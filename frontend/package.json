@@ -19,8 +19,5 @@
     "typescript": "^4.6.4",
     "vite": "^3.1.0",
     "vite-plugin-pwa": "^0.13.1"
-  },
-  "dependencies": {
-    "svelte-connection-status": "^1.1.0"
   }
 }
