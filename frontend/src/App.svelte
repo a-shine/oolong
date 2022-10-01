@@ -1,10 +1,17 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import Modal from "./lib/Modal.svelte";
+
+  // BUG: Not working with undefined date
 
   let display: string;
   let displayTasks: Task[] = [];
   let onlineFlag: boolean;
   let db;
+  let displayTaskAdder: boolean = false;
+
+  let newTaskContent: string;
+  let newTaskDate: Date;
 
   interface Task {
     id: number;
@@ -65,7 +72,7 @@
   };
   dbrequest.onsuccess = (e) => {
     db = e.target.result;
-    // addTasks(testTasks); when testing
+    // addTasks(testTasks); // when testing
     updateDisplay();
   };
 
@@ -105,6 +112,21 @@
     req.onerror = (e) => {
       console.log(e.target.errorCode);
     };
+  }
+
+  function submitTask() {
+    const task: Task = {
+      id: Date.now(), // todo: change id to ssn
+      content: newTaskContent,
+      createdAt: new Date(),
+      dueOn: newTaskDate,
+      reacurence: null,
+      complete: false,
+    };
+    addTask(task);
+    // updateDisplay();
+    newTaskContent = "";
+    displayTaskAdder = false;
   }
 
   function updateDisplay() {
@@ -178,6 +200,19 @@
       <li>{task.content}</li>
     {/each}
   </ul>
+  <button on:click={() => (displayTaskAdder = true)}> New task </button>
+  {#if displayTaskAdder}
+    <Modal on:close={() => (displayTaskAdder = false)}>
+      <h2 slot="header">New task</h2>
+      <form on:submit|preventDefault={submitTask} autocomplete="off">
+        <label for="task">Task</label>
+        <input type="text" id="content" bind:value={newTaskContent} />
+        <label for="dueOn">Due on</label>
+        <input type="date" id="dueOn" bind:value={newTaskDate} />
+        <button type="submit">Add</button>
+      </form>
+    </Modal>
+  {/if}
 </main>
 
 <style>
