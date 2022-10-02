@@ -44,6 +44,10 @@ func main() {
 			getTasks(w, r, db)
 		case "POST":
 			createTask(w, r, db)
+		case "PUT":
+			updateTask(w, r, db)
+		case "DELETE":
+			deleteTask(w, r, db)
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}

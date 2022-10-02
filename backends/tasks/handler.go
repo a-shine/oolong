@@ -29,3 +29,17 @@ func createTask(w http.ResponseWriter, r *http.Request, db *gorm.DB) {
 	db.Create(&task)
 	json.NewEncoder(w).Encode(task)
 }
+
+func updateTask(w http.ResponseWriter, r *http.Request, db *gorm.DB) {
+	var task Task
+	json.NewDecoder(r.Body).Decode(&task)
+	db.Save(&task)
+	json.NewEncoder(w).Encode(task)
+}
+
+func deleteTask(w http.ResponseWriter, r *http.Request, db *gorm.DB) {
+	var task Task
+	json.NewDecoder(r.Body).Decode(&task)
+	db.Delete(&task)
+	json.NewEncoder(w).Encode(task)
+}

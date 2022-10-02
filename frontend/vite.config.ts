@@ -8,9 +8,24 @@ export default defineConfig({
     svelte(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        runtimeCaching: [{
+          handler: 'NetworkOnly',
+          urlPattern: /http:\/\/localhost:8080\/api\/(.*)/, // looks for any request mactching this pattern and cahces them if offline
+          method: 'POST',
+          options: {
+            backgroundSync: {
+              name: 'api-queue',
+              options: {
+                maxRetentionTime: 24 * 60
+              }
+            }
+          }
+        }]
+      },
       manifest: {
         name: 'Oolong',
-        description: 'A life companion',
+        description: 'Opinionated organisation tool',
         theme_color: '#ffffff',
         icons: [
           {

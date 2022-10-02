@@ -115,7 +115,16 @@
       console.log(e.target.errorCode);
     };
   }
-  function addTaskRemote(task: Task) {}
+  function addTaskRemote(task: Task) {
+    var response = fetch("http://localhost:8080/api/tasks", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(task),
+    });
+    console.log(response);
+  }
 
   function addTask(task: Task) {
     addTaskRemote(task); // if fail set synced to false
