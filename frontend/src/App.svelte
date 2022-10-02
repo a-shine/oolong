@@ -2,8 +2,6 @@
   import { onMount } from "svelte";
   import Modal from "./lib/Modal.svelte";
 
-  // BUG: Not working with undefined date
-
   let display: string;
   let displayTasks: Task[] = [];
   let onlineFlag: boolean;
@@ -72,11 +70,11 @@
     if (!db.objectStoreNames.contains("tasks")) {
       const taskStore = db.createObjectStore("tasks", { keyPath: "id" });
       taskStore.createIndex("dueOn", "dueOn", { unique: false });
+      taskStore.createIndex("synced", "synced", { unique: false });
     }
   };
   dbrequest.onsuccess = (e) => {
     db = e.target.result;
-    // addTasks(testTasks); // when testing
     updateDisplay();
   };
 
@@ -104,7 +102,7 @@
     });
   }
 
-  function addTask(task: Task) {
+  function addTaskLocal(task: Task) {
     const req = db
       .transaction("tasks", "readwrite")
       .objectStore("tasks")
@@ -116,6 +114,12 @@
     req.onerror = (e) => {
       console.log(e.target.errorCode);
     };
+  }
+  function addTaskRemote(task: Task) {}
+
+  function addTask(task: Task) {
+    addTaskRemote(task); // if fail set synced to false
+    addTaskLocal(task);
   }
 
   function submitTask() {
@@ -184,9 +188,6 @@
             return task.dueOn.getTime() == 0;
           });
         };
-        // };
-        // console.log(tempDisplayTasks);
-        // displayTasks = tempDisplayTasks;
         break;
     }
   }
@@ -217,6 +218,9 @@
     <option value="upcoming">Upcoming</option>
     <option value="all">All</option>
   </select>
+  <!-- toggle completed -->
+  <label for="completedToggle">Toogle completed</label>
+  <input type="checkbox" id="completedToggle" />
   <ul>
     {#each displayTasks as task}
       <li>{task.content}</li>
@@ -228,7 +232,7 @@
       <h2 slot="header">New task</h2>
       <form on:submit|preventDefault={submitTask} autocomplete="off">
         <label for="task">Task</label>
-        <input type="text" id="content" bind:value={newTaskContent} />
+        <input type="text" id="task" bind:value={newTaskContent} />
         <label for="dueOn">Due on</label>
         <input type="date" id="dueOn" bind:value={newTaskDate} />
         <button type="submit">Add</button>

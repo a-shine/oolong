@@ -1,4 +1,4 @@
-# Oolong
+# Oolong frontend
 > Opinionated organisation tool
 
 In order to correctly run the PWA you need to first build all the assests
