@@ -17,9 +17,10 @@
     id: number;
     content: string;
     createdAt: Date;
-    dueOn: Date | null;
+    dueOn: Date;
     reacurence: number | null;
     complete: boolean;
+    synced: boolean;
   }
 
   let testTasks: Task[] = [
@@ -30,6 +31,7 @@
       dueOn: new Date(),
       reacurence: 0,
       complete: false,
+      synced: false,
     },
     {
       id: 2,
@@ -38,6 +40,7 @@
       dueOn: new Date(),
       reacurence: 0,
       complete: false,
+      synced: false,
     },
     {
       id: 3,
@@ -46,6 +49,7 @@
       dueOn: new Date(2025, 1, 1),
       reacurence: 0,
       complete: false,
+      synced: false,
     },
   ];
 
@@ -67,7 +71,7 @@
     db = e.target.result;
     if (!db.objectStoreNames.contains("tasks")) {
       const taskStore = db.createObjectStore("tasks", { keyPath: "id" });
-      taskStore.createIndex("dueOn", "dueOn");
+      taskStore.createIndex("dueOn", "dueOn", { unique: false });
     }
   };
   dbrequest.onsuccess = (e) => {
@@ -115,21 +119,30 @@
   }
 
   function submitTask() {
+    let dueOn;
+    if (newTaskDate) {
+      dueOn = new Date(newTaskDate);
+    } else {
+      dueOn = new Date(0);
+    }
     const task: Task = {
       id: Date.now(), // todo: change id to ssn
       content: newTaskContent,
       createdAt: new Date(),
-      dueOn: newTaskDate,
+      dueOn: dueOn,
       reacurence: null,
       complete: false,
+      synced: false,
     };
     addTask(task);
-    // updateDisplay();
+    updateDisplay();
     newTaskContent = "";
+    newTaskDate = undefined;
     displayTaskAdder = false;
   }
 
   function updateDisplay() {
+    displayTasks = [];
     const tx = db.transaction("tasks", "readonly");
     const taskStore = tx.objectStore("tasks");
 
@@ -138,18 +151,21 @@
         const allReq = taskStore.getAll();
         allReq.onsuccess = (e) => {
           displayTasks = allReq.result;
+          console.log(displayTasks);
         };
         break;
       case "today":
         const todayReq = taskStore.index("dueOn").getAll();
         todayReq.onsuccess = (e) => {
           displayTasks = todayReq.result.filter((task) => {
+            // console.log(task.dueOn);
             return (
               task.dueOn.getDate() == new Date().getDate() &&
               task.dueOn.getMonth() == new Date().getMonth() &&
               task.dueOn.getFullYear() == new Date().getFullYear()
             );
           });
+          console.log(displayTasks);
         };
         break;
       case "upcoming":
@@ -161,12 +177,16 @@
         };
         break;
       case "unassigned":
+        // let tempDisplayTasks: Task[] = [];
         const unassignedReq = taskStore.index("dueOn").getAll();
         unassignedReq.onsuccess = (e) => {
           displayTasks = unassignedReq.result.filter((task) => {
-            return task.dueOn == null;
+            return task.dueOn.getTime() == 0;
           });
         };
+        // };
+        // console.log(tempDisplayTasks);
+        // displayTasks = tempDisplayTasks;
         break;
     }
   }
@@ -179,6 +199,8 @@
     }
 
     display = "today";
+    // updateDisplay();
+    console.log(testTasks);
   });
 </script>
 
