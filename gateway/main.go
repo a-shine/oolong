@@ -9,6 +9,12 @@ import (
 	"strings"
 )
 
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+	(*w).Header().Add("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	(*w).Header().Add("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+}
+
 // Create a reverse proxy connection to the backend service host, set the correct URL path for the specific service
 // request and serve the request
 func connectAndServe(serviceHost string, servicePath string, w http.ResponseWriter, r *http.Request) {
@@ -18,6 +24,11 @@ func connectAndServe(serviceHost string, servicePath string, w http.ResponseWrit
 
 	// Add the path for the service request
 	r.URL.Path = servicePath
+
+	enableCors(&w)
+	if r.Method == "OPTIONS" { // CORS preflight request?
+		return
+	}
 
 	// Serve the request
 	reverseProxy.ServeHTTP(w, r)

@@ -9,12 +9,12 @@ import (
 
 type Task struct {
 	gorm.Model
-	Id         int
-	Content    string
-	CreatedAt  string
-	DueOn      string
-	Reacurence int
-	Complete   bool
+	Id         int    `json:"id"`
+	Content    string `json:"content"`
+	CreatedAt  string `json:"createdAt"`
+	DueOn      string `json:"dueOn"`
+	Reacurence int    `json:"reacurence"`
+	Complete   bool   `json:"complete"`
 }
 
 func getTasks(w http.ResponseWriter, r *http.Request, db *gorm.DB) {

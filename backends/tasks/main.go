@@ -38,7 +38,7 @@ func main() {
 	db.AutoMigrate(&Task{})
 
 	// Register routes
-	http.HandleFunc("/tasks", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "GET":
 			getTasks(w, r, db)

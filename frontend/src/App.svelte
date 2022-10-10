@@ -18,7 +18,7 @@
     dueOn: Date;
     reacurence: number | null;
     complete: boolean;
-    synced: boolean;
+    // synced: boolean; // no need to have sync because the background sync keeps track of failed post requests
   }
 
   let testTasks: Task[] = [
@@ -29,7 +29,6 @@
       dueOn: new Date(),
       reacurence: 0,
       complete: false,
-      synced: false,
     },
     {
       id: 2,
@@ -38,7 +37,6 @@
       dueOn: new Date(),
       reacurence: 0,
       complete: false,
-      synced: false,
     },
     {
       id: 3,
@@ -47,7 +45,6 @@
       dueOn: new Date(2025, 1, 1),
       reacurence: 0,
       complete: false,
-      synced: false,
     },
   ];
 
@@ -92,7 +89,10 @@
     const taskStore = tx.objectStore("tasks");
 
     tasks.forEach((task) => {
+      console.log(task);
+      console.log("adding task");
       const req = taskStore.add(task);
+      console.log("here");
       req.onsuccess = (e) => {
         console.log("task added");
       };
@@ -115,8 +115,10 @@
       console.log(e.target.errorCode);
     };
   }
+
+  //  BUG: Something weird is happening and there are extra fields when stored in the databse e.g. ID and id
   function addTaskRemote(task: Task) {
-    var response = fetch("http://localhost:8080/api/tasks", {
+    var response = fetch("http://localhost:8080/tasks", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -127,6 +129,7 @@
   }
 
   function addTask(task: Task) {
+    // console.log(task);
     addTaskRemote(task); // if fail set synced to false
     addTaskLocal(task);
   }
@@ -145,7 +148,6 @@
       dueOn: dueOn,
       reacurence: null,
       complete: false,
-      synced: false,
     };
     addTask(task);
     updateDisplay();
@@ -201,6 +203,16 @@
     }
   }
 
+  function getRemoteTasks() {
+    fetch("http://localhost:8080/tasks")
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("here");
+        console.log(data);
+        addTasks(data);
+      });
+  }
+
   onMount(() => {
     if (navigator.onLine) {
       onlineFlag = true;
@@ -209,8 +221,9 @@
     }
 
     display = "today";
+    getRemoteTasks();
     // updateDisplay();
-    console.log(testTasks);
+    // console.log(testTasks);
   });
 </script>
 
