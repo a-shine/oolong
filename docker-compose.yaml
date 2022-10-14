@@ -7,7 +7,7 @@ services:
     environment:
       TASKS: "http://tasks:80"
     ports:
-      - "8080:80"
+      - "8000:80"
   tasks:
     build:
       context: ./backends/tasks
@@ -18,7 +18,7 @@ services:
       POSTGRES_USER: dev
       POSTGRES_PASSWORD: password
     ports:
-      - 8081:80
+      - 8001:80
   db:
     image: postgres
     environment:
@@ -27,3 +27,7 @@ services:
       POSTGRES_PASSWORD: password
     ports:
       - 5432:5432
+  adminer:
+    image: adminer
+    ports:
+      - 8080:8080

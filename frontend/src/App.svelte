@@ -5,6 +5,7 @@
   let display: string;
   let displayTasks: Task[] = [];
   let onlineFlag: boolean;
+  let lastSynced: Date;
   let db;
   let displayTaskAdder: boolean = false;
 
@@ -67,7 +68,6 @@
     if (!db.objectStoreNames.contains("tasks")) {
       const taskStore = db.createObjectStore("tasks", { keyPath: "id" });
       taskStore.createIndex("dueOn", "dueOn", { unique: false });
-      taskStore.createIndex("synced", "synced", { unique: false });
     }
   };
   dbrequest.onsuccess = (e) => {
@@ -118,7 +118,7 @@
 
   //  BUG: Something weird is happening and there are extra fields when stored in the databse e.g. ID and id
   function addTaskRemote(task: Task) {
-    var response = fetch("http://localhost:8080/tasks", {
+    var response = fetch("http://localhost:8000/tasks", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -204,7 +204,7 @@
   }
 
   function getRemoteTasks() {
-    fetch("http://localhost:8080/tasks")
+    fetch("http://localhost:8000/tasks")
       .then((response) => response.json())
       .then((data) => {
         console.log("here");

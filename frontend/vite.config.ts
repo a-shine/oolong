@@ -11,7 +11,7 @@ export default defineConfig({
       workbox: {
         runtimeCaching: [{
           handler: 'NetworkOnly',
-          urlPattern: /http:\/\/localhost:8080\/(.*)/, // looks for any request mactching this pattern and cahces them if offline
+          urlPattern: /http:\/\/localhost:8000\/(.*)/, // looks for any request mactching this pattern and cahces them if offline
           method: 'POST', // TODO: might want to add delete and put here
           options: {
             backgroundSync: {
