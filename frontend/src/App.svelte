@@ -5,21 +5,25 @@
   let display: string;
   let displayTasks: Task[] = [];
   let onlineFlag: boolean;
-  let lastSynced: Date;
   let db;
   let displayTaskAdder: boolean = false;
 
   let newTaskContent: string;
   let newTaskDate: Date;
 
+  // tracking deletion is a bit more complicated - we either need to keep track of all devices and queue the deletion so that each delete is sent to every node
+  // or we can implement logical deletion by having a deleted flag on the task (this is not optimal as the database will be evergrowing but may be the easiet solution)
+
   interface Task {
     id: number;
     content: string;
     createdAt: Date;
+    updatedAt: Date;
     dueOn: Date;
-    reacurence: number | null;
+    reacurence: number;
     complete: boolean;
-    // synced: boolean; // no need to have sync because the background sync keeps track of failed post requests
+    deleted: boolean;
+    // no need to have sync because the background sync keeps track of failed post requests
   }
 
   let testTasks: Task[] = [
@@ -27,34 +31,38 @@
       id: 1,
       content: "Do the dishes",
       createdAt: new Date(),
+      updatedAt: new Date(),
       dueOn: new Date(),
       reacurence: 0,
       complete: false,
+      deleted: false,
     },
     {
       id: 2,
       content: "Do the laundry",
       createdAt: new Date(),
+      updatedAt: new Date(),
       dueOn: new Date(),
       reacurence: 0,
       complete: false,
+      deleted: false,
     },
     {
       id: 3,
       content: "Do the homework",
       createdAt: new Date(),
+      updatedAt: new Date(),
       dueOn: new Date(2025, 1, 1),
       reacurence: 0,
       complete: false,
+      deleted: false,
     },
   ];
 
   window.addEventListener("offline", (e) => {
-    console.log("offline");
     onlineFlag = false;
   });
   window.addEventListener("online", (e) => {
-    console.log("online");
     onlineFlag = true;
   });
 
@@ -72,6 +80,17 @@
   };
   dbrequest.onsuccess = (e) => {
     db = e.target.result;
+    // let lastSynced = getPersistentLastSynced();
+    // if (lastSynced) {
+    //   syncWithRemote();
+    // } else {
+    //   let remoteTasks = getRemoteTasks();
+    //   remoteTasks.then((tasks) => {
+    //     addTasks(tasks);
+    //   });
+    //   setPersistentLastSynced();
+    // }
+    syncWithRemote();
     updateDisplay();
   };
 
@@ -89,13 +108,8 @@
     const taskStore = tx.objectStore("tasks");
 
     tasks.forEach((task) => {
-      console.log(task);
-      console.log("adding task");
+      // task.dueOn = new Date(task.dueOn); // convert due on
       const req = taskStore.add(task);
-      console.log("here");
-      req.onsuccess = (e) => {
-        console.log("task added");
-      };
       req.onerror = (e) => {
         console.log(e.target.errorCode);
       };
@@ -116,7 +130,6 @@
     };
   }
 
-  //  BUG: Something weird is happening and there are extra fields when stored in the databse e.g. ID and id
   function addTaskRemote(task: Task) {
     var response = fetch("http://localhost:8000/tasks", {
       method: "POST",
@@ -145,9 +158,11 @@
       id: Date.now(), // todo: change id to ssn
       content: newTaskContent,
       createdAt: new Date(),
+      updatedAt: new Date(),
       dueOn: dueOn,
       reacurence: null,
       complete: false,
+      deleted: false,
     };
     addTask(task);
     updateDisplay();
@@ -166,28 +181,28 @@
         const allReq = taskStore.getAll();
         allReq.onsuccess = (e) => {
           displayTasks = allReq.result;
-          console.log(displayTasks);
         };
         break;
       case "today":
         const todayReq = taskStore.index("dueOn").getAll();
         todayReq.onsuccess = (e) => {
+          let date = new Date().toISOString().substring(0, 10);
           displayTasks = todayReq.result.filter((task) => {
-            // console.log(task.dueOn);
             return (
-              task.dueOn.getDate() == new Date().getDate() &&
-              task.dueOn.getMonth() == new Date().getMonth() &&
-              task.dueOn.getFullYear() == new Date().getFullYear()
+              task.dueOn.substring(0, 10) == date
+              // task.dueOn.getDate() == new Date().getDate() &&
+              // task.dueOn.getMonth() == new Date().getMonth() &&
+              // task.dueOn.getFullYear() == new Date().getFullYear()
             );
           });
-          console.log(displayTasks);
+          // console.log(displayTasks);
         };
         break;
       case "upcoming":
         const upcomingReq = taskStore.index("dueOn").getAll();
         upcomingReq.onsuccess = (e) => {
           displayTasks = upcomingReq.result.filter((task) => {
-            return task.dueOn > new Date();
+            return task.dueOn > new Date().toISOString(); // BUG: Not sure if this logic works when comparing strings
           });
         };
         break;
@@ -196,21 +211,91 @@
         const unassignedReq = taskStore.index("dueOn").getAll();
         unassignedReq.onsuccess = (e) => {
           displayTasks = unassignedReq.result.filter((task) => {
-            return task.dueOn.getTime() == 0;
+            return task.dueOn == ""; // BUG: needs to be some logical null value
           });
         };
         break;
     }
   }
 
-  function getRemoteTasks() {
-    fetch("http://localhost:8000/tasks")
+  function getPersistentLastSynced() {
+    return localStorage.getItem("lastSynced");
+  }
+
+  function setPersistentLastSynced() {
+    localStorage.setItem("lastSynced", new Date().toISOString());
+  }
+
+  // BUG: there might be a problem with the fields here
+  function getRemoteTasks(): Promise<Task[]> {
+    return fetch("http://localhost:8000/tasks")
       .then((response) => response.json())
       .then((data) => {
-        console.log("here");
-        console.log(data);
-        addTasks(data);
+        return data;
       });
+  }
+
+  function getRemoteLastUpdated(lastSynced): Promise<Task[]> {
+    // let lastSynced = getPersistentLastSynced();
+    // console.log(lastSynced);
+    return fetch("http://localhost:8000/tasks/updatedSince", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ lastSynced: lastSynced }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        return data;
+      });
+  }
+
+  function syncTasks(tasks: Task[]) {
+    const tx = db.transaction("tasks", "readwrite");
+    const taskStore = tx.objectStore("tasks");
+    tasks.forEach((task) => {
+      const req = taskStore.get(task.id);
+      req.onsuccess = (e) => {
+        if (req.result) {
+          if (task.deleted) {
+            taskStore.delete(task.id);
+          } else {
+            taskStore.put(task);
+          }
+        } else {
+          if (task.deleted) {
+            taskStore.delete(task.id);
+          } else {
+            taskStore.add(task);
+          }
+        }
+      };
+    });
+  }
+
+  function syncWithRemote() {
+    // let remoteTasks: Task[] = [];
+    let lastSynced = getPersistentLastSynced();
+    if (lastSynced) {
+      getRemoteLastUpdated(lastSynced).then((tasks) => {
+        // remoteTasks = tasks;
+        syncTasks(tasks);
+        setPersistentLastSynced();
+      });
+    } else {
+      getRemoteTasks().then((tasks) => {
+        syncTasks(tasks);
+        setPersistentLastSynced();
+      });
+    }
+    // let updatedSinceLastSyncTasks = getRemoteLastUpdated(lastSynced);
+    // updatedSinceLastSyncTasks.then((tasks) => {
+    //   // update local indexeddb
+    //   createUpdateDeleteTasks(tasks);
+    // });
+    // this is to ensure that deleted task get removed while they are flagged as deleted on the remote db (there is a flaw as when the db periodically removes deleted tasks then a rarely used client might not be aware that a task has been deleted to offset that enure that every so often we do a full client refresh)
+    // console.log(remoteTasks);
   }
 
   onMount(() => {
@@ -221,9 +306,6 @@
     }
 
     display = "today";
-    getRemoteTasks();
-    // updateDisplay();
-    // console.log(testTasks);
   });
 </script>
 
