@@ -282,11 +282,13 @@
         // remoteTasks = tasks;
         syncTasks(tasks);
         setPersistentLastSynced();
+        updateDisplay();
       });
     } else {
       getRemoteTasks().then((tasks) => {
         syncTasks(tasks);
         setPersistentLastSynced();
+        updateDisplay();
       });
     }
     // let updatedSinceLastSyncTasks = getRemoteLastUpdated(lastSynced);
