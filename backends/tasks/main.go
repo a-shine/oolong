@@ -53,19 +53,19 @@ func main() {
 		}
 	})
 
-	// http.HandleFunc("/recentlyDeleted", func(w http.ResponseWriter, r *http.Request) {
-	// 	switch r.Method {
-	// 	case "POST":
-	// 		recentlyDeletedTasks(w, r, db)
-	// 	default:
-	// 		w.WriteHeader(http.StatusMethodNotAllowed)
-	// 	}
-	// })
+	http.HandleFunc("/deletedSince", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "POST":
+			deletedSinceSync(w, r, db)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
 
 	http.HandleFunc("/updatedSince", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "POST":
-			syncLastUpdatedTasks(w, r, db)
+			updatedSinceSync(w, r, db)
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}

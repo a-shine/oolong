@@ -14,6 +14,8 @@
   // tracking deletion is a bit more complicated - we either need to keep track of all devices and queue the deletion so that each delete is sent to every node
   // or we can implement logical deletion by having a deleted flag on the task (this is not optimal as the database will be evergrowing but may be the easiet solution)
 
+  // TODO: abstract away deleted property from client - have a route that enables getting deletedSince lastSynced and delete based of that
+
   interface Task {
     id: number;
     content: string;
@@ -22,42 +24,9 @@
     dueOn: Date;
     reacurence: number;
     complete: boolean;
-    deleted: boolean;
+    // deleted: boolean;
     // no need to have sync because the background sync keeps track of failed post requests
   }
-
-  let testTasks: Task[] = [
-    {
-      id: 1,
-      content: "Do the dishes",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      dueOn: new Date(),
-      reacurence: 0,
-      complete: false,
-      deleted: false,
-    },
-    {
-      id: 2,
-      content: "Do the laundry",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      dueOn: new Date(),
-      reacurence: 0,
-      complete: false,
-      deleted: false,
-    },
-    {
-      id: 3,
-      content: "Do the homework",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      dueOn: new Date(2025, 1, 1),
-      reacurence: 0,
-      complete: false,
-      deleted: false,
-    },
-  ];
 
   window.addEventListener("offline", (e) => {
     onlineFlag = false;
@@ -67,8 +36,10 @@
   });
 
   const dbrequest = window.indexedDB.open("todos");
-  dbrequest.onerror = (e) => {
-    console.log(e.target.error);
+  dbrequest.onsuccess = (e) => {
+    db = e.target.result;
+    syncWithRemote();
+    updateDisplay();
   };
   dbrequest.onupgradeneeded = (e) => {
     console.log("upgrading db");
@@ -78,23 +49,11 @@
       taskStore.createIndex("dueOn", "dueOn", { unique: false });
     }
   };
-  dbrequest.onsuccess = (e) => {
-    db = e.target.result;
-    // let lastSynced = getPersistentLastSynced();
-    // if (lastSynced) {
-    //   syncWithRemote();
-    // } else {
-    //   let remoteTasks = getRemoteTasks();
-    //   remoteTasks.then((tasks) => {
-    //     addTasks(tasks);
-    //   });
-    //   setPersistentLastSynced();
-    // }
-    syncWithRemote();
-    updateDisplay();
+  dbrequest.onerror = (e) => {
+    console.log(e.target.error);
   };
 
-  function addTasks(tasks: Task[]) {
+  function addTasksLocal(tasks: Task[]) {
     const tx = db.transaction("tasks", "readwrite");
 
     tx.oncomplete = (e) => {
@@ -122,9 +81,6 @@
       .objectStore("tasks")
       .add(task);
 
-    req.onsuccess = (e) => {
-      console.log("task added");
-    };
     req.onerror = (e) => {
       console.log(e.target.errorCode);
     };
@@ -142,8 +98,7 @@
   }
 
   function addTask(task: Task) {
-    // console.log(task);
-    addTaskRemote(task); // if fail set synced to false
+    addTaskRemote(task);
     addTaskLocal(task);
   }
 
@@ -162,7 +117,7 @@
       dueOn: dueOn,
       reacurence: null,
       complete: false,
-      deleted: false,
+      // deleted: false,
     };
     addTask(task);
     updateDisplay();
@@ -188,14 +143,8 @@
         todayReq.onsuccess = (e) => {
           let date = new Date().toISOString().substring(0, 10);
           displayTasks = todayReq.result.filter((task) => {
-            return (
-              task.dueOn.substring(0, 10) == date
-              // task.dueOn.getDate() == new Date().getDate() &&
-              // task.dueOn.getMonth() == new Date().getMonth() &&
-              // task.dueOn.getFullYear() == new Date().getFullYear()
-            );
+            return task.dueOn.substring(0, 10) == date;
           });
-          // console.log(displayTasks);
         };
         break;
       case "upcoming":
@@ -207,7 +156,6 @@
         };
         break;
       case "unassigned":
-        // let tempDisplayTasks: Task[] = [];
         const unassignedReq = taskStore.index("dueOn").getAll();
         unassignedReq.onsuccess = (e) => {
           displayTasks = unassignedReq.result.filter((task) => {
@@ -226,7 +174,6 @@
     localStorage.setItem("lastSynced", new Date().toISOString());
   }
 
-  // BUG: there might be a problem with the fields here
   function getRemoteTasks(): Promise<Task[]> {
     return fetch("http://localhost:8000/tasks")
       .then((response) => response.json())
@@ -236,8 +183,6 @@
   }
 
   function getRemoteLastUpdated(lastSynced): Promise<Task[]> {
-    // let lastSynced = getPersistentLastSynced();
-    // console.log(lastSynced);
     return fetch("http://localhost:8000/tasks/updatedSince", {
       method: "POST",
       headers: {
@@ -251,27 +196,50 @@
       });
   }
 
-  function syncTasks(tasks: Task[]) {
+  function createOrUppdateTasks(tasks: Task[]) {
     const tx = db.transaction("tasks", "readwrite");
     const taskStore = tx.objectStore("tasks");
     tasks.forEach((task) => {
-      const req = taskStore.get(task.id);
-      req.onsuccess = (e) => {
-        if (req.result) {
-          if (task.deleted) {
-            taskStore.delete(task.id);
-          } else {
-            taskStore.put(task);
-          }
-        } else {
-          if (task.deleted) {
-            taskStore.delete(task.id);
-          } else {
-            taskStore.add(task);
-          }
-        }
-      };
+      // const req = taskStore.get(task.id);
+      // req.onsuccess = (e) => {
+      //   if (req.result) {
+      //     if (task.deleted) {
+      //       taskStore.delete(task.id);
+      //     } else {
+      //       taskStore.put(task);
+      //     }
+      //   } else {
+      //     if (task.deleted) {
+      //       taskStore.delete(task.id);
+      //     } else {
+      //       taskStore.add(task);
+      //     }
+      //   }
+      // };
+      taskStore.put(task);
     });
+  }
+
+  function deleteTasks(tasks: Task[]) {
+    const tx = db.transaction("tasks", "readwrite");
+    const taskStore = tx.objectStore("tasks");
+    tasks.forEach((task) => {
+      taskStore.delete(task.id);
+    });
+  }
+
+  function getRemoteDeletedSince(lastSynced): Promise<Task[]> {
+    return fetch("http://localhost:8000/tasks/deletedSince", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ lastSynced: lastSynced }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        return data;
+      });
   }
 
   function syncWithRemote() {
@@ -280,24 +248,32 @@
     if (lastSynced) {
       getRemoteLastUpdated(lastSynced).then((tasks) => {
         // remoteTasks = tasks;
-        syncTasks(tasks);
+        console.log("Tasks updated since last sync: ", tasks);
+        createOrUppdateTasks(tasks);
+        // setPersistentLastSynced();
+        // updateDisplay();
+      });
+      getRemoteDeletedSince(lastSynced).then((tasks) => {
+        // remoteTasks = remoteTasks.concat(tasks);
+        console.log("Tasks deleted since last sync: ", tasks);
+        deleteTasks(tasks);
+        // setPersistentLastSynced();
+        // updateDisplay();
+      });
+      Promise.all([
+        getRemoteLastUpdated(lastSynced),
+        getRemoteDeletedSince(lastSynced),
+      ]).then((tasks) => {
         setPersistentLastSynced();
         updateDisplay();
       });
     } else {
       getRemoteTasks().then((tasks) => {
-        syncTasks(tasks);
+        createOrUppdateTasks(tasks);
         setPersistentLastSynced();
         updateDisplay();
       });
     }
-    // let updatedSinceLastSyncTasks = getRemoteLastUpdated(lastSynced);
-    // updatedSinceLastSyncTasks.then((tasks) => {
-    //   // update local indexeddb
-    //   createUpdateDeleteTasks(tasks);
-    // });
-    // this is to ensure that deleted task get removed while they are flagged as deleted on the remote db (there is a flaw as when the db periodically removes deleted tasks then a rarely used client might not be aware that a task has been deleted to offset that enure that every so often we do a full client refresh)
-    // console.log(remoteTasks);
   }
 
   onMount(() => {
