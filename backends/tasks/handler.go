@@ -6,18 +6,19 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type Task struct {
-	Id         int       `gorm:"primaryKey" json:"id"`
-	Content    string    `gorm:"not null" json:"content"`
-	CreatedAt  time.Time `gorm:"not null" json:"createdAt"`
-	UpdatedAt  time.Time `gorm:"not null" json:"updatedAt"`
-	DueOn      time.Time `json:"dueOn"`
-	Reacurence int       `gorm:"not null" json:"reacurence"`
-	Complete   bool      `gorm:"not null" json:"complete"`
-	Deleted    bool      `gorm:"not null" json:"-"` // the "-" prevents returning the value in the api json as it is an artifact of the syncing logical delete and not relevant to the user// logical delete implementation - do not download deleted Tasks locally, and every month remove all deleted tasks (every so often ask client to do a full refreh of the tasks in order to avoid drift from clients that aren't often used)
+	Id         string     `gorm:"primaryKey" json:"id"`
+	Content    string     `gorm:"not null" json:"content"`
+	CreatedAt  time.Time  `gorm:"not null" json:"createdAt"`
+	UpdatedAt  time.Time  `gorm:"not null" json:"updatedAt"`
+	DueOn      *time.Time `gorm:"not null" json:"dueOn"` // pointer so that it can be null
+	Reacurence int        `gorm:"not null" json:"reacurence"`
+	Complete   bool       `gorm:"not null" json:"complete"`
+	Deleted    bool       `gorm:"not null" json:"-"` // the "-" prevents returning the value in the api json as it is an artifact of the syncing logical delete and not relevant to the user// logical delete implementation - do not download deleted Tasks locally, and every month remove all deleted tasks (every so often ask client to do a full refreh of the tasks in order to avoid drift from clients that aren't often used)
 }
 
 func getTasks(w http.ResponseWriter, r *http.Request, db *gorm.DB) {
@@ -57,9 +58,10 @@ func deletedSinceSync(w http.ResponseWriter, r *http.Request, db *gorm.DB) {
 func createTask(w http.ResponseWriter, r *http.Request, db *gorm.DB) {
 	var task Task
 	json.NewDecoder(r.Body).Decode(&task)
-	if task.Id == 0 {
+	if task.Id == "" {
 		// TODO: generate the uuid server side
 		// else let the client use a valid generated uuid
+		task.Id = uuid.New().String()
 	}
 	db.Create(&task)
 	json.NewEncoder(w).Encode(task)

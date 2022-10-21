@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import Modal from "./lib/Modal.svelte";
+  import { v4 as uuidv4 } from "uuid";
 
   let display: string;
   let displayTasks: Task[] = [];
@@ -13,6 +14,10 @@
 
   // tracking deletion is a bit more complicated - we either need to keep track of all devices and queue the deletion so that each delete is sent to every node
   // or we can implement logical deletion by having a deleted flag on the task (this is not optimal as the database will be evergrowing but may be the easiet solution)
+
+  function unassigned(date: Date) {
+    return date.toISOString() == new Date(0).toISOString();
+  }
 
   function inFuture(date: Date) {
     return date.setHours(0, 0, 0, 0) > new Date().setHours(0, 0, 0, 0);
@@ -27,7 +32,7 @@
     content: string;
     createdAt: Date;
     updatedAt: Date;
-    dueOn: Date;
+    dueOn: Date | null;
     reacurence: number;
     complete: boolean;
     // no need to have sync because the background sync keeps track of failed post requests
@@ -92,7 +97,7 @@
       dueOn = new Date(0);
     }
     const task: Task = {
-      id: Date.now(), // todo: change id to ssn
+      id: uuidv4(),
       content: newTaskContent,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -122,9 +127,6 @@
       case "today":
         const todayReq = taskStore.index("dueOn").getAll();
         todayReq.onsuccess = (e) => {
-          let date = new Date().getDate();
-          let month = new Date().getMonth();
-          let year = new Date().getFullYear();
           displayTasks = todayReq.result.filter((task) => {
             return today(task.dueOn);
           });
@@ -133,9 +135,6 @@
       case "upcoming":
         const upcomingReq = taskStore.index("dueOn").getAll();
         upcomingReq.onsuccess = (e) => {
-          let date = new Date().getDate();
-          let month = new Date().getMonth();
-          let year = new Date().getFullYear();
           displayTasks = upcomingReq.result.filter((task) => {
             return inFuture(task.dueOn);
           });
@@ -145,7 +144,7 @@
         const unassignedReq = taskStore.index("dueOn").getAll();
         unassignedReq.onsuccess = (e) => {
           displayTasks = unassignedReq.result.filter((task) => {
-            return task.dueOn.getFullYear() == 0; // BUG: needs to be some logical null value
+            return unassigned(task.dueOn);
           });
         };
         break;
@@ -164,6 +163,7 @@
     return fetch("http://localhost:8000/tasks")
       .then((response) => response.json())
       .then((data) => {
+        console.log(data);
         return data;
       });
   }
@@ -186,9 +186,13 @@
     const tx = db.transaction("tasks", "readwrite");
     const taskStore = tx.objectStore("tasks");
     tasks.forEach((task) => {
-      task.createdAt = new Date(task.createdAt);
+      task.createdAt = new Date(task.createdAt); // the reason why this code changs the consol log of the request is that it chages the object and they are reference to the same object (pointer)
       task.updatedAt = new Date(task.updatedAt);
-      task.dueOn = new Date(task.dueOn);
+      if (task.dueOn) {
+        task.dueOn = new Date(task.dueOn);
+      } else {
+        task.dueOn = new Date(0);
+      }
       taskStore.put(task);
     });
   }
@@ -230,7 +234,6 @@
       });
     } else {
       getRemoteTasks().then((tasks) => {
-        console.log(tasks);
         createOrUppdateTasks(tasks);
         setPersistentLastSynced();
         updateDisplay();
