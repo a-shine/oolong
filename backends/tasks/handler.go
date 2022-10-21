@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -27,73 +26,31 @@ func getTasks(w http.ResponseWriter, r *http.Request, db *gorm.DB) {
 	json.NewEncoder(w).Encode(tasks)
 }
 
-type LastSynced struct {
+type LastSyncedPayload struct {
 	LastSynced string `json:"lastSynced"`
 }
 
-// You can avoid deleting tasks off the db - if they are removed they can just be moved into a different table
-
 func updatedSinceSync(w http.ResponseWriter, r *http.Request, db *gorm.DB) {
 	var tasks []Task
-	var lastSynced string
-	// see request body
-	data, _ := ioutil.ReadAll(r.Body)
-	// fmt.Println(string(data))
-	// // json.NewDecoder(r.Body).Decode(&lastSynced)
-	// // fmt.Println(string(r.Body)) // BUG: Not understanding the ISO string
-	// // parse the ISO string to a time.Time
+	var lastSynced LastSyncedPayload
 
-	// Get the lastSynced value from the request body
-	// json.NewDecoder(r.Body).Decode(&lastSynced)
+	json.NewDecoder(r.Body).Decode(&lastSynced)
 
-	// Get the lastSynced value from the request body
-	// json.Unmarshal(, &lastSynced)
-	// fmt.Println(lastSynced)
+	fmt.Println(lastSynced.LastSynced)
 
-	res := make(map[string]interface{})
-	json.Unmarshal(data, &res)
-	fmt.Println(res["lastSynced"])
-	lastSynced = res["lastSynced"].(string) // should i convert to time or not?
+	db.Where("updated_at > ? AND NOT deleted", lastSynced.LastSynced).Find(&tasks)
 
-	// convert the ISO string to a time.Time
-	lastSyncedTime, _ := time.Parse(time.RFC3339, lastSynced)
-
-	fmt.Println(lastSyncedTime)
-
-	// fmt.Println(lastSynced)
-	db.Where("updated_at > ? AND NOT deleted", lastSyncedTime).Find(&tasks)
 	json.NewEncoder(w).Encode(tasks)
 }
 
 func deletedSinceSync(w http.ResponseWriter, r *http.Request, db *gorm.DB) {
 	var tasks []Task
-	var lastSynced string
-	// see request body
-	data, _ := ioutil.ReadAll(r.Body)
-	// fmt.Println(string(data))
-	// // json.NewDecoder(r.Body).Decode(&lastSynced)
-	// // fmt.Println(string(r.Body)) // BUG: Not understanding the ISO string
-	// // parse the ISO string to a time.Time
+	var lastSynced LastSyncedPayload
 
-	// Get the lastSynced value from the request body
-	// json.NewDecoder(r.Body).Decode(&lastSynced)
+	json.NewDecoder(r.Body).Decode(&lastSynced)
 
-	// Get the lastSynced value from the request body
-	// json.Unmarshal(, &lastSynced)
-	// fmt.Println(lastSynced)
+	db.Where("updated_at > ? AND deleted", lastSynced.LastSynced).Find(&tasks)
 
-	res := make(map[string]interface{})
-	json.Unmarshal(data, &res)
-	fmt.Println(res["lastSynced"])
-	lastSynced = res["lastSynced"].(string) // should i convert to time or not?
-
-	// convert the ISO string to a time.Time
-	lastSyncedTime, _ := time.Parse(time.RFC3339, lastSynced)
-
-	fmt.Println(lastSyncedTime)
-
-	// fmt.Println(lastSynced)
-	db.Where("updated_at > ? AND deleted", lastSyncedTime).Find(&tasks)
 	json.NewEncoder(w).Encode(tasks)
 }
 

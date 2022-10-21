@@ -1,0 +1,2 @@
+- [ ] Fix date bugs between frontend (javascript date) and backend (go/sql date)
+- [ ] Break tasks into componnents

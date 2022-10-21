@@ -39,7 +39,6 @@
   dbrequest.onsuccess = (e) => {
     db = e.target.result;
     syncWithRemote();
-    updateDisplay();
   };
   dbrequest.onupgradeneeded = (e) => {
     console.log("upgrading db");
@@ -52,28 +51,6 @@
   dbrequest.onerror = (e) => {
     console.log(e.target.error);
   };
-
-  function addTasksLocal(tasks: Task[]) {
-    const tx = db.transaction("tasks", "readwrite");
-
-    tx.oncomplete = (e) => {
-      console.log("transaction complete");
-    };
-
-    tx.onerror = (e) => {
-      console.log("e.target.errorCode");
-    };
-
-    const taskStore = tx.objectStore("tasks");
-
-    tasks.forEach((task) => {
-      // task.dueOn = new Date(task.dueOn); // convert due on
-      const req = taskStore.add(task);
-      req.onerror = (e) => {
-        console.log(e.target.errorCode);
-      };
-    });
-  }
 
   function addTaskLocal(task: Task) {
     const req = db
@@ -200,22 +177,6 @@
     const tx = db.transaction("tasks", "readwrite");
     const taskStore = tx.objectStore("tasks");
     tasks.forEach((task) => {
-      // const req = taskStore.get(task.id);
-      // req.onsuccess = (e) => {
-      //   if (req.result) {
-      //     if (task.deleted) {
-      //       taskStore.delete(task.id);
-      //     } else {
-      //       taskStore.put(task);
-      //     }
-      //   } else {
-      //     if (task.deleted) {
-      //       taskStore.delete(task.id);
-      //     } else {
-      //       taskStore.add(task);
-      //     }
-      //   }
-      // };
       taskStore.put(task);
     });
   }
@@ -246,24 +207,12 @@
     // let remoteTasks: Task[] = [];
     let lastSynced = getPersistentLastSynced();
     if (lastSynced) {
-      getRemoteLastUpdated(lastSynced).then((tasks) => {
-        // remoteTasks = tasks;
-        console.log("Tasks updated since last sync: ", tasks);
-        createOrUppdateTasks(tasks);
-        // setPersistentLastSynced();
-        // updateDisplay();
-      });
-      getRemoteDeletedSince(lastSynced).then((tasks) => {
-        // remoteTasks = remoteTasks.concat(tasks);
-        console.log("Tasks deleted since last sync: ", tasks);
-        deleteTasks(tasks);
-        // setPersistentLastSynced();
-        // updateDisplay();
-      });
       Promise.all([
         getRemoteLastUpdated(lastSynced),
         getRemoteDeletedSince(lastSynced),
       ]).then((tasks) => {
+        createOrUppdateTasks(tasks[0]);
+        deleteTasks(tasks[1]);
         setPersistentLastSynced();
         updateDisplay();
       });
