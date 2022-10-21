@@ -14,7 +14,13 @@
   // tracking deletion is a bit more complicated - we either need to keep track of all devices and queue the deletion so that each delete is sent to every node
   // or we can implement logical deletion by having a deleted flag on the task (this is not optimal as the database will be evergrowing but may be the easiet solution)
 
-  // TODO: abstract away deleted property from client - have a route that enables getting deletedSince lastSynced and delete based of that
+  function inFuture(date: Date) {
+    return date.setHours(0, 0, 0, 0) > new Date().setHours(0, 0, 0, 0);
+  }
+
+  function today(date: Date) {
+    return date.setHours(0, 0, 0, 0) === new Date().setHours(0, 0, 0, 0);
+  }
 
   interface Task {
     id: number;
@@ -24,7 +30,6 @@
     dueOn: Date;
     reacurence: number;
     complete: boolean;
-    // deleted: boolean;
     // no need to have sync because the background sync keeps track of failed post requests
   }
 
@@ -94,7 +99,6 @@
       dueOn: dueOn,
       reacurence: null,
       complete: false,
-      // deleted: false,
     };
     addTask(task);
     updateDisplay();
@@ -118,17 +122,22 @@
       case "today":
         const todayReq = taskStore.index("dueOn").getAll();
         todayReq.onsuccess = (e) => {
-          let date = new Date().toISOString().substring(0, 10);
+          let date = new Date().getDate();
+          let month = new Date().getMonth();
+          let year = new Date().getFullYear();
           displayTasks = todayReq.result.filter((task) => {
-            return task.dueOn.substring(0, 10) == date;
+            return today(task.dueOn);
           });
         };
         break;
       case "upcoming":
         const upcomingReq = taskStore.index("dueOn").getAll();
         upcomingReq.onsuccess = (e) => {
+          let date = new Date().getDate();
+          let month = new Date().getMonth();
+          let year = new Date().getFullYear();
           displayTasks = upcomingReq.result.filter((task) => {
-            return task.dueOn > new Date().toISOString(); // BUG: Not sure if this logic works when comparing strings
+            return inFuture(task.dueOn);
           });
         };
         break;
@@ -136,7 +145,7 @@
         const unassignedReq = taskStore.index("dueOn").getAll();
         unassignedReq.onsuccess = (e) => {
           displayTasks = unassignedReq.result.filter((task) => {
-            return task.dueOn == ""; // BUG: needs to be some logical null value
+            return task.dueOn.getFullYear() == 0; // BUG: needs to be some logical null value
           });
         };
         break;
@@ -177,6 +186,9 @@
     const tx = db.transaction("tasks", "readwrite");
     const taskStore = tx.objectStore("tasks");
     tasks.forEach((task) => {
+      task.createdAt = new Date(task.createdAt);
+      task.updatedAt = new Date(task.updatedAt);
+      task.dueOn = new Date(task.dueOn);
       taskStore.put(task);
     });
   }
@@ -218,6 +230,7 @@
       });
     } else {
       getRemoteTasks().then((tasks) => {
+        console.log(tasks);
         createOrUppdateTasks(tasks);
         setPersistentLastSynced();
         updateDisplay();
