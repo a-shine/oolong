@@ -17,7 +17,8 @@
   // or we can implement logical deletion by having a deleted flag on the task (this is not optimal as the database will be evergrowing but may be the easiet solution)
 
   interface Task {
-    id: number;
+    id: string;
+    projectId: string;
     content: string;
     createdAt: number;
     updatedAt: number;
@@ -89,6 +90,7 @@
     }
     const task: Task = {
       id: uuidv4(),
+      projectId: null,
       content: newTaskContent,
       createdAt: Date.now(),
       updatedAt: Date.now(),

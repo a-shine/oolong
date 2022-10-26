@@ -1,3 +1,2 @@
-- [ ] Fix date bugs between frontend (javascript date) and backend (go/sql date)
 - [ ] Break tasks into componnents
-- Still do not have a good way of dealing with null dueOn values
+- [ ] Final PWA feature would be to enable push notifications for timely tasks (i.e. when they have a time associated)
