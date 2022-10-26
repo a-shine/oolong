@@ -85,7 +85,7 @@
     if (newTaskDate) {
       dueOn = newTaskDate;
     } else {
-      dueOn = ""
+      dueOn = "";
     }
     const task: Task = {
       id: uuidv4(),
@@ -118,32 +118,38 @@
         };
         break;
       case "today":
-        let today = new Date();
-        let bound = today.toISOString().split('T')[0];
-        let range = IDBKeyRange.only(bound);
-        const todayReq = taskStore.index("dueOn").getAll(range);
-        todayReq.onsuccess = (e) => {
-          let request = e.target;
-          displayTasks = request.result;
-        };
+        {
+          let today = new Date();
+          let bound = today.toISOString().split("T")[0];
+          let range = IDBKeyRange.only(bound);
+          const todayReq = taskStore.index("dueOn").getAll(range);
+          todayReq.onsuccess = (e) => {
+            let request = e.target;
+            displayTasks = request.result;
+          };
+        }
         break;
       case "upcoming":
-        // let today = new Date();
-        // let bound = today.toISOString().split('T')[0]
-        let upperBound = IDBKeyRange.upperBound(bound, false);
-        const upcomingReq = taskStore.index("dueOn").getAll(upperBound);
-        upcomingReq.onsuccess = (e) => {
-          let request = e.target;
-          displayTasks = request.result;
-        };
+        {
+          let today = new Date();
+          let bound = today.toISOString().split("T")[0];
+          let range = IDBKeyRange.lowerBound(bound, true);
+          const upcomingReq = taskStore.index("dueOn").getAll(range);
+          upcomingReq.onsuccess = (e) => {
+            let request = e.target;
+            displayTasks = request.result;
+          };
+        }
         break;
       case "unassigned":
-        const unassignedReq = taskStore.index("dueOn").getAll();
-        unassignedReq.onsuccess = (e) => {
-          displayTasks = unassignedReq.result.filter((task) => {
-            return unassigned(task.dueOn);
-          });
-        };
+        {
+          let range = IDBKeyRange.only("");
+          const unassignedReq = taskStore.index("dueOn").getAll(range);
+          unassignedReq.onsuccess = (e) => {
+            let request = e.target;
+            displayTasks = request.result;
+          };
+        }
         break;
     }
   }
@@ -183,13 +189,6 @@
     const tx = db.transaction("tasks", "readwrite");
     const taskStore = tx.objectStore("tasks");
     tasks.forEach((task) => {
-      task.createdAt = new Date(task.createdAt); // the reason why this code changs the consol log of the request is that it chages the object and they are reference to the same object (pointer)
-      task.updatedAt = new Date(task.updatedAt);
-      if (task.dueOn) {
-        task.dueOn = new Date(task.dueOn);
-      } else {
-        task.dueOn = new Date(0);
-      }
       taskStore.put(task);
     });
   }
