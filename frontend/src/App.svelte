@@ -22,8 +22,7 @@
     content: string;
     createdAt: number;
     updatedAt: number;
-    dueOn: string; // use the timestamp and get the between range for the specified dates + 0 for undefined
-    dueAt: string;
+    due: number; // use the timestamp and get the between range for the specified dates + 0 for undefined
     reacurence: number;
     complete: boolean;
     // no need to have sync because the background sync keeps track of failed post requests
@@ -47,7 +46,7 @@
     db = e.target.result;
     if (!db.objectStoreNames.contains("tasks")) {
       const taskStore = db.createObjectStore("tasks", { keyPath: "id" });
-      taskStore.createIndex("dueOn", "dueOn", { unique: false });
+      taskStore.createIndex("due", "due", { unique: false });
     }
   };
   dbrequest.onerror = (e) => {
@@ -84,18 +83,27 @@
   function submitTask() {
     let dueOn;
     if (newTaskDate) {
-      dueOn = newTaskDate;
+      dueOn = new Date(newTaskDate).setHours(0, 0, 0, 0);
+      if (newTaskTime) {
+        let breakdown = newTaskTime.split(":");
+        dueOn = new Date(newTaskDate).setHours(
+          breakdown[0],
+          breakdown[1],
+          0,
+          0
+        );
+      }
     } else {
-      dueOn = "";
+      dueOn = -1;
     }
+    console.log(dueOn);
     const task: Task = {
       id: uuidv4(),
       projectId: null,
       content: newTaskContent,
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      dueOn: dueOn,
-      dueAt: newTaskTime,
+      due: dueOn,
       reacurence: null,
       complete: false,
     };
@@ -121,10 +129,10 @@
         break;
       case "today":
         {
-          let today = new Date();
-          let bound = today.toISOString().split("T")[0];
-          let range = IDBKeyRange.only(bound);
-          const todayReq = taskStore.index("dueOn").getAll(range);
+          let today = new Date().setHours(0, 0, 0, 0);
+          let tomorrow = new Date().setHours(0, 0, 0, 0) + 86400000;
+          let range = IDBKeyRange.bound(today, tomorrow, false, true);
+          const todayReq = taskStore.index("due").getAll(range);
           todayReq.onsuccess = (e) => {
             let request = e.target;
             displayTasks = request.result;
@@ -133,10 +141,9 @@
         break;
       case "upcoming":
         {
-          let today = new Date();
-          let bound = today.toISOString().split("T")[0];
-          let range = IDBKeyRange.lowerBound(bound, true);
-          const upcomingReq = taskStore.index("dueOn").getAll(range);
+          let tomorrow = new Date().setHours(0, 0, 0, 0) + 86400000;
+          let range = IDBKeyRange.lowerBound(tomorrow, false);
+          const upcomingReq = taskStore.index("due").getAll(range);
           upcomingReq.onsuccess = (e) => {
             let request = e.target;
             displayTasks = request.result;
@@ -145,8 +152,8 @@
         break;
       case "unassigned":
         {
-          let range = IDBKeyRange.only("");
-          const unassignedReq = taskStore.index("dueOn").getAll(range);
+          let range = IDBKeyRange.only(-1);
+          const unassignedReq = taskStore.index("due").getAll(range);
           unassignedReq.onsuccess = (e) => {
             let request = e.target;
             displayTasks = request.result;
