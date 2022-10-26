@@ -11,28 +11,18 @@
 
   let newTaskContent: string;
   let newTaskDate: Date;
+  let newTaskTime;
 
   // tracking deletion is a bit more complicated - we either need to keep track of all devices and queue the deletion so that each delete is sent to every node
   // or we can implement logical deletion by having a deleted flag on the task (this is not optimal as the database will be evergrowing but may be the easiet solution)
 
-  function unassigned(date: Date) {
-    return date.toISOString() == new Date(0).toISOString();
-  }
-
-  function inFuture(date: Date) {
-    return date.setHours(0, 0, 0, 0) > new Date().setHours(0, 0, 0, 0);
-  }
-
-  function today(date: Date) {
-    return date.setHours(0, 0, 0, 0) === new Date().setHours(0, 0, 0, 0);
-  }
-
   interface Task {
     id: number;
     content: string;
-    createdAt: Date;
-    updatedAt: Date;
-    dueOn: Date | null;
+    createdAt: number;
+    updatedAt: number;
+    dueOn: string; // use the timestamp and get the between range for the specified dates + 0 for undefined
+    dueAt: string;
     reacurence: number;
     complete: boolean;
     // no need to have sync because the background sync keeps track of failed post requests
@@ -49,6 +39,7 @@
   dbrequest.onsuccess = (e) => {
     db = e.target.result;
     syncWithRemote();
+    updateDisplay();
   };
   dbrequest.onupgradeneeded = (e) => {
     console.log("upgrading db");
@@ -92,16 +83,17 @@
   function submitTask() {
     let dueOn;
     if (newTaskDate) {
-      dueOn = new Date(newTaskDate);
+      dueOn = newTaskDate;
     } else {
-      dueOn = new Date(0);
+      dueOn = ""
     }
     const task: Task = {
       id: uuidv4(),
       content: newTaskContent,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
       dueOn: dueOn,
+      dueAt: newTaskTime,
       reacurence: null,
       complete: false,
     };
@@ -109,6 +101,7 @@
     updateDisplay();
     newTaskContent = "";
     newTaskDate = undefined;
+    newTaskTime = undefined;
     displayTaskAdder = false;
   }
 
@@ -125,19 +118,23 @@
         };
         break;
       case "today":
-        const todayReq = taskStore.index("dueOn").getAll();
+        let today = new Date();
+        let bound = today.toISOString().split('T')[0];
+        let range = IDBKeyRange.only(bound);
+        const todayReq = taskStore.index("dueOn").getAll(range);
         todayReq.onsuccess = (e) => {
-          displayTasks = todayReq.result.filter((task) => {
-            return today(task.dueOn);
-          });
+          let request = e.target;
+          displayTasks = request.result;
         };
         break;
       case "upcoming":
-        const upcomingReq = taskStore.index("dueOn").getAll();
+        // let today = new Date();
+        // let bound = today.toISOString().split('T')[0]
+        let upperBound = IDBKeyRange.upperBound(bound, false);
+        const upcomingReq = taskStore.index("dueOn").getAll(upperBound);
         upcomingReq.onsuccess = (e) => {
-          displayTasks = upcomingReq.result.filter((task) => {
-            return inFuture(task.dueOn);
-          });
+          let request = e.target;
+          displayTasks = request.result;
         };
         break;
       case "unassigned":
@@ -282,6 +279,8 @@
         <input type="text" id="task" bind:value={newTaskContent} />
         <label for="dueOn">Due on</label>
         <input type="date" id="dueOn" bind:value={newTaskDate} />
+        <label for="dueAt">At</label>
+        <input type="time" id="dueAt" bind:value={newTaskTime} />
         <button type="submit">Add</button>
       </form>
     </Modal>
