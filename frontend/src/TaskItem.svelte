@@ -8,16 +8,38 @@
         hour: "2-digit",
         minute: "2-digit",
     });
+
+    function editTask() {
+        console.log("here");
+    }
 </script>
 
-<div>
-    <span>{task.content}</span>
-    <input
-        type="checkbox"
-        bind:checked={task.complete}
-        on:click={() => saveCompleteStatus(task)}
-    /><br />
-    {#if task.withTime}
-        <span>{taskTime}</span>
-    {/if}
+<div class="grid-container-element">
+    <div on:click={editTask} id="taskBody">
+        <span>{task.content}</span>
+        <br />
+        {#if task.withTime}
+            <span>{taskTime}</span>
+        {/if}
+    </div>
+    <div>
+        <input
+            type="checkbox"
+            bind:checked={task.complete}
+            on:click={() => saveCompleteStatus(task)}
+        />
+    </div>
 </div>
+
+<style>
+    #taskBody:hover {
+        background-color: gray;
+    }
+    .grid-container-element {
+        display: grid;
+        grid-template-columns: 90% 10%;
+        /* grid-gap: 20px; */
+        border: 1px solid black;
+        /* width: 50%; */
+    }
+</style>
