@@ -1,24 +1,25 @@
 <script lang="ts">
-    import { onMount } from "svelte";
-    import { v4 as uuidv4 } from "uuid";
     import TaskItem from "./TaskItem.svelte";
 
     import type { Task } from "./types/task.type";
+
     import NewTask from "./NewTask.svelte";
+    import Filter from "./Filter.svelte";
 
-    let display: string;
+    let display = "today";
+    let completed = false;
+
     let displayTasks: Task[] = [];
-    let db;
-    let displayTaskAdder: boolean = false;
 
-    let newTaskContent: string;
-    let newTaskDate: Date;
-    let newTaskTime;
+    let db;
+
+    let displayNewTaskModal: boolean = false;
 
     // tracking deletion is a bit more complicated - we either need to keep track of all devices and queue the deletion so that each delete is sent to every node
     // or we can implement logical deletion by having a deleted flag on the task (this is not optimal as the database will be evergrowing but may be the easiet solution)
 
-    const dbrequest = window.indexedDB.open("todos");
+    const dbrequest = window.indexedDB.open("tasks");
+
     dbrequest.onsuccess = (e) => {
         db = e.target.result;
         syncWithRemote();
@@ -60,7 +61,7 @@
 
     function addTask(task: Task) {
         // displayTasks.push(task);
-        // addTaskRemote(task);
+        addTaskRemote(task);
         addTaskLocal(task);
     }
 
@@ -75,43 +76,13 @@
     }
 
     // BUG: There seems to be a problem submitting a task on mobile devices when associated with a time
-    function submitTask() {
-        let dueOn;
-        if (newTaskDate) {
-            dueOn = new Date(newTaskDate).setHours(0, 0, 0, 0);
-            if (newTaskTime) {
-                let breakdown = newTaskTime.split(":");
-                dueOn = new Date(newTaskDate).setHours(
-                    breakdown[0],
-                    breakdown[1],
-                    0,
-                    0
-                );
-            }
-        } else {
-            dueOn = -1;
-        }
-        const task: Task = {
-            id: uuidv4(),
-            projectId: null,
-            content: newTaskContent,
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-            due: dueOn,
-            withTime: newTaskTime ? true : false,
-            reacurence: null,
-            complete: false,
-        };
+    function saveTask(task: Task) {
         addTask(task);
         if (task.withTime) {
             // createNotification(task);
         }
         // createNotification(task); // BUG: add this to the add task function so that synced tasks can be notified too
         updateDisplay(); // better way would be to add the task to the display tasks array if it matches the filter else do nothing and rely on fetching filtered tasks when complete
-        newTaskContent = "";
-        newTaskDate = undefined;
-        newTaskTime = undefined;
-        displayTaskAdder = false;
     }
 
     function updateDisplay() {
@@ -248,7 +219,7 @@
         }
     }
 
-    function toggleComplete(task: Task) {
+    function saveCompleteStatus(task: Task): void {
         const tx = db.transaction("tasks", "readwrite");
         const taskStore = tx.objectStore("tasks");
         task.complete = !task.complete;
@@ -262,43 +233,19 @@
         // taskStore.put(task);
         console.log("edit task");
     }
-
-    function cancelNewTask() {
-        newTaskContent = "";
-        newTaskDate = undefined;
-        newTaskTime = undefined;
-        displayTaskAdder = false;
-    }
-
-    onMount(() => {
-        display = "today";
-    });
 </script>
 
-<!-- <h1>Tasks</h1> -->
-<select bind:value={display} on:change={updateDisplay}>
-    <option value="unassigned">Unassigned</option>
-    <option value="today">Today</option>
-    <option value="upcoming">Upcoming</option>
-    <option value="all">All</option>
-</select>
-<!-- toggle completed -->
-<label for="completedToggle">Toogle completed</label>
-<input type="checkbox" id="completedToggle" />
+<Filter bind:display bind:completed {updateDisplay} />
+
 <ul>
     {#each displayTasks as task}
         <li>
-            <TaskItem {task} />
+            <TaskItem {task} {saveCompleteStatus} />
         </li>
     {/each}
 </ul>
-<button on:click={() => (displayTaskAdder = true)}> New task </button>
-{#if displayTaskAdder}
-    <NewTask
-        {newTaskContent}
-        {newTaskDate}
-        {newTaskTime}
-        on:cancel={cancelNewTask}
-        on:save={saveNewTask}
-    />
+
+<button on:click={() => (displayNewTaskModal = true)}> New task </button>
+{#if displayNewTaskModal}
+    <NewTask bind:displayNewTaskModal {saveTask} />
 {/if}

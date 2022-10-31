@@ -11,7 +11,7 @@
     onlineFlag = true;
   });
 
-  function enableNotifications() {
+  function checkOrEnableNotifications() {
     if (!("Notification" in window)) {
       // Check if the browser supports notifications
       alert("This browser does not support desktop notification");
@@ -33,7 +33,7 @@
       onlineFlag = false;
     }
 
-    enableNotifications();
+    checkOrEnableNotifications();
   });
 </script>
 

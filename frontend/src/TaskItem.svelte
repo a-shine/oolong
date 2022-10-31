@@ -2,6 +2,7 @@
     import type { Task } from "./types/task.type";
 
     export let task: Task;
+    export let saveCompleteStatus: (task: Task) => void;
 
     let taskTime = new Date(task.due).toLocaleTimeString([], {
         hour: "2-digit",
@@ -14,7 +15,7 @@
     <input
         type="checkbox"
         bind:checked={task.complete}
-        on:click={() => toggleComplete(task)}
+        on:click={() => saveCompleteStatus(task)}
     /><br />
     {#if task.withTime}
         <span>{taskTime}</span>

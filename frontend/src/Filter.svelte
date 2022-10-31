@@ -1,6 +1,7 @@
 <script lang="ts">
-    export let display = "today";
-    export let completed = false;
+    export let display;
+    export let completed;
+    export let updateDisplay: () => void;
 </script>
 
 <!-- By date -->
