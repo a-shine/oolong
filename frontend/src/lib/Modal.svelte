@@ -49,7 +49,7 @@
     <hr />
 
     <!-- svelte-ignore a11y-autofocus -->
-    <button autofocus on:click={close}>Cancel</button>
+    <!-- <button autofocus on:click={close}>Cancel</button> -->
 </div>
 
 <style>
