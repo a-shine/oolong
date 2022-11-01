@@ -3,13 +3,24 @@
     import type { Task } from "./types/task.type";
 
     export let displayTaskEditorModal: boolean;
-    export let saveTask: (task: Task) => void;
-
     export let task: Task;
+    export let saveTask: (task: Task) => void;
+    export let updateDisplayedTasks: (task: Task) => void;
+
+    let newTaskDate: string;
+    let newTaskTime: string;
 
     let newTaskContent = task.content;
-    let newTaskDate = new Date(task.due);
-    let newTaskTime = new Date(task.due);
+    if (task.due === undefined) {
+        newTaskDate = "";
+        newTaskTime = "";
+    } else {
+        newTaskDate = new Date(task.due).toLocaleDateString();
+        newTaskTime = new Date(task.due).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+    }
 
     function resetNewTask() {
         newTaskContent = undefined;
@@ -41,7 +52,8 @@
     function newTask() {
         updateTask();
         saveTask(task);
-        resetNewTask;
+        updateDisplayedTasks(task);
+        resetNewTask();
     }
 </script>
 

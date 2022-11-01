@@ -1,21 +1,20 @@
 <script lang="ts">
+    import TaskEditor from "./TaskEditor.svelte";
     import type { Task } from "./types/task.type";
 
     export let task: Task;
-    export let saveCompleteStatus: (task: Task) => void;
+    export let saveTask: (task: Task) => void;
+
+    let displayTaskEditorModal: boolean = false;
 
     let taskTime = new Date(task.due).toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
     });
-
-    function editTask() {
-        console.log("here");
-    }
 </script>
 
 <div class="grid-container-element">
-    <div on:click={editTask} id="taskBody">
+    <div on:click={() => (displayTaskEditorModal = true)} id="taskBody">
         <span>{task.content}</span>
         <br />
         {#if task.withTime}
@@ -26,10 +25,14 @@
         <input
             type="checkbox"
             bind:checked={task.complete}
-            on:click={() => saveCompleteStatus(task)}
+            on:click={() => saveTask(task)}
         />
     </div>
 </div>
+
+{#if displayTaskEditorModal}
+    <TaskEditor bind:displayTaskEditorModal {task} {saveTask} />
+{/if}
 
 <style>
     #taskBody:hover {
@@ -37,7 +40,7 @@
     }
     .grid-container-element {
         display: grid;
-        grid-template-columns: 90% 10%;
+        grid-template-columns: 9fr 1fr;
         /* grid-gap: 20px; */
         border: 1px solid black;
         /* width: 50%; */

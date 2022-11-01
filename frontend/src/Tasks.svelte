@@ -13,7 +13,8 @@
 
     let db;
 
-    let displayNewTaskModal: boolean = false;
+    // let displayNewTaskModal: boolean = false;
+    let displayTaskEditorModal: boolean = false;
 
     // tracking deletion is a bit more complicated - we either need to keep track of all devices and queue the deletion so that each delete is sent to every node
     // or we can implement logical deletion by having a deleted flag on the task (this is not optimal as the database will be evergrowing but may be the easiet solution)
@@ -23,7 +24,7 @@
     dbrequest.onsuccess = (e) => {
         db = e.target.result;
         syncWithRemote();
-        updateDisplay();
+        getTasksToDisplay();
     };
     dbrequest.onupgradeneeded = (e) => {
         console.log("upgrading db");
@@ -76,16 +77,16 @@
     }
 
     // BUG: There seems to be a problem submitting a task on mobile devices when associated with a time
-    function saveTask(task: Task) {
-        addTask(task);
-        if (task.withTime) {
-            // createNotification(task);
-        }
-        // createNotification(task); // BUG: add this to the add task function so that synced tasks can be notified too
-        updateDisplay(); // better way would be to add the task to the display tasks array if it matches the filter else do nothing and rely on fetching filtered tasks when complete
-    }
+    // function saveTask(task: Task) {
+    //     addTask(task);
+    //     if (task.withTime) {
+    //         // createNotification(task);
+    //     }
+    //     // createNotification(task); // BUG: add this to the add task function so that synced tasks can be notified too
+    //     updateDisplay(); // better way would be to add the task to the display tasks array if it matches the filter else do nothing and rely on fetching filtered tasks when complete
+    // }
 
-    function updateDisplay() {
+    function getTasksToDisplay() {
         displayTasks = [];
         const tx = db.transaction("tasks", "readonly");
         const taskStore = tx.objectStore("tasks");
@@ -130,6 +131,29 @@
                     };
                 }
                 break;
+        }
+    }
+
+    function updateDisplayedTasks(task: Task) {
+        // if task passes filter add to display tasks else don't do anything
+        if (display == "all") {
+            displayTasks = [...displayTasks, task];
+        } else if (display == "today") {
+            let today = new Date().setHours(0, 0, 0, 0);
+            let tomorrow = new Date().setHours(0, 0, 0, 0) + 86400000;
+            if (task.due >= today && task.due < tomorrow) {
+                // displayTasks.push(task);
+                displayTasks = [...displayTasks, task];
+            }
+        } else if (display == "upcoming") {
+            let tomorrow = new Date().setHours(0, 0, 0, 0) + 86400000;
+            if (task.due >= tomorrow) {
+                displayTasks = [...displayTasks, task];
+            }
+        } else if (display == "unassigned") {
+            if (task.due == -1) {
+                displayTasks = [...displayTasks, task];
+            }
         }
     }
 
@@ -208,18 +232,18 @@
                 createOrUppdateTasks(tasks[0]);
                 deleteTasks(tasks[1]);
                 setPersistentLastSynced();
-                updateDisplay();
+                getTasksToDisplay();
             });
         } else {
             getRemoteTasks().then((tasks) => {
                 createOrUppdateTasks(tasks);
                 setPersistentLastSynced();
-                updateDisplay();
+                getTasksToDisplay();
             });
         }
     }
 
-    function saveCompleteStatus(task: Task): void {
+    function saveTask(task: Task): void {
         const tx = db.transaction("tasks", "readwrite");
         const taskStore = tx.objectStore("tasks");
         task.complete = !task.complete;
@@ -235,17 +259,17 @@
     }
 </script>
 
-<Filter bind:display bind:completed {updateDisplay} />
+<Filter bind:display bind:completed updateDisplay={getTasksToDisplay} />
 
 <ul>
     {#each displayTasks as task}
         <li>
-            <TaskItem {task} {saveCompleteStatus} />
+            <TaskItem {task} {saveTask} />
         </li>
     {/each}
 </ul>
 
-<button on:click={() => (displayNewTaskModal = true)}> New task </button>
-{#if displayNewTaskModal}
-    <NewTask bind:displayNewTaskModal {saveTask} />
+<button on:click={() => (displayTaskEditorModal = true)}> New task </button>
+{#if displayTaskEditorModal}
+    <NewTask bind:displayTaskEditorModal {saveTask} {updateDisplayedTasks} />
 {/if}
