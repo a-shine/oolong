@@ -13,7 +13,6 @@
 
     let db;
 
-    // let displayNewTaskModal: boolean = false;
     let displayTaskEditorModal: boolean = false;
 
     // tracking deletion is a bit more complicated - we either need to keep track of all devices and queue the deletion so that each delete is sent to every node
@@ -61,7 +60,6 @@
     }
 
     function addTask(task: Task) {
-        // displayTasks.push(task);
         addTaskRemote(task);
         addTaskLocal(task);
     }
@@ -194,7 +192,7 @@
         tasks.forEach((task) => {
             taskStore.put(task);
             if (task.withTime) {
-                createNotification(task);
+                // createNotification(task);
             }
         });
     }
@@ -246,30 +244,61 @@
     function saveTask(task: Task): void {
         const tx = db.transaction("tasks", "readwrite");
         const taskStore = tx.objectStore("tasks");
-        task.complete = !task.complete;
         taskStore.put(task);
         // TODO: Do remote as well
     }
 
-    function editTask(task: Task) {
-        // const tx = db.transaction("tasks", "readwrite");
-        // const taskStore = tx.objectStore("tasks");
-        // taskStore.put(task);
-        console.log("edit task");
+    function showNotification() {
+        // https://chromestatus.com/feature/5133150283890688
+        if ("showTrigger" in Notification.prototype) {
+            /* Notification Triggers supported */
+            console.log("Notification Triggers supported");
+        }
+        Notification.requestPermission((result) => {
+            if (result === "granted") {
+                navigator.serviceWorker.ready.then((registration) => {
+                    registration.showNotification("Vibration Sample", {
+                        body: "Buzz! Buzz!",
+                        icon: "../images/touch/chrome-touch-icon-192x192.png",
+                        vibrate: [200, 100, 200, 100, 200, 100, 200],
+                        tag: "vibration-sample",
+                        showTrigger: new TimestampTrigger(10),
+                    });
+                });
+            }
+        });
     }
 </script>
 
-<Filter bind:display bind:completed updateDisplay={getTasksToDisplay} />
+<div id="main">
+    <Filter bind:display bind:completed {getTasksToDisplay} />
 
-<ul>
-    {#each displayTasks as task}
-        <li>
-            <TaskItem {task} {saveTask} />
-        </li>
-    {/each}
-</ul>
+    <ul>
+        {#each displayTasks as task}
+            <li>
+                <TaskItem {task} {saveTask} />
+            </li>
+        {/each}
+    </ul>
 
-<button on:click={() => (displayTaskEditorModal = true)}> New task </button>
-{#if displayTaskEditorModal}
-    <NewTask bind:displayTaskEditorModal {saveTask} {updateDisplayedTasks} />
-{/if}
+    <button on:click={() => (displayTaskEditorModal = true)}> New task </button>
+    {#if displayTaskEditorModal}
+        <NewTask
+            bind:displayTaskEditorModal
+            {saveTask}
+            {updateDisplayedTasks}
+        />
+    {/if}
+</div>
+
+<style>
+    /* center content with max width */
+    #main {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    ul {
+        list-style-type: none;
+    }
+</style>

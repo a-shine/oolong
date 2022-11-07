@@ -41,12 +41,17 @@
                     0,
                     0
                 );
+                task.withTime = true;
+            } else {
+                task.withTime = false;
             }
         } else {
             dueOn = -1;
+            task.withTime = false;
         }
         task.content = newTaskContent;
         task.due = dueOn;
+        // TODO: Add task time logic here
     }
 
     function newTask() {

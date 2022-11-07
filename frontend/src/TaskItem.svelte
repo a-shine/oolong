@@ -11,24 +11,25 @@
         hour: "2-digit",
         minute: "2-digit",
     });
+
+    function updateCompletionStatus(task: Task) {
+        task.complete = !task.complete;
+        saveTask(task);
+    }
 </script>
 
-<div class="grid-container-element">
-    <div on:click={() => (displayTaskEditorModal = true)} id="taskBody">
-        <span>{task.content}</span>
-        <br />
-        {#if task.withTime}
-            <span>{taskTime}</span>
-        {/if}
-    </div>
-    <div>
-        <input
-            type="checkbox"
-            bind:checked={task.complete}
-            on:click={() => saveTask(task)}
-        />
-    </div>
-</div>
+<input
+    type="checkbox"
+    bind:checked={task.complete}
+    on:click={() => updateCompletionStatus(task)}
+/>
+<span on:click={() => (displayTaskEditorModal = true)} id="taskBody">
+    <span>{task.content}</span>
+    <br />
+    {#if task.withTime}
+        <span>{taskTime}</span>
+    {/if}
+</span>
 
 {#if displayTaskEditorModal}
     <TaskEditor bind:displayTaskEditorModal {task} {saveTask} />
@@ -38,11 +39,9 @@
     #taskBody:hover {
         background-color: gray;
     }
-    .grid-container-element {
+    /* .grid-container-element {
         display: grid;
-        grid-template-columns: 9fr 1fr;
-        /* grid-gap: 20px; */
+        grid-template-columns: 4fr 1fr;
         border: 1px solid black;
-        /* width: 50%; */
-    }
+    } */
 </style>

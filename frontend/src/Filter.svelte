@@ -1,11 +1,11 @@
 <script lang="ts">
     export let display;
     export let completed;
-    export let updateDisplay: () => void;
+    export let getTasksToDisplay: () => void;
 </script>
 
 <!-- By date -->
-<select bind:value={display} on:change={updateDisplay}>
+<select bind:value={display} on:change={getTasksToDisplay}>
     <option value="unassigned">Unassigned</option>
     <option value="today">Today</option>
     <option value="upcoming">Upcoming</option>
@@ -18,5 +18,5 @@
     type="checkbox"
     id="completedToggle"
     bind:checked={completed}
-    on:change={updateDisplay}
+    on:change={getTasksToDisplay}
 />
