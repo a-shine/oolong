@@ -8,6 +8,11 @@ services:
       TASKS: "http://tasks:80"
     ports:
       - "8000:80"
+  # test:
+  #   build:
+  #     context: ./newGateway
+  #   ports:
+  #     - "8000:81"
   tasks:
     build:
       context: ./backends/tasks
