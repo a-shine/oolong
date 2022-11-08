@@ -1,4 +1,6 @@
 <script lang="ts">
+    // BUG: Aligning checkbox with text
+
     import TaskEditor from "./TaskEditor.svelte";
     import type { Task } from "./types/task.type";
 
@@ -26,8 +28,9 @@
     />
     <div on:click={() => (displayTaskEditorModal = true)} id="taskBody">
         <span>{task.content}</span>
-        <br />
+
         {#if task.withTime}
+            <br />
             <span><small>{taskTime}</small></span>
         {/if}
     </div>
@@ -41,6 +44,8 @@
     #taskBody {
         cursor: pointer;
         width: 100%;
+        /* BUG: make height static */
+        margin: auto; /*used to vertical align content within */
     }
     #taskBody:hover {
         background-color: gray;
@@ -71,14 +76,17 @@
         background-color: white;
         vertical-align: middle;
         cursor: pointer;
+        /* vertical-align: middle; */
     }
 
     input[type="checkbox"]:checked {
         background-color: black;
     }
 
-    /* hover checkbox */
-    input[type="checkbox"]:hover {
-        background-color: gray;
+    /* BUG: Is this necessary? */
+    /* align checkbox with text */
+    input[type="checkbox"] {
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
     }
 </style>

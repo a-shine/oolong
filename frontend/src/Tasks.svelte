@@ -15,6 +15,8 @@
 
     let displayTaskEditorModal: boolean = false;
 
+    // TODO: Implement ordering logic for the Today and Upcoming todos
+
     // tracking deletion is a bit more complicated - we either need to keep track of all devices and queue the deletion so that each delete is sent to every node
     // or we can implement logical deletion by having a deleted flag on the task (this is not optimal as the database will be evergrowing but may be the easiet solution)
 
@@ -301,6 +303,8 @@
 
     ul {
         list-style-type: none;
+        list-style-position: inside;
+        padding-left: 0;
     }
 
     /* center button at bottom of screen */
@@ -322,5 +326,9 @@
         border: none;
         outline: none;
         cursor: pointer;
+    }
+    /* list item margins */
+    li {
+        margin: 0.5rem;
     }
 </style>

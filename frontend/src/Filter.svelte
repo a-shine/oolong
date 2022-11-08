@@ -13,10 +13,21 @@
 </select>
 
 <!-- Toggle completed -->
-<label for="completedToggle">Toogle completed</label>
-<input
-    type="checkbox"
-    id="completedToggle"
-    bind:checked={completed}
-    on:change={getTasksToDisplay}
-/>
+<span id="completedToggle">
+    <label for="completedToggle">Toogle completed</label>
+    <input
+        type="checkbox"
+        id="completedToggle"
+        bind:checked={completed}
+        on:change={getTasksToDisplay}
+    />
+</span>
+
+<style>
+    /* squared off select */
+
+    /* float right */
+    #completedToggle {
+        float: right;
+    }
+</style>

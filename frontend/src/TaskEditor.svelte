@@ -2,8 +2,9 @@
     import Modal from "./lib/Modal.svelte";
     import type { Task } from "./types/task.type";
 
-    // TODO: Prevent adding undefined task
     // TODO: Allow delete task when task is defined
+    // TODO: Implement task deletion
+    // BUG: Edge case of new tasks that have not been saved to the db yet
 
     export let displayTaskEditorModal: boolean;
     export let task: Task;
@@ -67,6 +68,17 @@
         updateDisplayedTasks(task);
         resetNewTask();
     }
+
+    let disableSaveButton: boolean = false;
+    let disableDelButton: boolean = false;
+    // if newTaskContent is empty, disable save button
+    $: if (newTaskContent === undefined || newTaskContent === "") {
+        disableSaveButton = true;
+        disableDelButton = true;
+    } else {
+        disableSaveButton = false;
+        disableDelButton = false;
+    }
 </script>
 
 <Modal on:close={() => (displayTaskEditorModal = false)}>
@@ -77,7 +89,16 @@
         <input type="date" id="dueOn" bind:value={newTaskDate} min={today} />
         <label for="dueAt">At</label>
         <input type="time" id="dueAt" bind:value={newTaskTime} />
-        <button type="submit">Add</button>
+        <button type="submit" disabled={disableSaveButton}>Save</button>
         <button type="button" on:click={resetNewTask}> Cancel</button>
+        <!-- if newTaskContent is not undefined show delete button -->
+        <button
+            type="button"
+            on:click={resetNewTask}
+            disabled={disableDelButton}
+            style="float: right;"
+        >
+            Delete</button
+        >
     </form>
 </Modal>
