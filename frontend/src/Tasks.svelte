@@ -273,6 +273,7 @@
 <div id="main">
     <Filter bind:display bind:completed {getTasksToDisplay} />
 
+    <!-- TODO: Have the ability to define a custom order in unasigned and today i.e. by default add newer requests at the end but have the ability to move round to re-prioritise -->
     <ul>
         {#each displayTasks as task}
             <li>

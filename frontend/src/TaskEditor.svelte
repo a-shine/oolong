@@ -2,6 +2,8 @@
     import Modal from "./lib/Modal.svelte";
     import type { Task } from "./types/task.type";
 
+    // BUG: Some fields from selected tasks are not copied to the editor
+
     export let displayTaskEditorModal: boolean;
     export let task: Task;
     export let saveTask: (task: Task) => void;
@@ -15,11 +17,13 @@
         newTaskDate = "";
         newTaskTime = "";
     } else {
-        newTaskDate = new Date(task.due).toLocaleDateString();
-        newTaskTime = new Date(task.due).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-        });
+        newTaskDate = new Date(task.due).toISOString().split("T")[0];
+        if (task.withTime) {
+            newTaskTime = new Date(task.due).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+            });
+        }
     }
 
     function resetNewTask() {

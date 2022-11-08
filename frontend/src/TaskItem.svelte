@@ -18,26 +18,38 @@
     }
 </script>
 
-<input
-    type="checkbox"
-    bind:checked={task.complete}
-    on:click={() => updateCompletionStatus(task)}
-/>
-<span on:click={() => (displayTaskEditorModal = true)} id="taskBody">
-    <span>{task.content}</span>
-    <br />
-    {#if task.withTime}
-        <span>{taskTime}</span>
-    {/if}
-</span>
+<div class="container">
+    <input
+        type="checkbox"
+        bind:checked={task.complete}
+        on:click={() => updateCompletionStatus(task)}
+    />
+    <div on:click={() => (displayTaskEditorModal = true)} id="taskBody">
+        <span>{task.content}</span>
+        <br />
+        {#if task.withTime}
+            <span><small>{taskTime}</small></span>
+        {/if}
+    </div>
+</div>
 
 {#if displayTaskEditorModal}
     <TaskEditor bind:displayTaskEditorModal {task} {saveTask} />
 {/if}
 
 <style>
+    #taskBody {
+        cursor: pointer;
+        width: 100%;
+    }
     #taskBody:hover {
         background-color: gray;
+    }
+    .container {
+        display: flex;
+        /* border: 1px solid black; */
+        /* flex-direction: row; */
+        /* align-items: center; */
     }
     /* .grid-container-element {
         display: grid;
