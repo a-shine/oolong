@@ -282,7 +282,7 @@
         {/each}
     </ul>
 
-    <button on:click={() => (displayTaskEditorModal = true)}> New task </button>
+    <button on:click={() => (displayTaskEditorModal = true)}> + </button>
     {#if displayTaskEditorModal}
         <NewTask
             bind:displayTaskEditorModal
@@ -301,5 +301,26 @@
 
     ul {
         list-style-type: none;
+    }
+
+    /* center button at bottom of screen */
+    button {
+        position: absolute;
+        bottom: 2%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    /* large round button */
+    button {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: black;
+        color: white;
+        font-size: 30px;
+        border: none;
+        outline: none;
+        cursor: pointer;
     }
 </style>

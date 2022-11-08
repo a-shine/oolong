@@ -56,4 +56,29 @@
         grid-template-columns: 4fr 1fr;
         border: 1px solid black;
     } */
+
+    /* flat square checkbox */
+    input[type="checkbox"] {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 1px solid black;
+        /* border-radius: 3px; */
+        background-clip: padding-box;
+        background-color: white;
+        vertical-align: middle;
+        cursor: pointer;
+    }
+
+    input[type="checkbox"]:checked {
+        background-color: black;
+    }
+
+    /* hover checkbox */
+    input[type="checkbox"]:hover {
+        background-color: gray;
+    }
 </style>

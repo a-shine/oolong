@@ -2,12 +2,15 @@
     import Modal from "./lib/Modal.svelte";
     import type { Task } from "./types/task.type";
 
-    // BUG: Some fields from selected tasks are not copied to the editor
+    // TODO: Prevent adding undefined task
+    // TODO: Allow delete task when task is defined
 
     export let displayTaskEditorModal: boolean;
     export let task: Task;
     export let saveTask: (task: Task) => void;
     export let updateDisplayedTasks: (task: Task) => void;
+
+    var today = new Date().toISOString().split("T")[0];
 
     let newTaskDate: string;
     let newTaskTime: string;
@@ -71,7 +74,7 @@
         <label for="task">Task</label>
         <input type="text" id="task" bind:value={newTaskContent} autofocus />
         <label for="dueOn">Due on</label>
-        <input type="date" id="dueOn" bind:value={newTaskDate} />
+        <input type="date" id="dueOn" bind:value={newTaskDate} min={today} />
         <label for="dueAt">At</label>
         <input type="time" id="dueAt" bind:value={newTaskTime} />
         <button type="submit">Add</button>
