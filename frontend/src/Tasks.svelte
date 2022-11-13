@@ -86,6 +86,29 @@
     //     updateDisplay(); // better way would be to add the task to the display tasks array if it matches the filter else do nothing and rely on fetching filtered tasks when complete
     // }
 
+    // function sort(tasks: Task[]) {
+    //     return tasks.sort((a, b) => {
+    //         if (a.prioritise && !b.prioritise) {
+    //             return -1;
+    //         } else if (!a.prioritise && b.prioritise) {
+    //             return 1;
+    //         } else {
+    //             return 0;
+    //         }
+    //     });
+    // }
+    function sortByIndex(tasks: Task[]) {
+        return tasks.sort((a, b) => {
+            if (a.index < b.index) {
+                return -1;
+            } else if (a.index > b.index) {
+                return 1;
+            } else {
+                return 0;
+            }
+        });
+    }
+
     function getTasksToDisplay() {
         displayTasks = [];
         const tx = db.transaction("tasks", "readonly");
@@ -107,6 +130,7 @@
                     todayReq.onsuccess = (e) => {
                         let request = e.target;
                         displayTasks = request.result;
+                        displayTasks = sortByIndex(displayTasks);
                     };
                 }
                 break;
@@ -144,6 +168,7 @@
             if (task.due >= today && task.due < tomorrow) {
                 // displayTasks.push(task);
                 displayTasks = [...displayTasks, task];
+                // displayTasks = sortByPrioritise(displayTasks);
             }
         } else if (display == "upcoming") {
             let tomorrow = new Date().setHours(0, 0, 0, 0) + 86400000;
@@ -155,6 +180,16 @@
                 displayTasks = [...displayTasks, task];
             }
         }
+    }
+
+    function saveAndUpdateDisplay(task: Task) {
+        saveTask(task);
+        updateDisplayedTasks(task);
+    }
+
+    function deleteAndUpdateDisplay(task: Task) {
+        deleteTask(task);
+        displayTasks = displayTasks.filter((t) => t.id != task.id);
     }
 
     function getPersistentLastSynced() {
@@ -250,6 +285,12 @@
         // TODO: Do remote as well
     }
 
+    function deleteTask(task: Task): void {
+        const tx = db.transaction("tasks", "readwrite");
+        const taskStore = tx.objectStore("tasks");
+        taskStore.delete(task.id);
+    }
+
     function showNotification() {
         // https://chromestatus.com/feature/5133150283890688
         if ("showTrigger" in Notification.prototype) {
@@ -270,6 +311,10 @@
             }
         });
     }
+
+    function updateDisplayedTask() {
+        displayTasks = [...displayTasks];
+    }
 </script>
 
 <div id="main">
@@ -279,7 +324,11 @@
     <ul>
         {#each displayTasks as task}
             <li>
-                <TaskItem {task} {saveTask} />
+                <TaskItem
+                    bind:task
+                    {saveAndUpdateDisplay}
+                    {deleteAndUpdateDisplay}
+                />
             </li>
         {/each}
     </ul>
@@ -287,9 +336,9 @@
     <button on:click={() => (displayTaskEditorModal = true)}> + </button>
     {#if displayTaskEditorModal}
         <NewTask
+            displayTasksLenghth={displayTasks.length}
             bind:displayTaskEditorModal
-            {saveTask}
-            {updateDisplayedTasks}
+            {saveAndUpdateDisplay}
         />
     {/if}
 </div>

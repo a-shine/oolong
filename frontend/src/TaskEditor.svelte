@@ -5,11 +5,14 @@
     // TODO: Allow delete task when task is defined
     // TODO: Implement task deletion
     // BUG: Edge case of new tasks that have not been saved to the db yet
+    // BUG: When saving pre-existing task it is re-added to the displayed tasts
 
     export let displayTaskEditorModal: boolean;
     export let task: Task;
-    export let saveTask: (task: Task) => void;
-    export let updateDisplayedTasks: (task: Task) => void;
+    export let saveAndUpdateDisplay: (task: Task) => void;
+    export let deleteAndUpdateDisplay: (task: Task) => void;
+    // TODO: just bind the list of displayed tasks to the task editor and then it's easy to save, update, delete
+    // export let displayedTasks: Task[];
 
     var today = new Date().toISOString().split("T")[0];
 
@@ -37,6 +40,7 @@
         displayTaskEditorModal = false;
     }
 
+    // implement reactivity here so that it updates the tast reactively https://svelte.dev/tutorial/updating-arrays-and-objects
     function updateTask() {
         let dueOn;
         if (newTaskDate) {
@@ -60,12 +64,17 @@
         task.content = newTaskContent;
         task.due = dueOn;
         // TODO: Add task time logic here
+        task = task; // add reactivity (BUG: have to do this on the displayed task list as well - that's what triggers the reactivity)
+    }
+
+    function deleteTask() {
+        deleteAndUpdateDisplay(task);
+        resetNewTask();
     }
 
     function newTask() {
         updateTask();
-        saveTask(task);
-        updateDisplayedTasks(task);
+        saveAndUpdateDisplay(task);
         resetNewTask();
     }
 
@@ -94,7 +103,7 @@
         <!-- if newTaskContent is not undefined show delete button -->
         <button
             type="button"
-            on:click={resetNewTask}
+            on:click={deleteTask}
             disabled={disableDelButton}
             style="float: right;"
         >

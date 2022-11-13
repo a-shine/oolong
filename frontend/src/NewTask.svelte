@@ -5,11 +5,15 @@
 
     import TaskEditor from "./TaskEditor.svelte";
 
+    export let displayTasksLenghth;
     export let displayTaskEditorModal: boolean;
-    export let saveTask: (task: Task) => void;
-    export let updateDisplayedTasks: (task: Task) => void;
+    // export let saveTask: (task: Task) => void;
+    // export let updateDisplayedTasks: (task: Task) => void;
+    export let saveAndUpdateDisplay: (task: Task) => void;
     let task: Task;
     task = createTask();
+
+    function deleteAndUpdateDisplay() {}
 
     function createTask(): Task {
         const task: Task = {
@@ -22,6 +26,7 @@
             withTime: undefined,
             reacurence: null,
             complete: false,
+            index: displayTasksLenghth + 1,
         };
         return task;
     }
@@ -30,6 +35,6 @@
 <TaskEditor
     bind:displayTaskEditorModal
     {task}
-    {saveTask}
-    {updateDisplayedTasks}
+    {saveAndUpdateDisplay}
+    {deleteAndUpdateDisplay}
 />

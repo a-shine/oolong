@@ -5,7 +5,10 @@
     import type { Task } from "./types/task.type";
 
     export let task: Task;
-    export let saveTask: (task: Task) => void;
+    // export let saveTask: (task: Task) => void;
+    // export let updateDisplayedTask: () => void;
+    export let saveAndUpdateDisplay: (task: Task) => void;
+    export let deleteAndUpdateDisplay: (task: Task) => void;
 
     let displayTaskEditorModal: boolean = false;
 
@@ -15,9 +18,12 @@
     });
 
     function updateCompletionStatus(task: Task) {
-        task.complete = !task.complete;
-        saveTask(task);
+        saveAndUpdateDisplay(task);
     }
+
+    // function updateDisplayedTask(task: Task) {
+    //     // does nothing;
+    // }
 </script>
 
 <div class="container">
@@ -37,7 +43,12 @@
 </div>
 
 {#if displayTaskEditorModal}
-    <TaskEditor bind:displayTaskEditorModal {task} {saveTask} />
+    <TaskEditor
+        bind:displayTaskEditorModal
+        {task}
+        {saveAndUpdateDisplay}
+        {deleteAndUpdateDisplay}
+    />
 {/if}
 
 <style>

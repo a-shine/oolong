@@ -8,4 +8,5 @@ export type Task = {
     withTime: boolean;
     reacurence: number;
     complete: boolean;
+    index: number;
 }
