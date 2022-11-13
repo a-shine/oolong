@@ -5,8 +5,6 @@
     import type { Task } from "./types/task.type";
 
     export let task: Task;
-    // export let saveTask: (task: Task) => void;
-    // export let updateDisplayedTask: () => void;
     export let updateTaskAndUpdateDisplay: (task: Task) => void;
     export let deleteTaskAndUpdateDisplay: (task: Task) => void;
 
@@ -14,18 +12,9 @@
 
     let displayTaskEditorModal: boolean = false;
 
-    let taskTime = new Date(task.due).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-    });
-
     function updateCompletionStatus(task: Task) {
         updateTaskAndUpdateDisplay(task);
     }
-
-    // function updateDisplayedTask(task: Task) {
-    //     // does nothing;
-    // }
 </script>
 
 <div class="container">
@@ -37,9 +26,17 @@
     <div on:click={() => (displayTaskEditorModal = true)} id="taskBody">
         <span>{task.content}</span>
 
+        <!-- if task with time compute the date in hh:mm format -->
         {#if task.withTime}
             <br />
-            <span><small>{taskTime}</small></span>
+            <span
+                ><small
+                    >{new Date(task.due).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                    })}</small
+                ></span
+            >
         {/if}
     </div>
 </div>

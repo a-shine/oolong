@@ -189,13 +189,33 @@
 
     function updateTaskAndUpdateDisplay(task: Task) {
         saveTask(task);
-        displayTasks = displayTasks.map((t) => {
-            if (t.id == task.id) {
-                return task;
+        // if task passes filter add to display tasks else don't do anything
+        if (display == "all") {
+            displayTasks = [...displayTasks];
+        } else if (display == "today") {
+            let today = new Date().setHours(0, 0, 0, 0);
+            let tomorrow = new Date().setHours(0, 0, 0, 0) + 86400000;
+            if (task.due >= today && task.due < tomorrow) {
+                // displayTasks.push(task);
+                displayTasks = [...displayTasks];
+                // displayTasks = sortByPrioritise(displayTasks);
             } else {
-                return t;
+                displayTasks = displayTasks.filter((t) => t.id != task.id);
             }
-        });
+        } else if (display == "upcoming") {
+            let tomorrow = new Date().setHours(0, 0, 0, 0) + 86400000;
+            if (task.due >= tomorrow) {
+                displayTasks = [...displayTasks];
+            } else {
+                displayTasks = displayTasks.filter((t) => t.id != task.id);
+            }
+        } else if (display == "unassigned") {
+            if (task.due == -1) {
+                displayTasks = [...displayTasks];
+            } else {
+                displayTasks = displayTasks.filter((t) => t.id != task.id);
+            }
+        }
     }
 
     function deleteTaskAndUpdateDisplay(task: Task) {

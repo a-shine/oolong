@@ -118,22 +118,8 @@
                 disabled={disableSaveButton}
                 on:click={saveTask}>Save</button
             >
-            <button
-                type="button"
-                disabled={disableDelButton}
-                on:click={deleteTask}>Delete</button
-            >
+            <button type="button" on:click={deleteTask}>Delete</button>
         {/if}
-        <!-- <button type="submit" disabled={disableSaveButton}>Save</button> -->
         <button type="button" on:click={resetNewTask}> Cancel</button>
-        <!-- if newTaskContent is not undefined show delete button -->
-        <!-- <button
-            type="button"
-            on:click={deleteTask}
-            disabled={disableDelButton}
-            style="float: right;"
-        >
-            Delete</button
-        > -->
     </form>
 </Modal>
