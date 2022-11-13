@@ -97,6 +97,10 @@
     //         }
     //     });
     // }
+    function filterByComplete(tasks: Task[]) {
+        return tasks.filter((task) => task.complete === completed);
+    }
+
     function sortByIndex(tasks: Task[]) {
         return tasks.sort((a, b) => {
             if (a.index < b.index) {
@@ -352,17 +356,33 @@
     <Filter bind:display bind:completed {getTasksToDisplay} />
 
     <!-- TODO: Have the ability to define a custom order in unasigned and today i.e. by default add newer requests at the end but have the ability to move round to re-prioritise -->
-    <ul>
-        {#each displayTasks as task}
-            <li>
-                <TaskItem
-                    bind:task
-                    {updateTaskAndUpdateDisplay}
-                    {deleteTaskAndUpdateDisplay}
-                />
-            </li>
-        {/each}
-    </ul>
+    <!-- if no tasks to display -->
+    {#if displayTasks.length == 0 && display == "today"}
+        <div class="no-tasks">
+            <!-- <h1>No tasks to display</h1> -->
+            <!-- <p>
+                You can add tasks by clicking the <span class="add-task">+</span
+                > button in the bottom right corner.
+            </p> -->
+
+            <img src="Oolongv1.png" alt="" width="300px" />
+            <p>Yay! You're done for the day - enjoy :)</p>
+        </div>
+    {:else}
+        <div class="tasks">
+            <ul>
+                {#each displayTasks as task}
+                    <li>
+                        <TaskItem
+                            bind:task
+                            {updateTaskAndUpdateDisplay}
+                            {deleteTaskAndUpdateDisplay}
+                        />
+                    </li>
+                {/each}
+            </ul>
+        </div>
+    {/if}
 
     <button on:click={() => (displayTaskEditorModal = true)}> + </button>
     {#if displayTaskEditorModal}
@@ -375,6 +395,14 @@
 </div>
 
 <style>
+    /* center horizontally and vertically */
+    .no-tasks {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+    }
     /* center content with max width */
     #main {
         max-width: 800px;

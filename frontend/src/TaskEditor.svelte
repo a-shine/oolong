@@ -15,6 +15,9 @@
     export let deleteTaskAndUpdateDisplay: (task: Task) => void;
     // TODO: just bind the list of displayed tasks to the task editor and then it's easy to save, update, delete
 
+    let addDate: boolean = false;
+    let addTime: boolean = false;
+
     var today = new Date().toISOString().split("T")[0];
 
     let newTaskDate: string;
@@ -95,17 +98,81 @@
         disableSaveButton = false;
         disableDelButton = false;
     }
+
+    function setToday() {
+        addDate = true;
+        newTaskDate = today;
+    }
+
+    // Listen for submit task on enter
+    function handleKeyDown(event: KeyboardEvent) {
+        if (event.key === "Enter") {
+            if (newTask) {
+                createTask();
+                // close modal
+            } else {
+                saveTask();
+                // close modal
+            }
+            displayTaskEditorModal = false;
+        }
+    }
 </script>
 
+<svelte:window on:keydown={handleKeyDown} />;
+
 <Modal on:close={() => (displayTaskEditorModal = false)}>
-    <form autocomplete="off">
-        <label for="task">Task</label>
-        <input type="text" id="task" bind:value={newTaskContent} autofocus />
-        <label for="dueOn">Due on</label>
-        <input type="date" id="dueOn" bind:value={newTaskDate} min={today} />
-        <label for="dueAt">At</label>
-        <input type="time" id="dueAt" bind:value={newTaskTime} />
-        <!-- if newTask -->
+    <!-- <form autocomplete="off"> -->
+    <div style="width: 100%;">
+        <input
+            style="width: 100%;"
+            type="text"
+            id="task"
+            bind:value={newTaskContent}
+            autofocus
+            placeholder="Task"
+        />
+    </div>
+
+    <div>
+        {#if !addDate}
+            <button on:click={() => (addDate = !addDate)}>Add due date</button>
+            (
+            <button on:click={setToday}>Today</button>
+            <button>Tomorrow</button>
+            <button>This weekend</button>)
+        {:else}
+            <label for="date">Due on</label>
+            <input type="date" id="date" bind:value={newTaskDate} min={today} />
+            <button on:click={() => (addDate = !addDate)}
+                >Remove due date</button
+            >
+        {/if}
+    </div>
+
+    <div>
+        {#if !addTime}
+            <button on:click={() => (addTime = !addTime)}>Add time due</button>
+            (
+            <button>Morning</button>
+            <button>Afternoon</button>
+            <button>Evening</button>)
+        {:else}
+            <label for="time">At</label>
+            <input type="time" id="time" bind:value={newTaskTime} />
+            <button on:click={() => (addTime = !addTime)}
+                >Remove time due</button
+            >
+        {/if}
+    </div>
+    <!-- add time -->
+
+    <!-- <label for="dueOn">Due on</label>
+    <input type="date" id="dueOn" bind:value={newTaskDate} min={today} /> -->
+    <!-- <label for="dueAt">At</label> -->
+    <!-- <input type="time" id="dueAt" bind:value={newTaskTime} /> -->
+    <!-- if newTask -->
+    <div>
         {#if newTask}
             <button
                 type="button"
@@ -121,5 +188,5 @@
             <button type="button" on:click={deleteTask}>Delete</button>
         {/if}
         <button type="button" on:click={resetNewTask}> Cancel</button>
-    </form>
+    </div>
 </Modal>
