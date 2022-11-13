@@ -7,8 +7,10 @@
     export let task: Task;
     // export let saveTask: (task: Task) => void;
     // export let updateDisplayedTask: () => void;
-    export let saveAndUpdateDisplay: (task: Task) => void;
-    export let deleteAndUpdateDisplay: (task: Task) => void;
+    export let updateTaskAndUpdateDisplay: (task: Task) => void;
+    export let deleteTaskAndUpdateDisplay: (task: Task) => void;
+
+    function createTaskAndUpdateDisplay(task: Task) {}
 
     let displayTaskEditorModal: boolean = false;
 
@@ -18,7 +20,7 @@
     });
 
     function updateCompletionStatus(task: Task) {
-        saveAndUpdateDisplay(task);
+        updateTaskAndUpdateDisplay(task);
     }
 
     // function updateDisplayedTask(task: Task) {
@@ -46,8 +48,10 @@
     <TaskEditor
         bind:displayTaskEditorModal
         {task}
-        {saveAndUpdateDisplay}
-        {deleteAndUpdateDisplay}
+        newTask={false}
+        {createTaskAndUpdateDisplay}
+        {updateTaskAndUpdateDisplay}
+        {deleteTaskAndUpdateDisplay}
     />
 {/if}
 

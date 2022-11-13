@@ -9,10 +9,11 @@
 
     export let displayTaskEditorModal: boolean;
     export let task: Task;
-    export let saveAndUpdateDisplay: (task: Task) => void;
-    export let deleteAndUpdateDisplay: (task: Task) => void;
+    export let newTask: boolean;
+    export let createTaskAndUpdateDisplay: (task: Task) => void;
+    export let updateTaskAndUpdateDisplay: (task: Task) => void;
+    export let deleteTaskAndUpdateDisplay: (task: Task) => void;
     // TODO: just bind the list of displayed tasks to the task editor and then it's easy to save, update, delete
-    // export let displayedTasks: Task[];
 
     var today = new Date().toISOString().split("T")[0];
 
@@ -68,13 +69,19 @@
     }
 
     function deleteTask() {
-        deleteAndUpdateDisplay(task);
+        deleteTaskAndUpdateDisplay(task);
         resetNewTask();
     }
 
-    function newTask() {
+    function createTask() {
         updateTask();
-        saveAndUpdateDisplay(task);
+        createTaskAndUpdateDisplay(task);
+        resetNewTask();
+    }
+
+    function saveTask() {
+        updateTask();
+        updateTaskAndUpdateDisplay(task);
         resetNewTask();
     }
 
@@ -91,23 +98,42 @@
 </script>
 
 <Modal on:close={() => (displayTaskEditorModal = false)}>
-    <form on:submit|preventDefault={newTask} autocomplete="off">
+    <form autocomplete="off">
         <label for="task">Task</label>
         <input type="text" id="task" bind:value={newTaskContent} autofocus />
         <label for="dueOn">Due on</label>
         <input type="date" id="dueOn" bind:value={newTaskDate} min={today} />
         <label for="dueAt">At</label>
         <input type="time" id="dueAt" bind:value={newTaskTime} />
-        <button type="submit" disabled={disableSaveButton}>Save</button>
+        <!-- if newTask -->
+        {#if newTask}
+            <button
+                type="button"
+                disabled={disableSaveButton}
+                on:click={createTask}>Create</button
+            >
+        {:else}
+            <button
+                type="button"
+                disabled={disableSaveButton}
+                on:click={saveTask}>Save</button
+            >
+            <button
+                type="button"
+                disabled={disableDelButton}
+                on:click={deleteTask}>Delete</button
+            >
+        {/if}
+        <!-- <button type="submit" disabled={disableSaveButton}>Save</button> -->
         <button type="button" on:click={resetNewTask}> Cancel</button>
         <!-- if newTaskContent is not undefined show delete button -->
-        <button
+        <!-- <button
             type="button"
             on:click={deleteTask}
             disabled={disableDelButton}
             style="float: right;"
         >
             Delete</button
-        >
+        > -->
     </form>
 </Modal>

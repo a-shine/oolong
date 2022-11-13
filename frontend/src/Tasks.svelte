@@ -182,12 +182,23 @@
         }
     }
 
-    function saveAndUpdateDisplay(task: Task) {
+    function createTaskAndUpdateDisplay(task: Task) {
         saveTask(task);
         updateDisplayedTasks(task);
     }
 
-    function deleteAndUpdateDisplay(task: Task) {
+    function updateTaskAndUpdateDisplay(task: Task) {
+        saveTask(task);
+        displayTasks = displayTasks.map((t) => {
+            if (t.id == task.id) {
+                return task;
+            } else {
+                return t;
+            }
+        });
+    }
+
+    function deleteTaskAndUpdateDisplay(task: Task) {
         deleteTask(task);
         displayTasks = displayTasks.filter((t) => t.id != task.id);
     }
@@ -326,8 +337,8 @@
             <li>
                 <TaskItem
                     bind:task
-                    {saveAndUpdateDisplay}
-                    {deleteAndUpdateDisplay}
+                    {updateTaskAndUpdateDisplay}
+                    {deleteTaskAndUpdateDisplay}
                 />
             </li>
         {/each}
@@ -338,7 +349,7 @@
         <NewTask
             displayTasksLenghth={displayTasks.length}
             bind:displayTaskEditorModal
-            {saveAndUpdateDisplay}
+            {createTaskAndUpdateDisplay}
         />
     {/if}
 </div>

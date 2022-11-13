@@ -7,13 +7,13 @@
 
     export let displayTasksLenghth;
     export let displayTaskEditorModal: boolean;
-    // export let saveTask: (task: Task) => void;
-    // export let updateDisplayedTasks: (task: Task) => void;
-    export let saveAndUpdateDisplay: (task: Task) => void;
+    export let createTaskAndUpdateDisplay: (task: Task) => void;
     let task: Task;
+    let newTask: boolean = true;
     task = createTask();
 
-    function deleteAndUpdateDisplay() {}
+    function updateTaskAndUpdateDisplay(task: Task) {}
+    function deleteTaskAndUpdateDisplay() {}
 
     function createTask(): Task {
         const task: Task = {
@@ -35,6 +35,8 @@
 <TaskEditor
     bind:displayTaskEditorModal
     {task}
-    {saveAndUpdateDisplay}
-    {deleteAndUpdateDisplay}
+    {newTask}
+    {createTaskAndUpdateDisplay}
+    {updateTaskAndUpdateDisplay}
+    {deleteTaskAndUpdateDisplay}
 />
