@@ -2,6 +2,13 @@
     export let display;
     export let completed;
     export let getTasksToDisplay: () => void;
+    export let sortCompleted: () => void;
+
+    function completedFilter() {
+        completed = !completed;
+        sortCompleted();
+        // getTasksToDisplay();
+    }
 </script>
 
 <!-- By date -->
@@ -19,7 +26,7 @@
         type="checkbox"
         id="completedToggle"
         bind:checked={completed}
-        on:change={getTasksToDisplay}
+        on:change={sortCompleted}
     />
 </span>
 

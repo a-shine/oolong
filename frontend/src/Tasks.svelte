@@ -97,8 +97,11 @@
     //         }
     //     });
     // }
-    function filterByComplete(tasks: Task[]) {
-        return tasks.filter((task) => task.complete === completed);
+
+    function sortCompleted() {
+        displayTasks = displayTasks.filter((task) => {
+            return task.complete === completed;
+        });
     }
 
     function sortByIndex(tasks: Task[]) {
@@ -353,7 +356,7 @@
 </script>
 
 <div id="main">
-    <Filter bind:display bind:completed {getTasksToDisplay} />
+    <Filter bind:display bind:completed {getTasksToDisplay} {sortCompleted} />
 
     <!-- TODO: Have the ability to define a custom order in unasigned and today i.e. by default add newer requests at the end but have the ability to move round to re-prioritise -->
     <!-- if no tasks to display -->
