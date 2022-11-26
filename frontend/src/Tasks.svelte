@@ -33,6 +33,12 @@
         if (!db.objectStoreNames.contains("tasks")) {
             const taskStore = db.createObjectStore("tasks", { keyPath: "id" });
             taskStore.createIndex("due", "due", { unique: false });
+            taskStore.createIndex("due, complete", ["due", "complete"]);
+            taskStore.createIndex("due, complete, index", [
+                "due",
+                "complete",
+                "index",
+            ]);
         }
     };
     dbrequest.onerror = (e) => {
@@ -373,17 +379,13 @@
         </div>
     {:else}
         <div class="tasks">
-            <ul>
-                {#each displayTasks as task}
-                    <li>
-                        <TaskItem
-                            bind:task
-                            {updateTaskAndUpdateDisplay}
-                            {deleteTaskAndUpdateDisplay}
-                        />
-                    </li>
-                {/each}
-            </ul>
+            {#each displayTasks as task}
+                <TaskItem
+                    bind:task
+                    {updateTaskAndUpdateDisplay}
+                    {deleteTaskAndUpdateDisplay}
+                />
+            {/each}
         </div>
     {/if}
 
@@ -412,12 +414,6 @@
         margin: 0 auto;
     }
 
-    ul {
-        list-style-type: none;
-        list-style-position: inside;
-        padding-left: 0;
-    }
-
     /* center button at bottom of screen */
     button {
         position: absolute;
@@ -437,9 +433,5 @@
         border: none;
         outline: none;
         cursor: pointer;
-    }
-    /* list item margins */
-    li {
-        margin: 0.5rem;
     }
 </style>

@@ -1,0 +1,47 @@
+:root {
+    /* https://coolors.co/6c8c3e-000501-ffffff-717c89-4d7298 */
+    --maximum-green: #6c8c3eff;
+    --black: #000501ff;
+    --white: #ffffffff;
+    --slate-gray: #717c89ff;
+    --queen-blue: #4d7298ff;
+}
+
+body {
+    font-family: 'Noto', sans-serif;
+}
+
+/* square brutalist buttons */
+button {
+    border-radius: 0;
+    background: white;
+    color: black;
+    cursor: pointer;
+    border: 2px solid black;
+}
+
+/* button hover avocado green */
+button:hover {
+    border-color: var(--maximum-green);
+}
+
+/* square text input with solid border */
+input[type=text] {
+    border-radius: 0;
+    background: white;
+    color: black;
+    border: 2px solid black;
+    outline: none;
+}
+
+input[type=text]:focus {
+    border-color: var(--maximum-green);
+}
+
+select {
+    border-radius: 0;
+    background: white;
+    color: black;
+    border: 2px solid black;
+    outline: none;
+}

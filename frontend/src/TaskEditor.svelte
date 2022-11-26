@@ -123,11 +123,10 @@
 
 <Modal on:close={() => (displayTaskEditorModal = false)}>
     <!-- <form autocomplete="off"> -->
-    <div style="width: 100%;">
+    <div style="width: 100%; margin-bottom: 1rem">
         <input
-            style="width: 100%;"
+            id="task-input"
             type="text"
-            id="task"
             bind:value={newTaskContent}
             autofocus
             placeholder="Task"
@@ -136,7 +135,9 @@
 
     <div>
         {#if !addDate}
-            <button on:click={() => (addDate = !addDate)}>Add due date</button>
+            <button on:click={() => (addDate = !addDate)}
+                ><i class="ri-calendar-line" /></button
+            >
             (
             <button on:click={setToday}>Today</button>
             <button>Tomorrow</button>
@@ -145,7 +146,7 @@
             <label for="date">Due on</label>
             <input type="date" id="date" bind:value={newTaskDate} min={today} />
             <button on:click={() => (addDate = !addDate)}
-                >Remove due date</button
+                ><i class="ri-close-line" /></button
             >
         {/if}
     </div>
@@ -190,3 +191,12 @@
         <button type="button" on:click={resetNewTask}> Cancel</button>
     </div>
 </Modal>
+
+<style>
+    /* large input */
+    #task-input {
+        width: 100%;
+        font-size: 1rem;
+        padding: 0.25rem;
+    }
+</style>
