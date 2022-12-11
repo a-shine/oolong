@@ -4,15 +4,8 @@ services:
   gateway:
     build:
       context: ./gateway
-    environment:
-      TASKS: "http://tasks:80"
     ports:
-      - "8000:80"
-  # test:
-  #   build:
-  #     context: ./newGateway
-  #   ports:
-  #     - "8000:81"
+      - 8000:8000
   tasks:
     build:
       context: ./backends/tasks
@@ -23,7 +16,7 @@ services:
       POSTGRES_USER: dev
       POSTGRES_PASSWORD: password
     ports:
-      - 8001:80
+      - 8001:8000
   db:
     image: postgres
     environment:
