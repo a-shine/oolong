@@ -23,6 +23,7 @@
         bind:checked={task.complete}
         on:click={() => updateCompletionStatus(task)}
     />
+    <!-- <div id="taskButton"> -->
     <div on:click={() => (displayTaskEditorModal = true)} id="taskBody">
         <span>{task.content}</span>
 
@@ -39,6 +40,7 @@
             >
         {/if}
     </div>
+    <!-- </div> -->
 </div>
 
 {#if displayTaskEditorModal}
@@ -53,17 +55,31 @@
 {/if}
 
 <style>
+    /* constant height */
+    .container {
+        height: 3em;
+        border: 1px solid black;
+    }
+
     #taskBody {
         cursor: pointer;
+        /* text-align: left; */
         width: 100%;
+        /* height: 100%; */
         /* BUG: make height static */
         margin: auto; /*used to vertical align content within */
     }
-    #taskBody:hover {
+    #taskButton {
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+    }
+    .container:hover {
         background-color: gray;
     }
     .container {
         display: flex;
+        align-items: center;
         /* border: 1px solid black; */
         /* flex-direction: row; */
         /* align-items: center; */
