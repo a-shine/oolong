@@ -1,6 +1,4 @@
 <script lang="ts">
-    // BUG: Aligning checkbox with text
-
     import TaskEditor from "./TaskEditor.svelte";
     import type { Task } from "./types/task.type";
 
@@ -13,18 +11,19 @@
     let displayTaskEditorModal: boolean = false;
 
     function updateCompletionStatus(task: Task) {
+        task.complete = !task.complete;
         updateTaskAndUpdateDisplay(task);
     }
 </script>
 
-<div class="container">
+<div class="container" on:click|self={() => (displayTaskEditorModal = true)}>
     <input
         type="checkbox"
         bind:checked={task.complete}
         on:click={() => updateCompletionStatus(task)}
     />
     <!-- <div id="taskButton"> -->
-    <div on:click={() => (displayTaskEditorModal = true)} id="taskBody">
+    <div id="taskBody" on:click={() => (displayTaskEditorModal = true)}>
         <span>{task.content}</span>
 
         <!-- if task with time compute the date in hh:mm format -->
@@ -57,17 +56,16 @@
 <style>
     /* constant height */
     .container {
+        display: flex;
+        align-items: center;
         height: 3em;
         border: 1px solid black;
+        cursor: pointer;
     }
 
     #taskBody {
         cursor: pointer;
-        /* text-align: left; */
         width: 100%;
-        /* height: 100%; */
-        /* BUG: make height static */
-        margin: auto; /*used to vertical align content within */
     }
     #taskButton {
         cursor: pointer;
@@ -77,19 +75,6 @@
     .container:hover {
         background-color: gray;
     }
-    .container {
-        display: flex;
-        align-items: center;
-        /* border: 1px solid black; */
-        /* flex-direction: row; */
-        /* align-items: center; */
-    }
-    /* .grid-container-element {
-        display: grid;
-        grid-template-columns: 4fr 1fr;
-        border: 1px solid black;
-    } */
-
     /* flat square checkbox */
     input[type="checkbox"] {
         -webkit-appearance: none;
@@ -109,12 +94,5 @@
 
     input[type="checkbox"]:checked {
         background-color: black;
-    }
-
-    /* BUG: Is this necessary? */
-    /* align checkbox with text */
-    input[type="checkbox"] {
-        margin-top: 0.5em;
-        margin-bottom: 0.5em;
     }
 </style>

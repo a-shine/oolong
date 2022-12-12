@@ -11,7 +11,7 @@
 
     let displayTasks: Task[] = [];
 
-    let db;
+    // let db;
 
     let displayTaskEditorModal: boolean = false;
 
@@ -22,14 +22,16 @@
 
     const dbrequest = window.indexedDB.open("tasks");
 
+    let db: IDBDatabase | null = null;
+
     dbrequest.onsuccess = (e) => {
-        db = e.target.result;
+        db = (e.target as IDBOpenDBRequest).result;
         syncWithRemote();
         getTasksToDisplay();
     };
     dbrequest.onupgradeneeded = (e) => {
         console.log("upgrading db");
-        db = e.target.result;
+        db = (e.target as IDBOpenDBRequest).result;
         if (!db.objectStoreNames.contains("tasks")) {
             const taskStore = db.createObjectStore("tasks", { keyPath: "id" });
             taskStore.createIndex("due", "due", { unique: false });
@@ -42,7 +44,7 @@
         }
     };
     dbrequest.onerror = (e) => {
-        console.log(e.target.error);
+        console.log((e.target as IDBOpenDBRequest).error);
     };
 
     function addTaskLocal(task: Task) {
@@ -52,7 +54,7 @@
             .add(task);
 
         req.onerror = (e) => {
-            console.log(e.target.errorCode);
+            // console.log(e.target.errorCode);
         };
     }
 
