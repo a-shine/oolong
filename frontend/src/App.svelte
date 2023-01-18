@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import Tasks from "./Tasks.svelte";
+  import TopBar from "./TopBar.svelte";
 
   let onlineFlag: boolean;
 
@@ -38,6 +39,7 @@
 </script>
 
 <main>
+  <TopBar />
   <!-- {#if onlineFlag}
     <span>online</span>
   {:else}

@@ -364,18 +364,12 @@
 </script>
 
 <div id="main">
-    <Filter bind:display bind:completed {getTasksToDisplay} {sortCompleted} />
+    <!-- <Filter bind:display bind:completed {getTasksToDisplay} {sortCompleted} /> -->
 
     <!-- TODO: Have the ability to define a custom order in unasigned and today i.e. by default add newer requests at the end but have the ability to move round to re-prioritise -->
     <!-- if no tasks to display -->
     {#if displayTasks.length == 0 && display == "today"}
         <div class="no-tasks">
-            <!-- <h1>No tasks to display</h1> -->
-            <!-- <p>
-                You can add tasks by clicking the <span class="add-task">+</span
-                > button in the bottom right corner.
-            </p> -->
-
             <img src="Oolongv1.png" alt="" width="300px" />
             <p>Yay! You're done for the day - enjoy :)</p>
         </div>
