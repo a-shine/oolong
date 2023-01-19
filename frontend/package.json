@@ -21,6 +21,7 @@
     "vite-plugin-pwa": "^0.13.1"
   },
   "dependencies": {
+    "svelte-spa-router": "^3.3.0",
     "uuid": "^9.0.0"
   }
 }

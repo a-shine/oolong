@@ -1,10 +1,15 @@
 <script lang="ts">
     import TaskItem from "./TaskItem.svelte";
+    import { fly } from "svelte/transition";
+    import Modal from "./lib/Modal.svelte";
 
     import type { Task } from "./types/task.type";
 
     import NewTask from "./NewTask.svelte";
     import Filter from "./Filter.svelte";
+    import NewTaskTest from "./NewTaskTest.svelte";
+
+    // let taskEditorDialog: boolean = false;
 
     let display = "today";
     let completed = false;
@@ -385,13 +390,25 @@
         </div>
     {/if}
 
+    <button
+        on:click={() => {
+            displayTaskEditorModal = true;
+        }}>+</button
+    >
+
+    <!-- {#if displayTaskEditorModal}
+        <div transition:fly={{ y: 100, duration: 100 }}><NewTaskTest /></div>
+    {/if} -->
     <button on:click={() => (displayTaskEditorModal = true)}> + </button>
     {#if displayTaskEditorModal}
-        <NewTask
+        <!-- <NewTask
             displayTasksLenghth={displayTasks.length}
             bind:displayTaskEditorModal
             {createTaskAndUpdateDisplay}
-        />
+        /> -->
+        <Modal on:close={() => (displayTaskEditorModal = false)}>
+            <NewTaskTest />
+        </Modal>
     {/if}
 </div>
 

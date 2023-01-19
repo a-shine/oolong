@@ -1,22 +1,50 @@
-/* Avoiding setting color directly in component css, instead use classes */
 :root {
-    --primary: hsl(138.86 15.982% 42.941%);
-    --primary-100: hsl(138.86 15.982% 52.941%);
-    --secondary: hsl(96.923 37.143% 93.137%);
-    --accent: hsl(0 67.742% 93.922%);
-    --neutral: hsl(0 3.9106% 35.098%);
-    --base-100: hsl(0 4.3478% 90.98%);
-    --base-200: hsl(0 4.3478% 80.98%);
-    --base-300: hsl(0 4.3478% 70.98%);
-    --info: hsl(198 93% 60%);
-    --success: hsl(158 100% 10%);
-    --warning: hsl(43 100% 11%);
-    --error: #000000;
+    /* Avoiding setting color directly in component css, instead use classes */
+
+    /* Primary color and darker focus color */
+    --primary-color: hsl(138.86 15.982% 42.941%);
+    --primary-focus-color: hsl(138.86 15.982% 34.353%);
+    --primary-content-color: hsl(138.86 100% 88.588%);
+
+    /* Secondary color */
+    --secondary-color: hsl(96.923 37.143% 93.137%);
+    --secondary-focus-color: hsl(96.923 37.143% 74.51%);
+    --secondary-content-color: hsl(996 32.468% 15.098%);
+
+    /* Accent color  */
+    --accent-color: hsl(0 67.742% 93.922%);
+    --accent-focus-color: hsl(0 67.742% 75.137%);
+    --accent-content-color: hsl(0 21.951% 16.078%);
+
+    /* Neutral color */
+    --neutral-color: hsl(0 3.9106% 35.098%);
+    --neutral-focus-color: hsl(0 3.9106% 28.078%);
+    --neutral-content-color: hsl(0 4.3478% 90.98%);
+
+    /* Base colors */
+    --base-100-color: hsl(0 4.3478% 90.98%);
+    --base-200-color: hsl(0 4.3478% 81.882%);
+    --base-300-color: hsl(0 4.3478% 73.694%);
+
+    /* Special colors */
+    --info-color: hsl(198 93% 60%);
+    --info-content-color: hsl(198 100% 12%);
+    --success-color: hsl(158 64% 52%);
+    --success-content-color: hsl(158 100% 10%);
+    --warning-color: hsl(43 96% 56%);
+    --warning-content-color: hsl(43 100% 11%);
+    --error: hsl(0 91% 71%);
+    --error-content-color: hsl(0 100% 14%);
 }
 
 
 .bg-primary {
-    background-color: var(--primary);
+    background-color: var(--primary-color);
+    color: var(--primary-content-color);
+}
+
+.bg-primary:focus {
+    background-color: var(--primary-focus-color);
 }
 
 * {
@@ -26,12 +54,14 @@
 }
 
 body {
-    /* remove default browser margins */
+    /* Remove default browser margins */
     margin: 0;
 
     /* Add Noto font */
     font-family: 'Noto Sans JP', sans-serif;
-    background-color: var(--base-100);
+
+    /* Set background color */
+    background-color: var(--base-100-color);
 
 
 }
@@ -58,7 +88,7 @@ button:hover {
 /* square text input with solid border */
 input[type=text] {
     border-radius: 0;
-    background: white;
+    background: transparent;
     color: black;
     border: 2px solid black;
     outline: none;

@@ -1,7 +1,11 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import NewTask from "./NewTask.svelte";
+  import NotFound from "./NotFound.svelte";
   import Tasks from "./Tasks.svelte";
   import TopBar from "./TopBar.svelte";
+  import Router from "svelte-spa-router";
+  import NewTaskTest from "./NewTaskTest.svelte";
 
   let onlineFlag: boolean;
 
@@ -27,6 +31,16 @@
     }
   }
 
+  const routes = {
+    // Exact path
+    "/tasks": Tasks,
+    "/task-editor": NewTaskTest,
+
+    // Catch-all
+    // This is optional, but if present it must be the last
+    "*": NotFound,
+  };
+
   onMount(() => {
     if (navigator.onLine) {
       onlineFlag = true;
@@ -45,5 +59,6 @@
   {:else}
     <span>offline</span>
   {/if} -->
-  <Tasks />
+  <Router {routes} />
+  <!-- <Tasks /> -->
 </main>
