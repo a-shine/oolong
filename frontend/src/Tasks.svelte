@@ -35,20 +35,18 @@
     let bound;
     switch (scope) {
       case "unassigned":
-        bound = [-1, 0, 0];
         if (showCompleted) {
-          let lwr = [-1, 0, 0];
-          let upr = [-1, 0, 1];
-          let rangelwe = IDBKeyRange.bound(lwr, lwr);
-          let rangeupr = IDBKeyRange.bound(upr, upr);
-          let tasks = await index.getAll(rangelwe);
-          return tasks.concat(await index.getAll(rangeupr));
+          let incomplete = [-1, 0, 0];
+          let completed = [-1, 0, 1];
+          let incompleteRange = IDBKeyRange.bound(incomplete, incomplete);
+          let completedRange = IDBKeyRange.bound(completed, completed);
+          let tasks = await index.getAll(incompleteRange);
+          return tasks.concat(await index.getAll(completedRange));
         } else {
+          bound = [-1, 0, 0];
           range = IDBKeyRange.bound(bound, bound);
+          return await index.getAll(range);
         }
-        console.log(bound);
-        range = IDBKeyRange.bound(bound, bound);
-        return await index.getAll(range);
       case "today":
         let today = new Date().setHours(0, 0, 0, 0);
         bound = [today, 0, 1];
@@ -491,15 +489,16 @@
   }
 </script>
 
+<TasksTopBar
+  on:changeScope={(e) => {
+    updateDisplayedTasks1(e.detail[0], e.detail[1]);
+  }}
+  on:toggleCompleted={(e) => {
+    updateDisplayedTasks1(e.detail[0], e.detail[1]);
+  }}
+/>
+
 <div id="main">
-  <TasksTopBar
-    on:changeScope={(e) => {
-      updateDisplayedTasks1(e.detail[0], e.detail[1]);
-    }}
-    on:toggleCompleted={(e) => {
-      updateDisplayedTasks1(e.detail[0], e.detail[1]);
-    }}
-  />
   <!-- <Filter bind:display bind:completed {getTasksToDisplay} {sortCompleted} /> -->
 
   <!-- TODO: Have the ability to define a custom order in unasigned and today i.e. by default add newer requests at the end but have the ability to move round to re-prioritise -->
