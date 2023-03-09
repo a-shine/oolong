@@ -1,15 +1,57 @@
 <script lang="ts">
     import { slide } from "svelte/transition";
 
+    import { createEventDispatcher } from "svelte";
+    import Modal from "./lib/Modal.svelte";
+
+    const dispatch = createEventDispatcher();
+    const close = () => dispatch("close");
+
+    let taskContent: string;
+
+    let safeExitModal = false;
+
     function newTask() {
         const task = document.getElementById("task") as HTMLInputElement;
         const taskText = task.value;
     }
 
     let addDateDialog = false;
+
+    function safeClose() {
+        if (taskContent === undefined || taskContent === "") {
+            close();
+        } else {
+            safeExitModal = true;
+        }
+    }
 </script>
 
+{#if safeExitModal}
+    <Modal>
+        Are you sure you want to exit?
+        <button
+            on:click={() => {
+                safeExitModal = false;
+            }}>No</button
+        >
+        <button
+            on:click={() => {
+                safeExitModal = false;
+                close();
+            }}>Yes</button
+        >
+    </Modal>
+{/if}
+
 <form id="task-editor" on:submit|preventDefault={newTask}>
+    <button
+        type="button"
+        id="task-cancel"
+        on:click={() => {
+            safeClose();
+        }}>&#x2715;</button
+    >
     <input
         type="text"
         id="task"
@@ -17,6 +59,7 @@
         placeholder="Task"
         autofocus
         autocomplete="off"
+        bind:value={taskContent}
     />
     <div id="task-params">
         {#if !addDateDialog}
@@ -68,6 +111,10 @@
     }
 
     #task-add {
+        float: right;
+    }
+
+    #task-cancel {
         float: right;
     }
 </style>

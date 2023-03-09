@@ -1,6 +1,0 @@
-gateway:
-  listenAddr: :8000
-  routes:
-    - name: Tasks
-      context: /tasks
-      target: http://tasks:8000

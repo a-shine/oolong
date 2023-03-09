@@ -3,9 +3,10 @@
   import NewTask from "./NewTask.svelte";
   import NotFound from "./NotFound.svelte";
   import Tasks from "./Tasks.svelte";
-  import TopBar from "./TopBar.svelte";
-  import Router from "svelte-spa-router";
+  import Router, { location, replace } from "svelte-spa-router";
   import NewTaskTest from "./NewTaskTest.svelte";
+  import Register from "./Register.svelte";
+  import Login from "./Login.svelte";
 
   let onlineFlag: boolean;
 
@@ -33,11 +34,13 @@
 
   const routes = {
     // Exact path
-    "/tasks": Tasks,
-    "/task-editor": NewTaskTest,
+    "/": Tasks,
+
+    "/register": Register,
+    "/login": Login,
 
     // Catch-all
-    // This is optional, but if present it must be the last
+    // Optional, but if present must be the last
     "*": NotFound,
   };
 
@@ -53,12 +56,8 @@
 </script>
 
 <main>
-  <TopBar />
-  <!-- {#if onlineFlag}
-    <span>online</span>
-  {:else}
-    <span>offline</span>
+  <!-- {#if $location !== "/register"}
+    <TopBar />
   {/if} -->
   <Router {routes} />
-  <!-- <Tasks /> -->
 </main>

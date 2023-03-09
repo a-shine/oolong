@@ -24,7 +24,7 @@
             updatedAt: Date.now(),
             due: undefined,
             withTime: undefined,
-            reacurence: null,
+            recurrence: null,
             complete: false,
             index: displayTasksLenghth + 1,
         };

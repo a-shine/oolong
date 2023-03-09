@@ -8,11 +8,7 @@
     let modal;
 </script>
 
-<div
-    class="modal-background"
-    transition:fade={{ duration: 200 }}
-    on:click={close}
-/>
+<div class="modal-background" transition:fade={{ duration: 200 }} />
 
 <div
     class="modal"
@@ -44,6 +40,7 @@
         overflow: auto;
         transform: translate(-50%, -50%);
         padding: 1em;
-        border-radius: 0.2em;
+        /* background: var(--base-100-color); */
+        /* border: 3px solid var(--primary-focus-color); */
     }
 </style>

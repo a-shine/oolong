@@ -68,11 +68,10 @@ body {
 
 /* square brutalist buttons */
 button {
-    border-radius: 0;
-    background: white;
     color: black;
     cursor: pointer;
-    border: 2px solid black;
+    border: 2px solid var(--primary-color);
+    background: transparent;
 }
 
 /* distort text on button click */
@@ -82,20 +81,18 @@ button:active {
 
 /* button hover avocado green */
 button:hover {
-    border-color: var(--maximum-green);
+    border-color: var(--primary-focus-color);
 }
 
 /* square text input with solid border */
 input[type=text] {
-    border-radius: 0;
     background: transparent;
-    color: black;
-    border: 2px solid black;
+    border: 2px solid var(--primary-color);
     outline: none;
 }
 
 input[type=text]:focus {
-    border-color: var(--maximum-green);
+    border-color: var(--primary-focus-color);
 }
 
 select {

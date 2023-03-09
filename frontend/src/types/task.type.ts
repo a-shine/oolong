@@ -1,12 +1,14 @@
 export type Task = {
     id: string;
-    projectId: string;
-    content: string;
+    projectTag: string;
+    description: string;
     createdAt: number;
     updatedAt: number;
-    due: number; // use the timestamp and get the between range for the specified dates + 0 for undefined
-    withTime: boolean;
-    reacurence: number;
-    complete: boolean;
-    index: number;
+    due: number; // string of the date/reminder
+    withTime: boolean; // look at time as well as date
+    recurrence: number;
+    // Cannot use boolean as key/index in indexedDB (https://github.com/w3c/IndexedDB/issues/76)
+    // so we use 0 and 1 instead
+    complete: number;
+    order: number;
 }
