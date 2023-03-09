@@ -37,11 +37,9 @@
       case "unassigned":
         if (showCompleted) {
           let incomplete = [-1, 0, 0];
-          let completed = [-1, 0, 1];
-          let incompleteRange = IDBKeyRange.bound(incomplete, incomplete);
-          let completedRange = IDBKeyRange.bound(completed, completed);
-          let tasks = await index.getAll(incompleteRange);
-          return tasks.concat(await index.getAll(completedRange));
+          let completed = [-1, Infinity, 1];
+          range = IDBKeyRange.bound(incomplete, completed);
+          return await index.getAll(range);
         } else {
           bound = [-1, 0, 0];
           range = IDBKeyRange.bound(bound, bound);
@@ -83,6 +81,7 @@
       },
     });
 
+    // Pull the scope and showCompleted from the the TasksTopBar component
     displayedTasks = await test("today", false);
     // // Insert several test tasks in the database
     // Give me two tasks
