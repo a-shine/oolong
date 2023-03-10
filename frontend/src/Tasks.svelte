@@ -510,30 +510,28 @@
     }
   }
 
-  let hovering = false;
+  import { dndzone } from "svelte-dnd-action";
+  import { flip } from "svelte/animate";
 
-  const dragstart = (event, i) => {
-    event.dataTransfer.effectAllowed = "move";
-    event.dataTransfer.dropEffect = "move";
-    const start = i;
-    event.dataTransfer.setData("text/plain", start);
-  };
-
-  const drop = (event, target) => {
-    event.dataTransfer.dropEffect = "move";
-    const start = parseInt(event.dataTransfer.getData("text/plain"));
-    const newTracklist = incompleteDisplayedTasks;
-
-    if (start < target) {
-      newTracklist.splice(target + 1, 0, newTracklist[start]);
-      newTracklist.splice(start, 1);
-    } else {
-      newTracklist.splice(target, 0, newTracklist[start]);
-      newTracklist.splice(start + 1, 1);
-    }
-    incompleteDisplayedTasks = newTracklist;
-    hovering = null;
-  };
+  const flipDurationMs = 0;
+  function handleDndConsider(e) {
+    incompleteDisplayedTasks = e.detail.items;
+    // small vibration
+    navigator.vibrate(5);
+    console.log("here");
+  }
+  function handleDndFinalize(e) {
+    incompleteDisplayedTasks = e.detail.items;
+    // update the order of the tasks
+    db.transaction("incompleteTasks", "readwrite").then((tx) => {
+      const taskStore = tx.objectStore("tasks");
+      incompleteDisplayedTasks.forEach((task, index) => {
+        task.order = index;
+        taskStore.put(task);
+      });
+    });
+    console.log("hereee");
+  }
 </script>
 
 <TasksTopBar
@@ -557,44 +555,45 @@
       <p>Yay! You're done for the day - enjoy :)</p>
     </div>
   {:else} -->
-  <div class="tasks">
-    {#if incompleteDisplayedTasks}
-      {#each incompleteDisplayedTasks as task, i}
-        <div
-          draggable="true"
-          on:dragstart={(event) => dragstart(event, i)}
-          on:drop|preventDefault={(event) => drop(event, i)}
-          on:dragenter|preventDefault={() => (hovering = i)}
-          on:dragover|preventDefault={() => (hovering = i)}
-          class:dragging={hovering === i}
-        >
+  {#if incompleteDisplayedTasks}
+    <!-- Only enable re-ordering on today and unordered -->
+    <section
+      class="tasks"
+      use:dndzone={{ items: incompleteDisplayedTasks, flipDurationMs }}
+      on:consider={handleDndConsider}
+      on:finalize={handleDndFinalize}
+      draggable="false"
+    >
+      {#each incompleteDisplayedTasks as task (task.id)}
+        <div animate:flip={{ duration: flipDurationMs }}>
           <TaskItemTest {task} />
+          <!-- test -->
         </div>
       {/each}
-    {/if}
 
-    {#if completedDisplayedTasks}
+      <!-- {#if completedDisplayedTasks}
       <hr />
       {#each completedDisplayedTasks as task}
         <TaskItemTest {task} />
       {/each}
-    {/if}
+    {/if} -->
 
-    <!-- {#each tasks as task}
+      <!-- {#each tasks as task}
         <TaskItemTest {task} />
       {/each} -->
-    <!-- {/await} -->
+      <!-- {/await} -->
 
-    <!-- {#each getTasks() as task} -->
-    <!-- <TaskItem
+      <!-- {#each getTasks() as task} -->
+      <!-- <TaskItem
         bind:task
         {updateTaskAndUpdateDisplay}
         {deleteTaskAndUpdateDisplay}
       /> -->
-    <!-- {task.id} -->
-    <!-- <TaskItemTest bind:task /> -->
-    <!-- {/each} -->
-  </div>
+      <!-- {task.id} -->
+      <!-- <TaskItemTest bind:task /> -->
+      <!-- {/each} -->
+    </section>
+  {/if}
   <!-- {/if} -->
 
   <button
