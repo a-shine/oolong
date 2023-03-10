@@ -557,7 +557,7 @@
   {:else} -->
   {#if incompleteDisplayedTasks}
     <!-- Only enable re-ordering on today and unordered -->
-    <section
+    <div
       class="tasks"
       use:dndzone={{ items: incompleteDisplayedTasks, flipDurationMs }}
       on:consider={handleDndConsider}
@@ -567,7 +567,6 @@
       {#each incompleteDisplayedTasks as task (task.id)}
         <div animate:flip={{ duration: flipDurationMs }}>
           <TaskItemTest {task} />
-          <!-- test -->
         </div>
       {/each}
 
@@ -592,7 +591,7 @@
       <!-- {task.id} -->
       <!-- <TaskItemTest bind:task /> -->
       <!-- {/each} -->
-    </section>
+    </div>
   {/if}
   <!-- {/if} -->
 
