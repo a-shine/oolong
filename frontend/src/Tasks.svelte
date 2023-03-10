@@ -22,8 +22,6 @@
 
   let db: IDBPDatabase<unknown>;
 
-  // TODO: the last real unkown is the drag and drop impl then we should be good :)
-
   async function updateDisplayedTasks1(scope: string, showCompleted: boolean) {
     if (showCompleted) {
       completedDisplayedTasks = await getCompletedTasks(scope);
@@ -45,9 +43,7 @@
         return await index.getAll(range);
       case "today":
         let today = new Date().setHours(0, 0, 0, 0);
-        bound = [today, 0, 1];
-        let bound2 = [today + 86400000, 0, 1];
-        range = IDBKeyRange.bound(bound, bound2);
+        range = IDBKeyRange.bound(today, today);
         return await index.getAll(range);
       case "upcoming":
         let tmr = new Date().setHours(0, 0, 0, 0) + 86400000;
@@ -72,13 +68,13 @@
         return await index.getAll(range);
       case "today":
         let today = new Date().setHours(0, 0, 0, 0);
-        bound = [today, 0, 1];
-        let bound2 = [today + 86400000, 0, 1];
+        bound = [today, 0];
+        let bound2 = [today + 86400000, Infinity];
         range = IDBKeyRange.bound(bound, bound2);
         return await index.getAll(range);
       case "upcoming":
         let tmr = new Date().setHours(0, 0, 0, 0) + 86400000;
-        range = IDBKeyRange.lowerBound(tmr);
+        range = IDBKeyRange.lowerBound([tmr, 0]);
         return await index.getAll(range);
       default:
         return await index.getAll();
@@ -109,7 +105,7 @@
     });
 
     // Pull the scope and showCompleted from the the TasksTopBar component
-    // displayedTasks = await test("today", false);
+    incompleteDisplayedTasks = await getIncompleteTasks("today");
     // // Insert several test tasks in the database
     // Give me two tasks
     let task1: Task = {
@@ -161,10 +157,19 @@
       order: 1,
     };
 
-    await db.add("incompleteTasks", task1);
-    await db.add("incompleteTasks", task2);
-    await db.add("incompleteTasks", task3);
-    await db.add("incompleteTasks", task4);
+    let task5: Task = {
+      id: "someRandomIdString5",
+      projectTag: null,
+      description: "Task 5",
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      dueOn: Date.now() + 86400000,
+      dueAt: null,
+      recurrence: 0,
+      order: 1,
+    };
+
+    db.add("incompleteTasks", task5);
   });
 
   function addTaskLocal(task: Task) {
@@ -478,10 +483,6 @@
     });
   }
 
-  function updateDisplayedTask() {
-    displayedTasks = [...displayedTasks];
-  }
-
   // getTasks from IndexedDB based on the current scope and showCompleted setting
   async function getTasks(db): Promise<Task[]> {
     // let db = await openDB("oolongDb", 1);
@@ -510,33 +511,37 @@
     }
   }
 
+  // https://github.com/isaacHagoel/svelte-dnd-action
   import { dndzone } from "svelte-dnd-action";
   import { flip } from "svelte/animate";
+
+  let dragDisabled = true;
 
   const flipDurationMs = 0;
   function handleDndConsider(e) {
     incompleteDisplayedTasks = e.detail.items;
     // small vibration
     navigator.vibrate(5);
-    console.log("here");
   }
-  function handleDndFinalize(e) {
+  async function handleDndFinalize(e) {
     incompleteDisplayedTasks = e.detail.items;
     // update the order of the tasks
-    db.transaction("incompleteTasks", "readwrite").then((tx) => {
-      const taskStore = tx.objectStore("tasks");
-      incompleteDisplayedTasks.forEach((task, index) => {
-        task.order = index;
-        taskStore.put(task);
-      });
+    incompleteDisplayedTasks.forEach((task, index) => {
+      console.log(task);
+      task.order = index;
+      db.put("incompleteTasks", task);
     });
-    console.log("hereee");
   }
 </script>
 
 <TasksTopBar
   on:changeScope={(e) => {
     updateDisplayedTasks1(e.detail[0], e.detail[1]);
+    if (e.detail[0] == "today" || e.detail[0] == "unassigned") {
+      dragDisabled = false;
+    } else {
+      dragDisabled = true;
+    }
   }}
   on:toggleCompleted={(e) => {
     updateDisplayedTasks1(e.detail[0], e.detail[1]);
@@ -559,39 +564,26 @@
     <!-- Only enable re-ordering on today and unordered -->
     <div
       class="tasks"
-      use:dndzone={{ items: incompleteDisplayedTasks, flipDurationMs }}
+      use:dndzone={{
+        items: incompleteDisplayedTasks,
+        flipDurationMs,
+        dragDisabled,
+      }}
       on:consider={handleDndConsider}
       on:finalize={handleDndFinalize}
-      draggable="false"
     >
       {#each incompleteDisplayedTasks as task (task.id)}
         <div animate:flip={{ duration: flipDurationMs }}>
           <TaskItemTest {task} />
         </div>
       {/each}
-
-      <!-- {#if completedDisplayedTasks}
+    </div>
+    {#if completedDisplayedTasks}
       <hr />
       {#each completedDisplayedTasks as task}
         <TaskItemTest {task} />
       {/each}
-    {/if} -->
-
-      <!-- {#each tasks as task}
-        <TaskItemTest {task} />
-      {/each} -->
-      <!-- {/await} -->
-
-      <!-- {#each getTasks() as task} -->
-      <!-- <TaskItem
-        bind:task
-        {updateTaskAndUpdateDisplay}
-        {deleteTaskAndUpdateDisplay}
-      /> -->
-      <!-- {task.id} -->
-      <!-- <TaskItemTest bind:task /> -->
-      <!-- {/each} -->
-    </div>
+    {/if}
   {/if}
   <!-- {/if} -->
 
