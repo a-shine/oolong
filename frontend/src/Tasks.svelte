@@ -5,8 +5,6 @@
 
   import type { Task } from "./types/task.type";
 
-  import NewTask from "./NewTask.svelte";
-  import Filter from "./Filter.svelte";
   import NewTaskTest from "./NewTaskTest.svelte";
   import TaskItemTest from "./TaskItemTest.svelte";
 
@@ -16,35 +14,62 @@
 
   let displayTaskEditorDialog: boolean = false;
 
-  let displayedTasks: Task[];
+  let incompleteDisplayedTasks: Task[];
+  let completedDisplayedTasks: Task[];
 
   // tracking deletion is a bit more complicated - we either need to keep track of all devices and queue the deletion so that each delete is sent to every node
   // or we can implement logical deletion by having a deleted flag on the task (this is not optimal as the database will be overgrowing but may be the easiest solution)
 
   let db: IDBPDatabase<unknown>;
 
+  // TODO: the last real unkown is the drag and drop impl then we should be good :)
+
   async function updateDisplayedTasks1(scope: string, showCompleted: boolean) {
-    displayedTasks = await test(scope, showCompleted);
+    if (showCompleted) {
+      completedDisplayedTasks = await getCompletedTasks(scope);
+    } else {
+      completedDisplayedTasks = null;
+    }
+    incompleteDisplayedTasks = await getIncompleteTasks(scope);
   }
 
-  async function test(scope: string, showCompleted: boolean) {
-    const tx = db.transaction("tasks", "readwrite");
-    const store = tx.objectStore("tasks");
-    const index = store.index("dueOrderComplete");
+  async function getCompletedTasks(scope: string): Promise<Task[]> {
+    const tx = db.transaction("completedTasks", "readwrite");
+    const store = tx.objectStore("completedTasks");
+    const index = store.index("dueOn");
     let range;
     let bound;
     switch (scope) {
       case "unassigned":
-        if (showCompleted) {
-          let incomplete = [-1, 0, 0];
-          let completed = [-1, Infinity, 1];
-          range = IDBKeyRange.bound(incomplete, completed);
-          return await index.getAll(range);
-        } else {
-          bound = [-1, 0, 0];
-          range = IDBKeyRange.bound(bound, bound);
-          return await index.getAll(range);
-        }
+        range = IDBKeyRange.bound(-1, -1);
+        return await index.getAll(range);
+      case "today":
+        let today = new Date().setHours(0, 0, 0, 0);
+        bound = [today, 0, 1];
+        let bound2 = [today + 86400000, 0, 1];
+        range = IDBKeyRange.bound(bound, bound2);
+        return await index.getAll(range);
+      case "upcoming":
+        let tmr = new Date().setHours(0, 0, 0, 0) + 86400000;
+        range = IDBKeyRange.lowerBound(tmr);
+        return await index.getAll(range);
+      default:
+        return await index.getAll();
+    }
+  }
+
+  async function getIncompleteTasks(scope: string) {
+    const tx = db.transaction("incompleteTasks", "readwrite");
+    const store = tx.objectStore("incompleteTasks");
+    const index = store.index("dueOnOrder");
+    let range;
+    let bound;
+    switch (scope) {
+      case "unassigned":
+        let lwrbound = [-1, 0];
+        let upperbound = [-1, Infinity];
+        range = IDBKeyRange.bound(lwrbound, upperbound);
+        return await index.getAll(range);
       case "today":
         let today = new Date().setHours(0, 0, 0, 0);
         bound = [today, 0, 1];
@@ -64,25 +89,27 @@
     db = await openDB("oolongDb", 1, {
       upgrade(db) {
         console.log("Upgrading database...");
-        if (!db.objectStoreNames.contains("tasks")) {
-          const taskStore = db.createObjectStore("tasks", { keyPath: "id" });
-          taskStore.createIndex("due", "due", { unique: false });
-          taskStore.createIndex("dueOder", ["due", "order"], {
+        if (!db.objectStoreNames.contains("incompleteTasks")) {
+          const incompleteTasks = db.createObjectStore("incompleteTasks", {
+            keyPath: "id",
+          });
+          incompleteTasks.createIndex("dueOnOrder", ["dueOn", "order"], {
             unique: false,
           });
-          taskStore.createIndex(
-            "dueOrderComplete",
-            ["due", "order", "complete"],
-            {
-              unique: false,
-            }
-          );
+        }
+        if (!db.objectStoreNames.contains("completedTasks")) {
+          const completedTasks = db.createObjectStore("completedTasks", {
+            keyPath: "id",
+          });
+          completedTasks.createIndex("dueOn", "dueOn", {
+            unique: false,
+          });
         }
       },
     });
 
     // Pull the scope and showCompleted from the the TasksTopBar component
-    displayedTasks = await test("today", false);
+    // displayedTasks = await test("today", false);
     // // Insert several test tasks in the database
     // Give me two tasks
     let task1: Task = {
@@ -91,10 +118,9 @@
       description: "Task 1",
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      due: new Date("2021-01-01").getTime(),
-      withTime: false,
+      dueOn: new Date("2021-01-01").setHours(0, 0, 0, 0),
+      dueAt: new Date("2021-01-01").getTime(),
       recurrence: 0,
-      complete: 0,
       order: 0,
     };
 
@@ -104,10 +130,9 @@
       description: "Task 2",
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      due: new Date().getTime(),
-      withTime: true,
+      dueOn: new Date().setHours(0, 0, 0, 0),
+      dueAt: new Date().getTime(),
       recurrence: 0,
-      complete: 0,
       order: 0,
     };
 
@@ -118,10 +143,9 @@
       description: "Task 3",
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      due: -1,
-      withTime: false,
+      dueOn: -1,
+      dueAt: null,
       recurrence: 0,
-      complete: 0,
       order: 0,
     };
 
@@ -131,17 +155,16 @@
       description: "Task 4",
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      due: -1,
-      withTime: false,
+      dueOn: -1,
+      dueAt: null,
       recurrence: 0,
-      complete: 1,
-      order: 0,
+      order: 1,
     };
 
-    await db.add("tasks", task1);
-    await db.add("tasks", task2);
-    await db.add("tasks", task3);
-    await db.add("tasks", task4);
+    await db.add("incompleteTasks", task1);
+    await db.add("incompleteTasks", task2);
+    await db.add("incompleteTasks", task3);
+    await db.add("incompleteTasks", task4);
   });
 
   function addTaskLocal(task: Task) {
@@ -486,6 +509,31 @@
         return await taskStore.getAll();
     }
   }
+
+  let hovering = false;
+
+  const dragstart = (event, i) => {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.dropEffect = "move";
+    const start = i;
+    event.dataTransfer.setData("text/plain", start);
+  };
+
+  const drop = (event, target) => {
+    event.dataTransfer.dropEffect = "move";
+    const start = parseInt(event.dataTransfer.getData("text/plain"));
+    const newTracklist = incompleteDisplayedTasks;
+
+    if (start < target) {
+      newTracklist.splice(target + 1, 0, newTracklist[start]);
+      newTracklist.splice(start, 1);
+    } else {
+      newTracklist.splice(target, 0, newTracklist[start]);
+      newTracklist.splice(start + 1, 1);
+    }
+    incompleteDisplayedTasks = newTracklist;
+    hovering = null;
+  };
 </script>
 
 <TasksTopBar
@@ -494,6 +542,7 @@
   }}
   on:toggleCompleted={(e) => {
     updateDisplayedTasks1(e.detail[0], e.detail[1]);
+    // If completedDisplayed tasks is null then set to null
   }}
 />
 
@@ -509,8 +558,24 @@
     </div>
   {:else} -->
   <div class="tasks">
-    {#if displayedTasks}
-      {#each displayedTasks as task}
+    {#if incompleteDisplayedTasks}
+      {#each incompleteDisplayedTasks as task, i}
+        <div
+          draggable="true"
+          on:dragstart={(event) => dragstart(event, i)}
+          on:drop|preventDefault={(event) => drop(event, i)}
+          on:dragenter|preventDefault={() => (hovering = i)}
+          on:dragover|preventDefault={() => (hovering = i)}
+          class:dragging={hovering === i}
+        >
+          <TaskItemTest {task} />
+        </div>
+      {/each}
+    {/if}
+
+    {#if completedDisplayedTasks}
+      <hr />
+      {#each completedDisplayedTasks as task}
         <TaskItemTest {task} />
       {/each}
     {/if}
