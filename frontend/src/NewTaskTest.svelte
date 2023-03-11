@@ -9,6 +9,8 @@
   // If no task is passed, we will create a new one so we start with an undefined task
   export let task: Task;
 
+  let dueOn: string = undefined;
+
   const dispatch = createEventDispatcher();
 
   const close = () => {
@@ -32,6 +34,7 @@
     task.description = task.description.trim();
     task.createdAt = new Date().getTime();
     task.updatedAt = new Date().getTime();
+    task.dueOn = new Date(taskDueOn).getTime();
     dispatch("newTask", task);
   }
 
@@ -63,7 +66,7 @@
   </Modal>
 {/if}
 
-<form id="task-editor" on:submit|preventDefault={createNewTask}>
+<form id="task-editor" on:submit|preventDefault>
   <button
     type="button"
     id="task-cancel"
@@ -83,20 +86,35 @@
   <div id="task-params">
     {#if !addDateDialog}
       <button
-        on:click={() => {
-          taskDueOn = new Date().setHours(0, 0, 0, 0);
+        class:active={dueOn === new Date().toISOString().split("T")[0]}
+        on:click={(e) => {
+          dueOn = new Date().toISOString().split("T")[0];
         }}>Today</button
       >
-      <button>Tomorrow</button>
+      <button
+        class:active={dueOn ===
+          new Date(new Date().getTime() + 86400000).toISOString().split("T")[0]}
+        on:click={() => {
+          dueOn = new Date(new Date().getTime() + 86400000)
+            .toISOString()
+            .split("T")[0];
+        }}>Tomorrow</button
+      >
       <button
         on:click={() => {
           addDateDialog = true;
         }}>Other datetime</button
       >
+      <!-- remove date button -->
+      {#if dueOn}
+        <button
+          on:click={() => {
+            dueOn = undefined;
+          }}>x</button
+        >
+      {/if}
     {:else}
-      <!-- <div transition:slide>This is were you can add date info</div> -->
-      <!-- This is were you can add date info -->
-      <input transition:slide type="date" />
+      <input in:slide type="date" />
       <button
         on:click={() => {
           addDateDialog = false;
@@ -108,11 +126,14 @@
     <button type="button" on:click={deleteTask}>Delete</button>
     <button type="button" on:click={updateTask}>Save</button>
   {:else}
-    <button type="submit" id="task-add">Add</button>
+    <button type="button" id="task-add" on:click={createNewTask}>Add</button>
   {/if}
 </form>
 
 <style>
+  .active {
+    background-color: var(--primary-color);
+  }
   #task-editor {
     width: 100%;
     /* background-color: var(--base-100); */
@@ -128,7 +149,7 @@
     font-size: 1.5rem;
   }
 
-  button {
+  #dateButton {
     background: transparent;
     border: none;
   }
