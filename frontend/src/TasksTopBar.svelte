@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from "svelte";
 
-  let scope: string = "today";
+  export let scope: string;
   let showCompleted: boolean = false;
 
   const dispatch = createEventDispatcher();

@@ -3,9 +3,9 @@
   import { dndzone } from "svelte-dnd-action"; // https://github.com/isaacHagoel/svelte-dnd-action
   import { flip } from "svelte/animate";
 
-  import Modal from "./lib/Modal.svelte";
-
   import type { Task } from "./types/task.type";
+
+  import Modal from "./lib/Modal.svelte";
 
   import TasksTopBar from "./TasksTopBar.svelte";
   import TaskEditor from "./TaskEditor.svelte";
@@ -15,6 +15,9 @@
 
   let incompleteDisplayedTasks: Task[];
   let completedDisplayedTasks: Task[];
+
+  // Displayed tasks are determined by the scope
+  let scope: string = "today";
 
   // TODO: clean and comment
 
@@ -224,7 +227,7 @@
   async function addTaskTest(task: Task) {
     (await db).put("incompleteTasks", task);
     // TODO: update the displayed tasks with the current scope
-    // incompleteDisplayedTasks = await getIncompleteTasksTimeline("today");
+    incompleteDisplayedTasks = await getIncompleteTasksTimeline(scope);
   }
 
   function newBlankTask(): Task {
@@ -249,7 +252,7 @@
     (await db).put("completedTasks", task);
     (await db).delete("incompleteTasks", task.id);
     // TODO: update the displayed tasks with the current scope
-    // incompleteDisplayedTasks = await getIncompleteTasksTimeline("today");
+    incompleteDisplayedTasks = await getIncompleteTasksTimeline(scope);
   }
 
   let taskCursor: Task = newBlankTask();
@@ -261,6 +264,7 @@
 </script>
 
 <TasksTopBar
+  bind:scope
   on:changeScope={async (e) => {
     // BUG: this is not working as expected should be able to use completedDisplay tasks
     switch (e.detail[0]) {
