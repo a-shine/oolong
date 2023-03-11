@@ -7,12 +7,11 @@
   const dispatch = createEventDispatcher();
 
   // dispatch change scope with new scope value
-  const changeScope = (event) => {
+  const changeScope = () => {
     dispatch("changeScope", [scope, showCompleted]);
   };
 
-  const toggleCompleted = (event) => {
-    console.log(event.target.checked);
+  const toggleCompleted = () => {
     dispatch("toggleCompleted", [scope, showCompleted]);
   };
 </script>
@@ -25,27 +24,35 @@
       bind:value={scope}
       on:change={changeScope}
     >
-      <option value="unassigned">Unassigned</option>
-      <option value="today">Today</option>
-      <!-- have an option on this page to see completed tasks of today to show progress -->
-      <option value="upcoming">Upcoming</option>
-      <option value="all">All incomplete</option>
-      <option value="completed">All completed</option>
+      <optgroup label="Timeline">
+        <option value="unassigned">Unassigned</option>
+        <option value="today">Today</option>
+        <!-- have an option on this page to see completed tasks of today to show progress -->
+        <option value="upcoming">Upcoming</option>
+      </optgroup>
+      <optgroup label="All">
+        <option value="all">Incomplete</option>
+        <option value="completed">Completed</option>
+      </optgroup>
       <!-- return all completed in order of most recently completed and do it by day -->
+      <!-- <optgroup label="Project">
+      </optgroup> -->
     </select>
   </div>
 
   <div id="right-side">
     <div class="bar-item">
       <!-- Toggle completed checkbox with label -->
-      <label for="toggle-completed">Show completed</label>
-      <input
-        type="checkbox"
-        id="toggle-completed"
-        name="toggle-completed"
-        bind:checked={showCompleted}
-        on:change={toggleCompleted}
-      />
+      {#if scope === "today"}
+        <label for="toggle-completed">Show completed</label>
+        <input
+          type="checkbox"
+          id="toggle-completed"
+          name="toggle-completed"
+          bind:checked={showCompleted}
+          on:change={toggleCompleted}
+        />
+      {/if}
     </div>
   </div>
 </div>

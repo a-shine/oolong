@@ -30,7 +30,7 @@
     } else {
       completedDisplayedTasks = null;
     }
-    incompleteDisplayedTasks = await getIncompleteTasks(scope);
+    incompleteDisplayedTasks = await getIncompleteTasksTimeline(scope);
   }
 
   async function getCompletedTasks(scope: string): Promise<Task[]> {
@@ -56,10 +56,10 @@
     }
   }
 
-  async function getIncompleteTasks(scope: string) {
+  async function getIncompleteTasksTimeline(scope: string) {
     const tx = db.transaction("incompleteTasks", "readwrite");
     const store = tx.objectStore("incompleteTasks");
-    const index = store.index("dueOnOrder");
+    const index = store.index("dueOnListOrder");
     let range;
     let bound;
     switch (scope) {
@@ -91,9 +91,20 @@
           const incompleteTasks = db.createObjectStore("incompleteTasks", {
             keyPath: "id",
           });
-          incompleteTasks.createIndex("dueOnOrder", ["dueOn", "order"], {
-            unique: false,
-          });
+          incompleteTasks.createIndex(
+            "dueOnListOrder",
+            ["dueOn", "listOrder"],
+            {
+              unique: false,
+            }
+          );
+          incompleteTasks.createIndex(
+            "projectLabelLaneLaneOrder",
+            ["projectLabel", "lane", "laneOrder"],
+            {
+              unique: false,
+            }
+          );
         }
         if (!db.objectStoreNames.contains("completedTasks")) {
           const completedTasks = db.createObjectStore("completedTasks", {
@@ -111,70 +122,89 @@
     });
 
     // Pull the scope and showCompleted from the the TasksTopBar component
-    incompleteDisplayedTasks = await getIncompleteTasks("today");
+    incompleteDisplayedTasks = await getIncompleteTasksTimeline("today");
     // // Insert several test tasks in the database
     // Give me two tasks
     let task1: Task = {
       id: "someRandomIdString1",
-      projectTag: null,
+      projectLabel: null,
       description: "Task 1",
       createdAt: Date.now(),
       updatedAt: Date.now(),
       dueOn: new Date("2021-01-01").setHours(0, 0, 0, 0),
       dueAt: new Date("2021-01-01").getTime(),
       recurrence: 0,
-      order: 0,
+      lane: null,
+      listOrder: 0,
+      laneOrder: 0,
+      completedAt: null,
     };
 
     let task2: Task = {
       id: "someRandomIdString2",
-      projectTag: null,
+      projectLabel: null,
       description: "Task 2",
       createdAt: Date.now(),
       updatedAt: Date.now(),
       dueOn: new Date().setHours(0, 0, 0, 0),
       dueAt: new Date().getTime(),
       recurrence: 0,
-      order: 0,
+      lane: null,
+      listOrder: 0,
+      laneOrder: 0,
+      completedAt: null,
     };
 
     // task with no due date
     let task3: Task = {
       id: "someRandomIdString3",
-      projectTag: null,
+      projectLabel: null,
       description: "Task 3",
       createdAt: Date.now(),
       updatedAt: Date.now(),
       dueOn: -1,
       dueAt: null,
       recurrence: 0,
-      order: 0,
+      lane: null,
+      listOrder: 0,
+      laneOrder: 0,
+      completedAt: null,
     };
 
     let task4: Task = {
       id: "someRandomIdString4",
-      projectTag: null,
+      projectLabel: null,
       description: "Task 4",
       createdAt: Date.now(),
       updatedAt: Date.now(),
       dueOn: -1,
       dueAt: null,
       recurrence: 0,
-      order: 1,
+      lane: null,
+      listOrder: 0,
+      laneOrder: 0,
+      completedAt: null,
     };
 
     let task5: Task = {
       id: "someRandomIdString5",
-      projectTag: null,
+      projectLabel: null,
       description: "Task 5",
       createdAt: Date.now(),
       updatedAt: Date.now(),
       dueOn: Date.now() + 86400000,
       dueAt: null,
       recurrence: 0,
-      order: 1,
+      lane: null,
+      listOrder: 0,
+      laneOrder: 0,
+      completedAt: null,
     };
 
+    db.add("incompleteTasks", task1);
+    db.add("incompleteTasks", task2);
+    db.add("incompleteTasks", task3);
+    db.add("incompleteTasks", task4);
     db.add("incompleteTasks", task5);
   });
 
@@ -253,120 +283,6 @@
         return 0;
       }
     });
-  }
-
-  function getTasksToDisplay() {
-    displayedTasks = [];
-    const tx = db.transaction("tasks", "readonly");
-    const taskStore = tx.objectStore("tasks");
-
-    switch (display) {
-      case "all":
-        const allReq = taskStore.getAll();
-        allReq.onsuccess = (e) => {
-          displayedTasks = allReq.result;
-        };
-        break;
-      case "today":
-        {
-          let today = new Date().setHours(0, 0, 0, 0);
-          let tomorrow = new Date().setHours(0, 0, 0, 0) + 86400000;
-          let range = IDBKeyRange.bound(today, tomorrow, false, true);
-          const todayReq = taskStore.index("due").getAll(range);
-          todayReq.onsuccess = (e) => {
-            let request = e.target;
-            displayedTasks = request.result;
-            displayedTasks = sortByIndex(displayedTasks);
-          };
-        }
-        break;
-      case "upcoming":
-        {
-          let tomorrow = new Date().setHours(0, 0, 0, 0) + 86400000;
-          let range = IDBKeyRange.lowerBound(tomorrow, false);
-          const upcomingReq = taskStore.index("due").getAll(range);
-          upcomingReq.onsuccess = (e) => {
-            let request = e.target;
-            displayedTasks = request.result;
-          };
-        }
-        break;
-      case "unassigned":
-        {
-          let range = IDBKeyRange.only(-1);
-          const unassignedReq = taskStore.index("due").getAll(range);
-          unassignedReq.onsuccess = (e) => {
-            let request = e.target;
-            displayedTasks = request.result;
-          };
-        }
-        break;
-    }
-  }
-
-  function updateDisplayedTasks(task: Task) {
-    // if task passes filter add to display tasks else don't do anything
-    if (display == "all") {
-      displayedTasks = [...displayedTasks, task];
-    } else if (display == "today") {
-      let today = new Date().setHours(0, 0, 0, 0);
-      let tomorrow = new Date().setHours(0, 0, 0, 0) + 86400000;
-      if (task.due >= today && task.due < tomorrow) {
-        // displayTasks.push(task);
-        displayedTasks = [...displayedTasks, task];
-        // displayTasks = sortByPrioritise(displayTasks);
-      }
-    } else if (display == "upcoming") {
-      let tomorrow = new Date().setHours(0, 0, 0, 0) + 86400000;
-      if (task.due >= tomorrow) {
-        displayedTasks = [...displayedTasks, task];
-      }
-    } else if (display == "unassigned") {
-      if (task.due == -1) {
-        displayedTasks = [...displayedTasks, task];
-      }
-    }
-  }
-
-  function createTaskAndUpdateDisplay(task: Task) {
-    saveTask(task);
-    updateDisplayedTasks(task);
-  }
-
-  function updateTaskAndUpdateDisplay(task: Task) {
-    saveTask(task);
-    // if task passes filter add to display tasks else don't do anything
-    if (display == "all") {
-      displayedTasks = [...displayedTasks];
-    } else if (display == "today") {
-      let today = new Date().setHours(0, 0, 0, 0);
-      let tomorrow = new Date().setHours(0, 0, 0, 0) + 86400000;
-      if (task.due >= today && task.due < tomorrow) {
-        // displayTasks.push(task);
-        displayedTasks = [...displayedTasks];
-        // displayTasks = sortByPrioritise(displayTasks);
-      } else {
-        displayedTasks = displayedTasks.filter((t) => t.id != task.id);
-      }
-    } else if (display == "upcoming") {
-      let tomorrow = new Date().setHours(0, 0, 0, 0) + 86400000;
-      if (task.due >= tomorrow) {
-        displayedTasks = [...displayedTasks];
-      } else {
-        displayedTasks = displayedTasks.filter((t) => t.id != task.id);
-      }
-    } else if (display == "unassigned") {
-      if (task.due == -1) {
-        displayedTasks = [...displayedTasks];
-      } else {
-        displayedTasks = displayedTasks.filter((t) => t.id != task.id);
-      }
-    }
-  }
-
-  function deleteTaskAndUpdateDisplay(task: Task) {
-    deleteTask(task);
-    displayedTasks = displayedTasks.filter((t) => t.id != task.id);
   }
 
   function getPersistentLastSynced() {
@@ -468,26 +384,27 @@
     taskStore.delete(task.id);
   }
 
-  function showNotification() {
-    // https://chromestatus.com/feature/5133150283890688
-    if ("showTrigger" in Notification.prototype) {
-      /* Notification Triggers supported */
-      console.log("Notification Triggers supported");
-    }
-    Notification.requestPermission((result) => {
-      if (result === "granted") {
-        navigator.serviceWorker.ready.then((registration) => {
-          registration.showNotification("Vibration Sample", {
-            body: "Buzz! Buzz!",
-            icon: "../images/touch/chrome-touch-icon-192x192.png",
-            vibrate: [200, 100, 200, 100, 200, 100, 200],
-            tag: "vibration-sample",
-            showTrigger: new TimestampTrigger(10),
-          });
-        });
-      }
-    });
-  }
+  // Show a notification offline (by scheduling it) is not supported yet
+  // https://chromestatus.com/feature/5133150283890688
+  // function showNotification() {
+  //   if ("showTrigger" in Notification.prototype) {
+  //     /* Notification Triggers supported */
+  //     console.log("Notification Triggers supported");
+  //   }
+  //   Notification.requestPermission((result) => {
+  //     if (result === "granted") {
+  //       navigator.serviceWorker.ready.then((registration) => {
+  //         registration.showNotification("Vibration Sample", {
+  //           body: "Buzz! Buzz!",
+  //           icon: "../images/touch/chrome-touch-icon-192x192.png",
+  //           vibrate: [200, 100, 200, 100, 200, 100, 200],
+  //           tag: "vibration-sample",
+  //           showTrigger: new TimestampTrigger(10),
+  //         });
+  //       });
+  //     }
+  //   });
+  // }
 
   // https://github.com/isaacHagoel/svelte-dnd-action
   import { dndzone } from "svelte-dnd-action";
@@ -505,10 +422,39 @@
     incompleteDisplayedTasks = e.detail.items;
     // update the order of the tasks
     incompleteDisplayedTasks.forEach((task, index) => {
-      console.log(task);
-      task.order = index;
+      task.listOrder = index;
       db.put("incompleteTasks", task);
     });
+  }
+
+  async function addTaskTest(task: Task) {
+    db.put("incompleteTasks", task);
+    incompleteDisplayedTasks = await getIncompleteTasksTimeline("today");
+  }
+
+  function newBlankTask(): Task {
+    return {
+      id: undefined,
+      projectLabel: null,
+      description: "",
+      createdAt: undefined,
+      updatedAt: undefined,
+      dueOn: -1, // by default no due date
+      dueAt: null,
+      recurrence: 0,
+      lane: null,
+      listOrder: Infinity,
+      laneOrder: Infinity,
+      completedAt: undefined,
+    };
+  }
+
+  let taskCursor: Task = newBlankTask();
+
+  function editTask(task: Task) {
+    displayTaskEditorDialog = true;
+    // overwrite the taskCursor with the task to edit
+    taskCursor = task;
   }
 </script>
 
@@ -528,16 +474,6 @@
 />
 
 <div id="main">
-  <!-- <Filter bind:display bind:completed {getTasksToDisplay} {sortCompleted} /> -->
-
-  <!-- TODO: Have the ability to define a custom order in unasigned and today i.e. by default add newer requests at the end but have the ability to move round to re-prioritise -->
-  <!-- if no tasks to display -->
-  <!-- {#if displayTasks.length == 0 && display == "today"}
-    <div class="no-tasks">
-      <img src="Oolongv1.png" alt="" width="300px" />
-      <p>Yay! You're done for the day - enjoy :)</p>
-    </div>
-  {:else} -->
   {#if incompleteDisplayedTasks}
     <!-- Only enable re-ordering on today and unordered -->
     <div
@@ -551,11 +487,15 @@
       on:finalize={handleDndFinalize}
     >
       {#each incompleteDisplayedTasks as task (task.id)}
-        <div animate:flip={{ duration: flipDurationMs }}>
+        <div
+          animate:flip={{ duration: flipDurationMs }}
+          on:click={() => editTask(task)}
+        >
           <TaskItemTest {task} />
         </div>
       {/each}
     </div>
+
     {#if completedDisplayedTasks}
       <hr />
       {#each completedDisplayedTasks as task}
@@ -563,21 +503,23 @@
       {/each}
     {/if}
   {/if}
-  <!-- {/if} -->
 
-  <button
-    on:click={() => {
-      displayTaskEditorDialog = true;
-    }}>+</button
-  >
-
-  <!-- {#if displayTaskEditorModal}
-        <div transition:fly={{ y: 100, duration: 100 }}><NewTaskTest /></div>
-    {/if} -->
   <button on:click={() => (displayTaskEditorDialog = true)}> + </button>
+
   {#if displayTaskEditorDialog}
     <Modal on:close={() => (displayTaskEditorDialog = false)}>
-      <NewTaskTest on:close={() => (displayTaskEditorDialog = false)} />
+      <NewTaskTest
+        task={taskCursor}
+        on:close={() => {
+          displayTaskEditorDialog = false;
+          taskCursor = newBlankTask();
+        }}
+        on:newTask={(e) => {
+          console.log(e.detail);
+          addTaskTest(e.detail);
+          displayTaskEditorDialog = false;
+        }}
+      />
     </Modal>
   {/if}
 </div>

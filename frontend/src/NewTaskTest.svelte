@@ -4,31 +4,41 @@
   import { createEventDispatcher } from "svelte";
   import Modal from "./lib/Modal.svelte";
   import type { Task } from "./types/task.type";
+  import { v4 as uuidv4 } from "uuid";
 
-  let task: Task;
+  // If no task is passed, we will create a new one so we start with an undefined task
+  export let task: Task;
 
   const dispatch = createEventDispatcher();
+
   const close = () => {
-    dispatch("newTask", task);
-    dispatch("updateTask, task");
-    dispatch("deleteTask, task");
     dispatch("close");
-    // pass the task to the parent component
   };
 
-  let taskContent: string;
+  const updateTask = () => {
+    dispatch("updateTask", task);
+  };
+
+  const deleteTask = () => {
+    dispatch("deleteTask", task);
+  };
 
   let safeExitModal = false;
 
-  function newTask() {
-    const task = document.getElementById("task") as HTMLInputElement;
-    const taskText = task.value;
+  let taskDueOn: Date;
+
+  function createNewTask() {
+    task.id = uuidv4();
+    task.description = task.description.trim();
+    task.createdAt = new Date().getTime();
+    task.updatedAt = new Date().getTime();
+    dispatch("newTask", task);
   }
 
   let addDateDialog = false;
 
   function safeClose() {
-    if (taskContent === undefined || taskContent === "") {
+    if (task.description === "") {
       close();
     } else {
       safeExitModal = true;
@@ -53,7 +63,7 @@
   </Modal>
 {/if}
 
-<form id="task-editor" on:submit|preventDefault={newTask}>
+<form id="task-editor" on:submit|preventDefault={createNewTask}>
   <button
     type="button"
     id="task-cancel"
@@ -68,11 +78,15 @@
     placeholder="Task"
     autofocus
     autocomplete="off"
-    bind:value={taskContent}
+    bind:value={task.description}
   />
   <div id="task-params">
     {#if !addDateDialog}
-      <button>Today</button>
+      <button
+        on:click={() => {
+          taskDueOn = new Date().setHours(0, 0, 0, 0);
+        }}>Today</button
+      >
       <button>Tomorrow</button>
       <button
         on:click={() => {
@@ -90,7 +104,12 @@
       >
     {/if}
   </div>
-  <button type="submit" id="task-add">Add</button>
+  {#if task.id}
+    <button type="button" on:click={deleteTask}>Delete</button>
+    <button type="button" on:click={updateTask}>Save</button>
+  {:else}
+    <button type="submit" id="task-add">Add</button>
+  {/if}
 </form>
 
 <style>

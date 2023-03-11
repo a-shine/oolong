@@ -7,10 +7,12 @@ export type Task = {
     dueOn: number;
     dueAt: number;
     recurrence: number;
-    state: string; // 'active' | 'in progress' | 'bug'/'feature' | 'completed' | 'archived'
+    // Whether a task is completed is in a different table (if completed the state is set to null)
+    lane: string; // 'active' | 'in progress' | 'bug'/'feature'
     // A task list only capture the incomplete or completed states
     // A project Kanban board could capture the other states (any state other than 'completed' is considered incomplete)
-    order: number;
+    listOrder: number;
+    laneOrder: number;
     completedAt: number;
 }
 
