@@ -12,9 +12,9 @@
       {task.description}
     </div>
     <div id="task-details">
-      {#if task.withTime}
+      {#if task.dueAt}
         <span class="detail-tag"
-          >{new Date(task.due).toLocaleTimeString([], {
+          >{new Date(task.dueAt).toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
           })}</span

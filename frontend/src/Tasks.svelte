@@ -1,6 +1,4 @@
 <script lang="ts">
-  import TaskItem from "./TaskItem.svelte";
-  import { fly } from "svelte/transition";
   import Modal from "./lib/Modal.svelte";
 
   import type { Task } from "./types/task.type";
@@ -8,7 +6,7 @@
   import NewTaskTest from "./NewTaskTest.svelte";
   import TaskItemTest from "./TaskItemTest.svelte";
 
-  import { openDB, deleteDB, wrap, unwrap } from "idb";
+  import { openDB } from "idb";
   import { onMount } from "svelte";
   import TasksTopBar from "./TasksTopBar.svelte";
 
@@ -16,6 +14,10 @@
 
   let incompleteDisplayedTasks: Task[];
   let completedDisplayedTasks: Task[];
+
+  // FEATURE: Want to handle toggle completed tasks a little differently:
+  // - make completed tasks a new separate scope (like today, upcoming, unassigned)
+  // - have a button to see completed tasks specific to the today scope (so we get a sense of what we've achieved today)
 
   // tracking deletion is a bit more complicated - we either need to keep track of all devices and queue the deletion so that each delete is sent to every node
   // or we can implement logical deletion by having a deleted flag on the task (this is not optimal as the database will be overgrowing but may be the easiest solution)
@@ -34,7 +36,7 @@
   async function getCompletedTasks(scope: string): Promise<Task[]> {
     const tx = db.transaction("completedTasks", "readwrite");
     const store = tx.objectStore("completedTasks");
-    const index = store.index("dueOn");
+    const index = store.index("dueOnCompletedAt"); // return completed task in order of the most recently completed
     let range;
     let bound;
     switch (scope) {
@@ -97,9 +99,13 @@
           const completedTasks = db.createObjectStore("completedTasks", {
             keyPath: "id",
           });
-          completedTasks.createIndex("dueOn", "dueOn", {
-            unique: false,
-          });
+          completedTasks.createIndex(
+            "dueOnCompletedAt",
+            ["dueOn", "completedAt"],
+            {
+              unique: false,
+            }
+          );
         }
       },
     });
@@ -483,34 +489,6 @@
     });
   }
 
-  // getTasks from IndexedDB based on the current scope and showCompleted setting
-  async function getTasks(db): Promise<Task[]> {
-    // let db = await openDB("oolongDb", 1);
-    let tx = await db.transaction("tasks", "readonly");
-    let taskStore = tx.objectStore("tasks");
-    let dueIndex = taskStore.index("due");
-
-    let range;
-    switch (scope) {
-      case "unassigned":
-        // Get where due is -1
-        range = IDBKeyRange.bound(-1, -1);
-        return await dueIndex.getAll(range);
-      case "today":
-        // get where due as iso string is today
-        let today = new Date().setHours(0, 0, 0, 0);
-        range = IDBKeyRange.bound(today, today + 86400000);
-        return await dueIndex.getAll(range);
-      case "upcoming":
-        // get where due as iso string is in the future
-        let tomorrow = new Date().setHours(0, 0, 0, 0) + 86400000;
-        range = IDBKeyRange.lowerBound(tomorrow);
-        return await dueIndex.getAll(range);
-      default:
-        return await taskStore.getAll();
-    }
-  }
-
   // https://github.com/isaacHagoel/svelte-dnd-action
   import { dndzone } from "svelte-dnd-action";
   import { flip } from "svelte/animate";
@@ -598,11 +576,6 @@
     {/if} -->
   <button on:click={() => (displayTaskEditorDialog = true)}> + </button>
   {#if displayTaskEditorDialog}
-    <!-- <NewTask
-            displayTasksLenghth={displayTasks.length}
-            bind:displayTaskEditorModal
-            {createTaskAndUpdateDisplay}
-        /> -->
     <Modal on:close={() => (displayTaskEditorDialog = false)}>
       <NewTaskTest on:close={() => (displayTaskEditorDialog = false)} />
     </Modal>

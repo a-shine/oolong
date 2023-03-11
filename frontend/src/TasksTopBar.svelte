@@ -27,8 +27,11 @@
     >
       <option value="unassigned">Unassigned</option>
       <option value="today">Today</option>
+      <!-- have an option on this page to see completed tasks of today to show progress -->
       <option value="upcoming">Upcoming</option>
-      <option value="all">All</option>
+      <option value="all">All incomplete</option>
+      <option value="completed">All completed</option>
+      <!-- return all completed in order of most recently completed and do it by day -->
     </select>
   </div>
 
