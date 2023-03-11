@@ -22,7 +22,38 @@
   // tracking deletion is a bit more complicated - we either need to keep track of all devices and queue the deletion so that each delete is sent to every node
   // or we can implement logical deletion by having a deleted flag on the task (this is not optimal as the database will be overgrowing but may be the easiest solution)
 
-  let db: IDBPDatabase<unknown>;
+  const db = openDB("oolongDb", 1, {
+    upgrade(db) {
+      console.log("Upgrading database...");
+      if (!db.objectStoreNames.contains("incompleteTasks")) {
+        const incompleteTasks = db.createObjectStore("incompleteTasks", {
+          keyPath: "id",
+        });
+        incompleteTasks.createIndex("dueOnListOrder", ["dueOn", "listOrder"], {
+          unique: false,
+        });
+        incompleteTasks.createIndex(
+          "projectLabelLaneLaneOrder",
+          ["projectLabel", "lane", "laneOrder"],
+          {
+            unique: false,
+          }
+        );
+      }
+      if (!db.objectStoreNames.contains("completedTasks")) {
+        const completedTasks = db.createObjectStore("completedTasks", {
+          keyPath: "id",
+        });
+        completedTasks.createIndex(
+          "dueOnCompletedAt",
+          ["dueOn", "completedAt"],
+          {
+            unique: false,
+          }
+        );
+      }
+    },
+  });
 
   async function updateDisplayedTasks1(scope: string, showCompleted: boolean) {
     if (showCompleted) {
@@ -34,22 +65,15 @@
   }
 
   async function getCompletedTasks(scope: string): Promise<Task[]> {
-    const tx = db.transaction("completedTasks", "readwrite");
+    const tx = (await db).transaction("completedTasks", "readwrite");
     const store = tx.objectStore("completedTasks");
     const index = store.index("dueOnCompletedAt"); // return completed task in order of the most recently completed
     let range;
     let bound;
     switch (scope) {
-      case "unassigned":
-        range = IDBKeyRange.bound(-1, -1);
-        return await index.getAll(range);
       case "today":
         let today = new Date().setHours(0, 0, 0, 0);
         range = IDBKeyRange.bound(today, today);
-        return await index.getAll(range);
-      case "upcoming":
-        let tmr = new Date().setHours(0, 0, 0, 0) + 86400000;
-        range = IDBKeyRange.lowerBound(tmr);
         return await index.getAll(range);
       default:
         return await index.getAll();
@@ -57,7 +81,7 @@
   }
 
   async function getIncompleteTasksTimeline(scope: string) {
-    const tx = db.transaction("incompleteTasks", "readwrite");
+    const tx = (await db).transaction("incompleteTasks", "readwrite");
     const store = tx.objectStore("incompleteTasks");
     const index = store.index("dueOnListOrder");
     let range;
@@ -83,46 +107,8 @@
     }
   }
 
-  onMount(async () => {
-    db = await openDB("oolongDb", 1, {
-      upgrade(db) {
-        console.log("Upgrading database...");
-        if (!db.objectStoreNames.contains("incompleteTasks")) {
-          const incompleteTasks = db.createObjectStore("incompleteTasks", {
-            keyPath: "id",
-          });
-          incompleteTasks.createIndex(
-            "dueOnListOrder",
-            ["dueOn", "listOrder"],
-            {
-              unique: false,
-            }
-          );
-          incompleteTasks.createIndex(
-            "projectLabelLaneLaneOrder",
-            ["projectLabel", "lane", "laneOrder"],
-            {
-              unique: false,
-            }
-          );
-        }
-        if (!db.objectStoreNames.contains("completedTasks")) {
-          const completedTasks = db.createObjectStore("completedTasks", {
-            keyPath: "id",
-          });
-          completedTasks.createIndex(
-            "dueOnCompletedAt",
-            ["dueOn", "completedAt"],
-            {
-              unique: false,
-            }
-          );
-        }
-      },
-    });
-
+  onMount(() => {
     // Pull the scope and showCompleted from the the TasksTopBar component
-    incompleteDisplayedTasks = await getIncompleteTasksTimeline("today");
     // // Insert several test tasks in the database
     // Give me two tasks
     let task1: Task = {
@@ -201,11 +187,11 @@
       completedAt: null,
     };
 
-    db.add("incompleteTasks", task1);
-    db.add("incompleteTasks", task2);
-    db.add("incompleteTasks", task3);
-    db.add("incompleteTasks", task4);
-    db.add("incompleteTasks", task5);
+    // db.add("incompleteTasks", task1);
+    // db.add("incompleteTasks", task2);
+    // db.add("incompleteTasks", task3);
+    // db.add("incompleteTasks", task4);
+    // db.add("incompleteTasks", task5);
   });
 
   function addTaskLocal(task: Task) {
@@ -235,16 +221,6 @@
     addTaskLocal(task);
   }
 
-  function createNotification(task: Task) {
-    const option = {
-      body: task.content,
-      icon: "https://svelte.dev/favicon.png",
-      timestamp: task.due,
-    };
-    const notification = new Notification("Task Due", option);
-    // sw.showNotification(notification);
-  }
-
   // BUG: There seems to be a problem submitting a task on mobile devices when associated with a time
   // function saveTask(task: Task) {
   //     addTask(task);
@@ -254,36 +230,6 @@
   //     // createNotification(task); // BUG: add this to the add task function so that synced tasks can be notified too
   //     updateDisplay(); // better way would be to add the task to the display tasks array if it matches the filter else do nothing and rely on fetching filtered tasks when complete
   // }
-
-  // function sort(tasks: Task[]) {
-  //     return tasks.sort((a, b) => {
-  //         if (a.prioritise && !b.prioritise) {
-  //             return -1;
-  //         } else if (!a.prioritise && b.prioritise) {
-  //             return 1;
-  //         } else {
-  //             return 0;
-  //         }
-  //     });
-  // }
-
-  function sortCompleted() {
-    displayedTasks = displayedTasks.filter((task) => {
-      return task.complete === completed;
-    });
-  }
-
-  function sortByIndex(tasks: Task[]) {
-    return tasks.sort((a, b) => {
-      if (a.index < b.index) {
-        return -1;
-      } else if (a.index > b.index) {
-        return 1;
-      } else {
-        return 0;
-      }
-    });
-  }
 
   function getPersistentLastSynced() {
     return localStorage.getItem("lastSynced");
@@ -421,14 +367,15 @@
   async function handleDndFinalize(e) {
     incompleteDisplayedTasks = e.detail.items;
     // update the order of the tasks
-    incompleteDisplayedTasks.forEach((task, index) => {
-      task.listOrder = index;
-      db.put("incompleteTasks", task);
-    });
+    // BUG: for each is not async (use a normal for loop)
+    for (let i = 0; i < incompleteDisplayedTasks.length; i++) {
+      incompleteDisplayedTasks[i].listOrder = i;
+      (await db).put("incompleteTasks", incompleteDisplayedTasks[i]);
+    }
   }
 
   async function addTaskTest(task: Task) {
-    db.put("incompleteTasks", task);
+    (await db).put("incompleteTasks", task);
     incompleteDisplayedTasks = await getIncompleteTasksTimeline("today");
   }
 

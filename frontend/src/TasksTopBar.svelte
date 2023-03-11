@@ -14,6 +14,10 @@
   const toggleCompleted = () => {
     dispatch("toggleCompleted", [scope, showCompleted]);
   };
+
+  onMount(() => {
+    dispatch("changeScope", [scope, showCompleted]);
+  });
 </script>
 
 <div id="container" class="bg-primary">
