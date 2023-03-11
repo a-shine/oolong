@@ -16,6 +16,8 @@
   let incompleteDisplayedTasks: Task[];
   let completedDisplayedTasks: Task[];
 
+  // TODO: clean and comment
+
   // Get the database promise and create the object stores if required
   const db = openDB("oolongDb", 1, {
     upgrade(db) {
@@ -213,7 +215,6 @@
   async function handleDndFinalize(e) {
     incompleteDisplayedTasks = e.detail.items;
     // update the order of the tasks
-    // BUG: for each is not async (use a normal for loop)
     for (let i = 0; i < incompleteDisplayedTasks.length; i++) {
       incompleteDisplayedTasks[i].listOrder = i;
       (await db).put("incompleteTasks", incompleteDisplayedTasks[i]);
@@ -261,7 +262,7 @@
 
 <TasksTopBar
   on:changeScope={async (e) => {
-    // BUG: this is not working
+    // BUG: this is not working as expected should be able to use completedDisplay tasks
     switch (e.detail[0]) {
       case "completed":
         console.log("completed");
@@ -319,7 +320,6 @@
     </div>
 
     {#if completedDisplayedTasks}
-      here
       <hr />
       {#each completedDisplayedTasks as task}
         <TaskItem {task} />
