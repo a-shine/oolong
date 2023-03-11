@@ -1,27 +1,22 @@
 <script lang="ts">
+  import { openDB } from "idb";
+  import { dndzone } from "svelte-dnd-action"; // https://github.com/isaacHagoel/svelte-dnd-action
+  import { flip } from "svelte/animate";
+
   import Modal from "./lib/Modal.svelte";
 
   import type { Task } from "./types/task.type";
 
-  import NewTaskTest from "./NewTaskTest.svelte";
-  import TaskItemTest from "./TaskItemTest.svelte";
-
-  import { openDB } from "idb";
-  import { onMount } from "svelte";
   import TasksTopBar from "./TasksTopBar.svelte";
+  import TaskEditor from "./TaskEditor.svelte";
+  import TaskItem from "./TaskItem.svelte";
 
   let displayTaskEditorDialog: boolean = false;
 
   let incompleteDisplayedTasks: Task[];
   let completedDisplayedTasks: Task[];
 
-  // FEATURE: Want to handle toggle completed tasks a little differently:
-  // - make completed tasks a new separate scope (like today, upcoming, unassigned)
-  // - have a button to see completed tasks specific to the today scope (so we get a sense of what we've achieved today)
-
-  // tracking deletion is a bit more complicated - we either need to keep track of all devices and queue the deletion so that each delete is sent to every node
-  // or we can implement logical deletion by having a deleted flag on the task (this is not optimal as the database will be overgrowing but may be the easiest solution)
-
+  // Get the database promise and create the object stores if required
   const db = openDB("oolongDb", 1, {
     upgrade(db) {
       console.log("Upgrading database...");
@@ -55,26 +50,22 @@
     },
   });
 
-  async function updateDisplayedTasks1(scope: string, showCompleted: boolean) {
-    if (showCompleted) {
-      completedDisplayedTasks = await getCompletedTasks(scope);
-    } else {
-      completedDisplayedTasks = null;
-    }
-    incompleteDisplayedTasks = await getIncompleteTasksTimeline(scope);
-  }
-
   async function getCompletedTasks(scope: string): Promise<Task[]> {
     const tx = (await db).transaction("completedTasks", "readwrite");
     const store = tx.objectStore("completedTasks");
     const index = store.index("dueOnCompletedAt"); // return completed task in order of the most recently completed
-    let range;
-    let bound;
     switch (scope) {
       case "today":
         let today = new Date().setHours(0, 0, 0, 0);
-        range = IDBKeyRange.bound(today, today);
+        let range = IDBKeyRange.bound(
+          [today, 0],
+          [today + 86400000, Infinity],
+          false,
+          true
+        );
         return await index.getAll(range);
+      case "completed":
+        return await index.getAll();
       default:
         return await index.getAll();
     }
@@ -85,18 +76,17 @@
     const store = tx.objectStore("incompleteTasks");
     const index = store.index("dueOnListOrder");
     let range;
-    let bound;
     switch (scope) {
       case "unassigned":
-        let lwrbound = [-1, 0];
-        let upperbound = [-1, Infinity];
-        range = IDBKeyRange.bound(lwrbound, upperbound);
+        let firstUnassignedTask = [-1, 0];
+        let lastUnassignedTask = [-1, Infinity];
+        range = IDBKeyRange.bound(firstUnassignedTask, lastUnassignedTask);
         return await index.getAll(range);
       case "today":
         let today = new Date().setHours(0, 0, 0, 0);
-        bound = [today, 0];
-        let bound2 = [today + 86400000, Infinity];
-        range = IDBKeyRange.bound(bound, bound2);
+        let firstTaskToday = [today, 0];
+        let firstTaskTmr = [today + 86400000, 0];
+        range = IDBKeyRange.bound(firstTaskToday, firstTaskTmr, false, true);
         return await index.getAll(range);
       case "upcoming":
         let tmr = new Date().setHours(0, 0, 0, 0) + 86400000;
@@ -107,104 +97,6 @@
     }
   }
 
-  onMount(() => {
-    // Pull the scope and showCompleted from the the TasksTopBar component
-    // // Insert several test tasks in the database
-    // Give me two tasks
-    let task1: Task = {
-      id: "someRandomIdString1",
-      projectLabel: null,
-      description: "Task 1",
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      dueOn: new Date("2021-01-01").setHours(0, 0, 0, 0),
-      dueAt: new Date("2021-01-01").getTime(),
-      recurrence: 0,
-      lane: null,
-      listOrder: 0,
-      laneOrder: 0,
-      completedAt: null,
-    };
-
-    let task2: Task = {
-      id: "someRandomIdString2",
-      projectLabel: null,
-      description: "Task 2",
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      dueOn: new Date().setHours(0, 0, 0, 0),
-      dueAt: new Date().getTime(),
-      recurrence: 0,
-      lane: null,
-      listOrder: 0,
-      laneOrder: 0,
-      completedAt: null,
-    };
-
-    // task with no due date
-    let task3: Task = {
-      id: "someRandomIdString3",
-      projectLabel: null,
-      description: "Task 3",
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      dueOn: -1,
-      dueAt: null,
-      recurrence: 0,
-      lane: null,
-      listOrder: 0,
-      laneOrder: 0,
-      completedAt: null,
-    };
-
-    let task4: Task = {
-      id: "someRandomIdString4",
-      projectLabel: null,
-      description: "Task 4",
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      dueOn: -1,
-      dueAt: null,
-      recurrence: 0,
-      lane: null,
-      listOrder: 0,
-      laneOrder: 0,
-      completedAt: null,
-    };
-
-    let task5: Task = {
-      id: "someRandomIdString5",
-      projectLabel: null,
-      description: "Task 5",
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      dueOn: Date.now() + 86400000,
-      dueAt: null,
-      recurrence: 0,
-      lane: null,
-      listOrder: 0,
-      laneOrder: 0,
-      completedAt: null,
-    };
-
-    // db.add("incompleteTasks", task1);
-    // db.add("incompleteTasks", task2);
-    // db.add("incompleteTasks", task3);
-    // db.add("incompleteTasks", task4);
-    // db.add("incompleteTasks", task5);
-  });
-
-  function addTaskLocal(task: Task) {
-    const req = db
-      .transaction("tasks", "readwrite")
-      .objectStore("tasks")
-      .add(task);
-
-    req.onerror = (e) => {
-      // console.log(e.target.errorCode);
-    };
-  }
-
   function addTaskRemote(task: Task) {
     var response = fetch("http://localhost:8000/tasks", {
       method: "POST",
@@ -213,23 +105,12 @@
       },
       body: JSON.stringify(task),
     });
-    console.log(response);
   }
 
   function addTask(task: Task) {
     addTaskRemote(task);
     addTaskLocal(task);
   }
-
-  // BUG: There seems to be a problem submitting a task on mobile devices when associated with a time
-  // function saveTask(task: Task) {
-  //     addTask(task);
-  //     if (task.withTime) {
-  //         // createNotification(task);
-  //     }
-  //     // createNotification(task); // BUG: add this to the add task function so that synced tasks can be notified too
-  //     updateDisplay(); // better way would be to add the task to the display tasks array if it matches the filter else do nothing and rely on fetching filtered tasks when complete
-  // }
 
   function getPersistentLastSynced() {
     return localStorage.getItem("lastSynced");
@@ -262,25 +143,7 @@
       });
   }
 
-  function createOrUppdateTasks(tasks: Task[]) {
-    const tx = db.transaction("tasks", "readwrite");
-    const taskStore = tx.objectStore("tasks");
-    tasks.forEach((task) => {
-      taskStore.put(task);
-      if (task.withTime) {
-        // createNotification(task);
-      }
-    });
-  }
-
-  function deleteTasks(tasks: Task[]) {
-    const tx = db.transaction("tasks", "readwrite");
-    const taskStore = tx.objectStore("tasks");
-    tasks.forEach((task) => {
-      taskStore.delete(task.id);
-    });
-  }
-
+  // Eventually the database will clear out old tasks so have a period full sync of the database in case (or keep a record of replicas)
   function getRemoteDeletedSince(lastSynced): Promise<Task[]> {
     return fetch("http://localhost:8000/tasks/deletedSince", {
       method: "POST",
@@ -317,19 +180,6 @@
     }
   }
 
-  function saveTask(task: Task): void {
-    const tx = db.transaction("tasks", "readwrite");
-    const taskStore = tx.objectStore("tasks");
-    taskStore.put(task);
-    // TODO: Do remote as well
-  }
-
-  function deleteTask(task: Task): void {
-    const tx = db.transaction("tasks", "readwrite");
-    const taskStore = tx.objectStore("tasks");
-    taskStore.delete(task.id);
-  }
-
   // Show a notification offline (by scheduling it) is not supported yet
   // https://chromestatus.com/feature/5133150283890688
   // function showNotification() {
@@ -352,13 +202,9 @@
   //   });
   // }
 
-  // https://github.com/isaacHagoel/svelte-dnd-action
-  import { dndzone } from "svelte-dnd-action";
-  import { flip } from "svelte/animate";
-
   let dragDisabled = true;
 
-  const flipDurationMs = 0;
+  const flipDurationMs = 100;
   function handleDndConsider(e) {
     incompleteDisplayedTasks = e.detail.items;
     // small vibration
@@ -376,7 +222,8 @@
 
   async function addTaskTest(task: Task) {
     (await db).put("incompleteTasks", task);
-    incompleteDisplayedTasks = await getIncompleteTasksTimeline("today");
+    // TODO: update the displayed tasks with the current scope
+    // incompleteDisplayedTasks = await getIncompleteTasksTimeline("today");
   }
 
   function newBlankTask(): Task {
@@ -396,27 +243,54 @@
     };
   }
 
+  async function completeTask(task: Task) {
+    task.completedAt = Date.now();
+    (await db).put("completedTasks", task);
+    (await db).delete("incompleteTasks", task.id);
+    // TODO: update the displayed tasks with the current scope
+    // incompleteDisplayedTasks = await getIncompleteTasksTimeline("today");
+  }
+
   let taskCursor: Task = newBlankTask();
 
   function editTask(task: Task) {
     displayTaskEditorDialog = true;
-    // overwrite the taskCursor with the task to edit
-    taskCursor = task;
+    taskCursor = task; // overwrite the taskCursor with the task to edit
   }
 </script>
 
 <TasksTopBar
-  on:changeScope={(e) => {
-    updateDisplayedTasks1(e.detail[0], e.detail[1]);
+  on:changeScope={async (e) => {
+    // BUG: this is not working
+    switch (e.detail[0]) {
+      case "completed":
+        console.log("completed");
+        // incompleteDisplayedTasks = null;
+        // completedDisplayedTasks = [];
+        incompleteDisplayedTasks = await getCompletedTasks(e.detail[0]);
+        console.log(completedDisplayedTasks);
+        break;
+      default:
+        completedDisplayedTasks = null;
+        incompleteDisplayedTasks = await getIncompleteTasksTimeline(
+          e.detail[0]
+        );
+    }
+
+    // Disable re-ordering if not today or unassigned
     if (e.detail[0] == "today" || e.detail[0] == "unassigned") {
       dragDisabled = false;
     } else {
       dragDisabled = true;
     }
   }}
-  on:toggleCompleted={(e) => {
-    updateDisplayedTasks1(e.detail[0], e.detail[1]);
-    // If completedDisplayed tasks is null then set to null
+  on:toggleCompletedToday={async (e) => {
+    console.log("toggleCompletedToday");
+    if (e.detail[1]) {
+      completedDisplayedTasks = await getCompletedTasks("today");
+    } else {
+      completedDisplayedTasks = null;
+    }
   }}
 />
 
@@ -434,36 +308,40 @@
       on:finalize={handleDndFinalize}
     >
       {#each incompleteDisplayedTasks as task (task.id)}
-        <div
-          animate:flip={{ duration: flipDurationMs }}
-          on:click={() => editTask(task)}
-        >
-          <TaskItemTest {task} />
+        <div animate:flip={{ duration: flipDurationMs }}>
+          <TaskItem
+            {task}
+            on:toggleEdit={(e) => editTask(e.detail)}
+            on:toggleDone={(e) => completeTask(e.detail)}
+          />
         </div>
       {/each}
     </div>
 
     {#if completedDisplayedTasks}
+      here
       <hr />
       {#each completedDisplayedTasks as task}
-        <TaskItemTest {task} />
+        <TaskItem {task} />
       {/each}
     {/if}
   {/if}
 
-  <button on:click={() => (displayTaskEditorDialog = true)}> + </button>
+  <button id="newTaskButton" on:click={() => (displayTaskEditorDialog = true)}>
+    +
+  </button>
 
   {#if displayTaskEditorDialog}
     <Modal on:close={() => (displayTaskEditorDialog = false)}>
-      <NewTaskTest
+      <TaskEditor
         task={taskCursor}
         on:close={() => {
           displayTaskEditorDialog = false;
           taskCursor = newBlankTask();
         }}
         on:newTask={(e) => {
-          console.log(e.detail);
           addTaskTest(e.detail);
+          taskCursor = newBlankTask();
           displayTaskEditorDialog = false;
         }}
       />
@@ -472,38 +350,26 @@
 </div>
 
 <style>
-  /* center horizontally and vertically */
-  .no-tasks {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-  }
   /* center content with max width */
   #main {
     max-width: 800px;
     margin: 0 auto;
   }
 
-  /* center button at bottom of screen */
-  button {
-    position: absolute;
-    bottom: 2%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
-
-  /* large round button */
-  button {
+  /* large round button center bottom of the screen */
+  #newTaskButton {
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background-color: black;
+    background-color: var(--primary-color);
     color: white;
     font-size: 30px;
     border: none;
     outline: none;
     cursor: pointer;
+    position: absolute;
+    bottom: 2%;
+    left: 50%;
+    transform: translate(-50%, -50%);
   }
 </style>

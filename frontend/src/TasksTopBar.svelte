@@ -12,7 +12,7 @@
   };
 
   const toggleCompleted = () => {
-    dispatch("toggleCompleted", [scope, showCompleted]);
+    dispatch("toggleCompletedToday", [scope, showCompleted]);
   };
 
   onMount(() => {

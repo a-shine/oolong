@@ -1,11 +1,8 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import NewTask from "./NewTask.svelte";
   import NotFound from "./NotFound.svelte";
   import Tasks from "./Tasks.svelte";
   import Router, { location, replace } from "svelte-spa-router";
-  import NewTaskTest from "./NewTaskTest.svelte";
-  import Register from "./Register.svelte";
   import Login from "./Login.svelte";
 
   let onlineFlag: boolean;
@@ -36,7 +33,6 @@
     // Exact path
     "/": Tasks,
 
-    "/register": Register,
     "/login": Login,
 
     // Catch-all
@@ -56,8 +52,5 @@
 </script>
 
 <main>
-  <!-- {#if $location !== "/register"}
-    <TopBar />
-  {/if} -->
   <Router {routes} />
 </main>

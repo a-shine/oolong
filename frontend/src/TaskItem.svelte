@@ -1,98 +1,85 @@
 <script lang="ts">
-    import TaskEditor from "./TaskEditor.svelte";
-    import type { Task } from "./types/task.type";
+  import type { Task } from "./types/task.type";
+  import { createEventDispatcher } from "svelte";
 
-    export let task: Task;
-    export let updateTaskAndUpdateDisplay: (task: Task) => void;
-    export let deleteTaskAndUpdateDisplay: (task: Task) => void;
+  export let task: Task;
 
-    function createTaskAndUpdateDisplay(task: Task) {}
+  const dispatch = createEventDispatcher();
 
-    let displayTaskEditorModal: boolean = false;
+  function toggleDone() {
+    dispatch("toggleDone", task);
+  }
 
-    function updateCompletionStatus(task: Task) {
-        task.complete = !task.complete;
-        updateTaskAndUpdateDisplay(task);
-    }
+  function toggleEdit() {
+    dispatch("toggleEdit", task);
+  }
 </script>
 
-<div class="container" on:click|self={() => (displayTaskEditorModal = true)}>
+<div id="task-item">
+  <div id="done-checkbox">
     <input
-        type="checkbox"
-        bind:checked={task.complete}
-        on:click={() => updateCompletionStatus(task)}
+      type="checkbox"
+      id="task-checkbox"
+      name="task-checkbox"
+      on:click={toggleDone}
     />
-    <!-- <div id="taskButton"> -->
-    <div id="taskBody" on:click={() => (displayTaskEditorModal = true)}>
-        <span>{task.content}</span>
-
-        <!-- if task with time compute the date in hh:mm format -->
-        {#if task.withTime}
-            <br />
-            <span
-                ><small
-                    >{new Date(task.due).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                    })}</small
-                ></span
-            >
-        {/if}
+  </div>
+  <div id="task-info" on:click={toggleEdit}>
+    <div id="task-text">
+      {task.description}
     </div>
-    <!-- </div> -->
+    <div id="task-details">
+      {#if task.dueAt}
+        <span class="detail-tag"
+          >{new Date(task.dueAt).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}</span
+        >
+      {/if}
+    </div>
+  </div>
 </div>
 
-{#if displayTaskEditorModal}
-    <TaskEditor
-        bind:displayTaskEditorModal
-        {task}
-        newTask={false}
-        {createTaskAndUpdateDisplay}
-        {updateTaskAndUpdateDisplay}
-        {deleteTaskAndUpdateDisplay}
-    />
-{/if}
-
 <style>
-    /* constant height */
-    .container {
-        display: flex;
-        align-items: center;
-        height: 3em;
-        border: 1px solid black;
-        cursor: pointer;
-    }
+  #task-item {
+    width: 100%;
+    height: 50px;
+    display: flex;
+    align-items: center;
+  }
 
-    #taskBody {
-        cursor: pointer;
-        width: 100%;
-    }
-    #taskButton {
-        cursor: pointer;
-        width: 100%;
-        height: 100%;
-    }
-    .container:hover {
-        background-color: gray;
-    }
-    /* flat square checkbox */
-    input[type="checkbox"] {
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
-        display: inline-block;
-        width: 20px;
-        height: 20px;
-        border: 1px solid black;
-        /* border-radius: 3px; */
-        background-clip: padding-box;
-        background-color: white;
-        vertical-align: middle;
-        cursor: pointer;
-        /* vertical-align: middle; */
-    }
+  #done-checkbox {
+    margin-right: 5px;
+  }
 
-    input[type="checkbox"]:checked {
-        background-color: black;
-    }
+  /* Fill the remaining space of the task-item */
+  #task-info {
+    width: 100%;
+    overflow: hidden;
+  }
+
+  /* Fill remaining width of task-item */
+  #task-text {
+    width: 100%;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Little coloured tag with rounded edges */
+  #task-details {
+    width: 100%;
+  }
+
+  .detail-tag {
+    /* small text */
+    font-size: 0.7rem;
+
+    margin-right: 2.5px;
+    padding: 1px 2.5px;
+
+    border-radius: 5px;
+    background-color: var(--accent);
+  }
 </style>

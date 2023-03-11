@@ -21,3 +21,10 @@ Design decision
 - https://neighbourhood.ie/blog/2019/05/10/an-offline-first-todo-list-with-svelte-pouchdb-and-couchdb/ - svelte/pouchdb implementation
 
 don't change the way I store date and time its is actually the best way (as it allows the app to readust to different timezones) BUT do allow for re-ordering tasts that are on the same day
+
+// FEATURE: Want to handle toggle completed tasks a little differently:
+// - make completed tasks a new separate scope (like today, upcoming, unassigned)
+// - have a button to see completed tasks specific to the today scope (so we get a sense of what we've achieved today)
+
+// tracking deletion is a bit more complicated - we either need to keep track of all devices and queue the deletion so that each delete is sent to every node
+// or we can implement logical deletion by having a deleted flag on the task (this is not optimal as the database will be overgrowing but may be the easiest solution)
