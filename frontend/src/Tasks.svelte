@@ -5,8 +5,6 @@
 
   import type { Task } from "./types/task.type";
 
-  import Modal from "./lib/Modal.svelte";
-
   import TasksTopBar from "./TasksTopBar.svelte";
   import TaskEditor from "./TaskEditor.svelte";
   import TaskItem from "./TaskItem.svelte";
@@ -19,7 +17,12 @@
   // Displayed tasks are determined by the scope
   let scope: string = "today";
 
+  let dragDisabled = true;
+
+  let disabledScroll = true;
+
   // TODO: clean and comment
+  // BUG: Disable scrolling on mobile when keyboard is open
 
   // Get the database promise and create the object stores if required
   const db = openDB("oolongDb", 1, {
@@ -102,113 +105,6 @@
     }
   }
 
-  function addTaskRemote(task: Task) {
-    var response = fetch("http://localhost:8000/tasks", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(task),
-    });
-  }
-
-  function addTask(task: Task) {
-    addTaskRemote(task);
-    addTaskLocal(task);
-  }
-
-  function getPersistentLastSynced() {
-    return localStorage.getItem("lastSynced");
-  }
-
-  function setPersistentLastSynced() {
-    localStorage.setItem("lastSynced", new Date().toISOString());
-  }
-
-  function getRemoteTasks(): Promise<Task[]> {
-    return fetch("http://localhost:8000/tasks")
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data);
-        return data;
-      });
-  }
-
-  function getRemoteLastUpdated(lastSynced): Promise<Task[]> {
-    return fetch("http://localhost:8000/tasks/updatedSince", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ lastSynced: lastSynced }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        return data;
-      });
-  }
-
-  // Eventually the database will clear out old tasks so have a period full sync of the database in case (or keep a record of replicas)
-  function getRemoteDeletedSince(lastSynced): Promise<Task[]> {
-    return fetch("http://localhost:8000/tasks/deletedSince", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ lastSynced: lastSynced }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        return data;
-      });
-  }
-
-  function syncWithRemote() {
-    // let remoteTasks: Task[] = [];
-    let lastSynced = getPersistentLastSynced();
-    if (lastSynced) {
-      Promise.all([
-        getRemoteLastUpdated(lastSynced),
-        getRemoteDeletedSince(lastSynced),
-      ]).then((tasks) => {
-        createOrUppdateTasks(tasks[0]);
-        deleteTasks(tasks[1]);
-        setPersistentLastSynced();
-        getTasksToDisplay();
-      });
-    } else {
-      getRemoteTasks().then((tasks) => {
-        createOrUppdateTasks(tasks);
-        setPersistentLastSynced();
-        getTasksToDisplay();
-      });
-    }
-  }
-
-  // Show a notification offline (by scheduling it) is not supported yet
-  // https://chromestatus.com/feature/5133150283890688
-  // function showNotification() {
-  //   if ("showTrigger" in Notification.prototype) {
-  //     /* Notification Triggers supported */
-  //     console.log("Notification Triggers supported");
-  //   }
-  //   Notification.requestPermission((result) => {
-  //     if (result === "granted") {
-  //       navigator.serviceWorker.ready.then((registration) => {
-  //         registration.showNotification("Vibration Sample", {
-  //           body: "Buzz! Buzz!",
-  //           icon: "../images/touch/chrome-touch-icon-192x192.png",
-  //           vibrate: [200, 100, 200, 100, 200, 100, 200],
-  //           tag: "vibration-sample",
-  //           showTrigger: new TimestampTrigger(10),
-  //         });
-  //       });
-  //     }
-  //   });
-  // }
-
-  let dragDisabled = true;
-
   const flipDurationMs = 100;
   function handleDndConsider(e) {
     incompleteDisplayedTasks = e.detail.items;
@@ -224,13 +120,13 @@
     }
   }
 
-  async function addTaskTest(task: Task) {
+  async function addTaskToLocalDb(task: Task) {
     (await db).put("incompleteTasks", task);
-    // TODO: update the displayed tasks with the current scope
+    // Refresh the displayed tasks based on the current scope
     incompleteDisplayedTasks = await getIncompleteTasksTimeline(scope);
   }
 
-  function newBlankTask(): Task {
+  function newBlankTaskObj(): Task {
     return {
       id: undefined,
       projectLabel: null,
@@ -251,11 +147,11 @@
     task.completedAt = Date.now();
     (await db).put("completedTasks", task);
     (await db).delete("incompleteTasks", task.id);
-    // TODO: update the displayed tasks with the current scope
+    // Refresh the displayed tasks based on the current scope
     incompleteDisplayedTasks = await getIncompleteTasksTimeline(scope);
   }
 
-  let taskCursor: Task = newBlankTask();
+  let taskCursor: Task = newBlankTaskObj();
 
   function editTask(task: Task) {
     displayTaskEditorDialog = true;
@@ -263,101 +159,119 @@
   }
 </script>
 
-<TasksTopBar
-  bind:scope
-  on:changeScope={async (e) => {
-    // BUG: this is not working as expected should be able to use completedDisplay tasks
-    switch (e.detail[0]) {
-      case "completed":
-        console.log("completed");
-        // incompleteDisplayedTasks = null;
-        // completedDisplayedTasks = [];
-        incompleteDisplayedTasks = await getCompletedTasks(e.detail[0]);
-        console.log(completedDisplayedTasks);
-        break;
-      default:
-        completedDisplayedTasks = null;
-        incompleteDisplayedTasks = await getIncompleteTasksTimeline(
-          e.detail[0]
-        );
-    }
+{#if displayTaskEditorDialog}
+  <TaskEditor
+    task={taskCursor}
+    on:close={() => {
+      displayTaskEditorDialog = false;
+      taskCursor = newBlankTaskObj();
+    }}
+    on:newTask={(e) => {
+      addTaskToLocalDb(e.detail);
+      taskCursor = newBlankTaskObj();
+      displayTaskEditorDialog = false;
+    }}
+  />
+  <!-- Show task list -->
+{:else}
+  <div id="main" class:scroll-lock={disabledScroll}>
+    <TasksTopBar
+      bind:scope
+      on:changeScope={async (e) => {
+        // BUG: this is not working as expected should be able to use completedDisplay tasks
+        switch (e.detail[0]) {
+          case "completed":
+            console.log("completed");
+            // incompleteDisplayedTasks = null;
+            // completedDisplayedTasks = [];
+            incompleteDisplayedTasks = await getCompletedTasks(e.detail[0]);
+            console.log(completedDisplayedTasks);
+            break;
+          default:
+            completedDisplayedTasks = null;
+            incompleteDisplayedTasks = await getIncompleteTasksTimeline(
+              e.detail[0]
+            );
+        }
 
-    // Disable re-ordering if not today or unassigned
-    if (e.detail[0] == "today" || e.detail[0] == "unassigned") {
-      dragDisabled = false;
-    } else {
-      dragDisabled = true;
-    }
-  }}
-  on:toggleCompletedToday={async (e) => {
-    console.log("toggleCompletedToday");
-    if (e.detail[1]) {
-      completedDisplayedTasks = await getCompletedTasks("today");
-    } else {
-      completedDisplayedTasks = null;
-    }
-  }}
-/>
-
-<div id="main">
-  {#if incompleteDisplayedTasks}
-    <!-- Only enable re-ordering on today and unordered -->
-    <div
-      class="tasks"
-      use:dndzone={{
-        items: incompleteDisplayedTasks,
-        flipDurationMs,
-        dragDisabled,
+        // Disable re-ordering if not today or unassigned
+        if (e.detail[0] == "today" || e.detail[0] == "unassigned") {
+          dragDisabled = false;
+        } else {
+          dragDisabled = true;
+        }
       }}
-      on:consider={handleDndConsider}
-      on:finalize={handleDndFinalize}
-    >
-      {#each incompleteDisplayedTasks as task (task.id)}
-        <div animate:flip={{ duration: flipDurationMs }}>
-          <TaskItem
-            {task}
-            on:toggleEdit={(e) => editTask(e.detail)}
-            on:toggleDone={(e) => completeTask(e.detail)}
-          />
-        </div>
-      {/each}
+      on:toggleCompletedToday={async (e) => {
+        console.log("toggleCompletedToday");
+        if (e.detail[1]) {
+          completedDisplayedTasks = await getCompletedTasks("today");
+        } else {
+          completedDisplayedTasks = null;
+        }
+      }}
+    />
+
+    <div id="task-list">
+      {#if incompleteDisplayedTasks}
+        {#key incompleteDisplayedTasks}
+          <!-- TODO: test this to re-render component based on refresh -->
+          <div
+            class="tasks"
+            use:dndzone={{
+              items: incompleteDisplayedTasks,
+              flipDurationMs,
+              dragDisabled,
+            }}
+            on:consider={handleDndConsider}
+            on:finalize={handleDndFinalize}
+          >
+            {#each incompleteDisplayedTasks as task (task.id)}
+              <div animate:flip={{ duration: flipDurationMs }}>
+                <TaskItem
+                  {task}
+                  on:toggleEdit={(e) => editTask(e.detail)}
+                  on:toggleDone={(e) => completeTask(e.detail)}
+                />
+              </div>
+            {/each}
+          </div>
+        {/key}
+        <!-- Only enable re-ordering on today and unordered -->
+
+        {#if completedDisplayedTasks}
+          <hr />
+          {#each completedDisplayedTasks as task}
+            <TaskItem {task} />
+          {/each}
+        {/if}
+      {/if}
     </div>
-
-    {#if completedDisplayedTasks}
-      <hr />
-      {#each completedDisplayedTasks as task}
-        <TaskItem {task} />
-      {/each}
-    {/if}
-  {/if}
-
-  <button id="newTaskButton" on:click={() => (displayTaskEditorDialog = true)}>
-    +
-  </button>
-
-  {#if displayTaskEditorDialog}
-    <Modal on:close={() => (displayTaskEditorDialog = false)}>
-      <TaskEditor
-        task={taskCursor}
-        on:close={() => {
-          displayTaskEditorDialog = false;
-          taskCursor = newBlankTask();
-        }}
-        on:newTask={(e) => {
-          addTaskTest(e.detail);
-          taskCursor = newBlankTask();
-          displayTaskEditorDialog = false;
-        }}
-      />
-    </Modal>
-  {/if}
-</div>
+    <div id="bottomBar">
+      <button
+        id="newTaskButton"
+        on:click={() => (displayTaskEditorDialog = true)}
+      >
+        +
+      </button>
+    </div>
+  </div>
+{/if}
 
 <style>
-  /* center content with max width */
   #main {
+    height: 100%;
+  }
+
+  /* make the task list the height of main minus the  topbar and bottom bar of 50px */
+  #task-list {
+    height: calc(100% - 100px); /* 100px = 50px topbar + 50px bottombar */
     max-width: 800px;
-    margin: 0 auto;
+    margin: 0 auto; /* center the task list */
+  }
+
+  #bottomBar {
+    height: 50px;
+    width: 100%;
   }
 
   /* large round button center bottom of the screen */
@@ -372,8 +286,5 @@
     outline: none;
     cursor: pointer;
     position: absolute;
-    bottom: 2%;
-    left: 50%;
-    transform: translate(-50%, -50%);
   }
 </style>

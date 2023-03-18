@@ -22,6 +22,7 @@
       id="task-checkbox"
       name="task-checkbox"
       on:click={toggleDone}
+      bind:checked={task.completedAt}
     />
   </div>
   <div id="task-info" on:click={toggleEdit}>

@@ -1,13 +1,16 @@
 <script lang="ts">
+  // TODO: Remove as modal and just have it as a new page?
   import { slide } from "svelte/transition";
 
   import { createEventDispatcher } from "svelte";
-  import Modal from "./lib/Modal.svelte";
+  import Dialog from "./lib/Dialog.svelte";
   import type { Task } from "./types/task.type";
   import { v4 as uuidv4 } from "uuid";
 
   // If no task is passed, we will create a new one so we start with an undefined task
   export let task: Task;
+
+  // TODO: fix so that keyboard doesn't add scroll to page on mobile
 
   // cache the initial task description and dueOn date
   let initialTaskDescription: string = task.description;
@@ -58,7 +61,7 @@
 </script>
 
 {#if safeExitModal}
-  <Modal>
+  <Dialog>
     Are you sure you want to exit?
     <button
       on:click={() => {
@@ -71,17 +74,19 @@
         close();
       }}>Yes</button
     >
-  </Modal>
+  </Dialog>
 {/if}
 
-<form id="task-editor" on:submit|preventDefault>
+<div id="topBar">
   <button
     type="button"
-    id="task-cancel"
+    id="close"
     on:click={() => {
       safeClose();
     }}>&#x2715;</button
   >
+</div>
+<div id="taskForm">
   <input
     type="text"
     id="task"
@@ -136,16 +141,17 @@
   {:else}
     <button type="button" id="task-add" on:click={createNewTask}>Add</button>
   {/if}
-</form>
+</div>
 
 <style>
+  #topBar {
+    width: 100%;
+    margin-bottom: 10px;
+    border: solid 2px black;
+  }
+
   .active {
     background-color: var(--primary-color);
-  }
-  #task-editor {
-    width: 100%;
-    /* background-color: var(--base-100); */
-    /* padding: 2rem 1rem; */
   }
 
   #task {
@@ -168,10 +174,6 @@
   }
 
   #task-add {
-    float: right;
-  }
-
-  #task-cancel {
     float: right;
   }
 </style>

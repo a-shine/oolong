@@ -53,6 +53,10 @@
     box-sizing: border-box;
 }
 
+html {
+    height: 100%;
+}
+
 body {
     /* Remove default browser margins */
     margin: 0;
@@ -63,7 +67,11 @@ body {
     /* Set background color */
     background-color: var(--base-100-color);
 
+    height: 100%;
+}
 
+#app {
+    height: 100%;
 }
 
 /* square brutalist buttons */
@@ -96,9 +104,11 @@ input[type=text]:focus {
 }
 
 select {
-    border-radius: 0;
-    background: white;
-    color: black;
-    border: 2px solid black;
-    outline: none;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+select:hover {
+    background-color: var(--primary-focus-color);
 }

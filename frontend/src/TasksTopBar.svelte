@@ -46,7 +46,7 @@
 
   <div id="right-side">
     <div class="bar-item">
-      <!-- Toggle completed checkbox with label -->
+      <!-- TODO: Move Completed section to bottom of Today list as a dropdown list like in G Tasks -->
       {#if scope === "today"}
         <label for="toggle-completed">Show completed</label>
         <input
@@ -78,16 +78,17 @@
     margin: 0 10px;
   }
 
-  /* make select element transparent */
+  /* 
+  Make select element transparent as it is on coloured top bar and slightly 
+  larger
+  */
   select {
     background-color: transparent;
-    border: none;
-    cursor: pointer;
+    font-size: 1rem;
+    outline: none;
   }
 
-  /* rounded hover on select */
   select:hover {
-    border-radius: 5px;
-    background-color: var(--primary-100);
+    background-color: var(--primary-focus-color);
   }
 </style>
