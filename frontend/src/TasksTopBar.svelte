@@ -11,10 +11,6 @@
     dispatch("changeScope", [scope, showCompleted]);
   };
 
-  const toggleCompleted = () => {
-    dispatch("toggleCompletedToday", [scope, showCompleted]);
-  };
-
   onMount(() => {
     dispatch("changeScope", [scope, showCompleted]);
   });
@@ -35,7 +31,6 @@
         <option value="upcoming">Upcoming</option>
       </optgroup>
       <optgroup label="All">
-        <option value="all">Incomplete</option>
         <option value="completed">Completed</option>
       </optgroup>
       <!-- return all completed in order of most recently completed and do it by day -->
@@ -44,21 +39,7 @@
     </select>
   </div>
 
-  <div id="right-side">
-    <div class="bar-item">
-      <!-- TODO: Move Completed section to bottom of Today list as a dropdown list like in G Tasks -->
-      {#if scope === "today"}
-        <label for="toggle-completed">Show completed</label>
-        <input
-          type="checkbox"
-          id="toggle-completed"
-          name="toggle-completed"
-          bind:checked={showCompleted}
-          on:change={toggleCompleted}
-        />
-      {/if}
-    </div>
-  </div>
+  <div id="right-side" />
 </div>
 
 <style>

@@ -112,3 +112,18 @@ select {
 select:hover {
     background-color: var(--primary-focus-color);
 }
+
+ /* button with no borders and simple hover */
+ .borderless-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #000;
+    font-size: 1rem;
+    font-weight: 500;
+    padding: 0;
+  }
+
+  .borderless-button:hover {
+    background: var(--primary-focus-color);
+  }

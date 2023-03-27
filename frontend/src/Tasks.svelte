@@ -8,11 +8,12 @@
   import TasksTopBar from "./TasksTopBar.svelte";
   import TaskEditor from "./TaskEditor.svelte";
   import TaskItem from "./TaskItem.svelte";
+  import TodayView from "./TodayView.svelte";
+  import TaskList from "./TaskList.svelte";
 
   let displayTaskEditorDialog: boolean = false;
 
-  let incompleteDisplayedTasks: Task[];
-  let completedDisplayedTasks: Task[];
+  let tasks: Task[] = [];
 
   // Displayed tasks are determined by the scope
   let scope: string = "today";
@@ -107,23 +108,23 @@
 
   const flipDurationMs = 100;
   function handleDndConsider(e) {
-    incompleteDisplayedTasks = e.detail.items;
+    tasks = e.detail.items;
     // small vibration
     navigator.vibrate(5);
   }
   async function handleDndFinalize(e) {
-    incompleteDisplayedTasks = e.detail.items;
+    tasks = e.detail.items;
     // update the order of the tasks
-    for (let i = 0; i < incompleteDisplayedTasks.length; i++) {
-      incompleteDisplayedTasks[i].listOrder = i;
-      (await db).put("incompleteTasks", incompleteDisplayedTasks[i]);
+    for (let i = 0; i < tasks.length; i++) {
+      tasks[i].listOrder = i;
+      (await db).put("incompleteTasks", tasks[i]);
     }
   }
 
   async function addTaskToLocalDb(task: Task) {
     (await db).put("incompleteTasks", task);
     // Refresh the displayed tasks based on the current scope
-    incompleteDisplayedTasks = await getIncompleteTasksTimeline(scope);
+    tasks = await getIncompleteTasksTimeline(scope);
   }
 
   function newBlankTaskObj(): Task {
@@ -141,14 +142,6 @@
       laneOrder: Infinity,
       completedAt: undefined,
     };
-  }
-
-  async function completeTask(task: Task) {
-    task.completedAt = Date.now();
-    (await db).put("completedTasks", task);
-    (await db).delete("incompleteTasks", task.id);
-    // Refresh the displayed tasks based on the current scope
-    incompleteDisplayedTasks = await getIncompleteTasksTimeline(scope);
   }
 
   let taskCursor: Task = newBlankTaskObj();
@@ -181,17 +174,14 @@
         // BUG: this is not working as expected should be able to use completedDisplay tasks
         switch (e.detail[0]) {
           case "completed":
-            console.log("completed");
             // incompleteDisplayedTasks = null;
             // completedDisplayedTasks = [];
-            incompleteDisplayedTasks = await getCompletedTasks(e.detail[0]);
-            console.log(completedDisplayedTasks);
+            tasks = await getCompletedTasks(e.detail[0]);
+            // console.log(completedDisplayedTasks);
             break;
           default:
-            completedDisplayedTasks = null;
-            incompleteDisplayedTasks = await getIncompleteTasksTimeline(
-              e.detail[0]
-            );
+            // completedDisplayedTasks = null;
+            tasks = await getIncompleteTasksTimeline(e.detail[0]);
         }
 
         // Disable re-ordering if not today or unassigned
@@ -201,20 +191,22 @@
           dragDisabled = true;
         }
       }}
-      on:toggleCompletedToday={async (e) => {
-        console.log("toggleCompletedToday");
-        if (e.detail[1]) {
-          completedDisplayedTasks = await getCompletedTasks("today");
-        } else {
-          completedDisplayedTasks = null;
-        }
-      }}
     />
 
+    <!-- TODO: add overdue tasks in today page (maybe make Today it's own component) -->
     <div id="task-list">
-      {#if incompleteDisplayedTasks}
+      {#if scope == "today"}
+        <TodayView {db} /> <!-- Might need a await here? -->
+      {:else}
+        <!-- Have the simple list (unassigned, upcoming and completed) - today is the only one with the special set of lists-->
+        {#key tasks}
+          <TaskList {tasks} />
+        {/key}
+      {/if}
+      <!-- TODO: test this to re-render component based on refresh -->
+      <!-- {#if incompleteDisplayedTasks}
         {#key incompleteDisplayedTasks}
-          <!-- TODO: test this to re-render component based on refresh -->
+        
           <div
             class="tasks"
             use:dndzone={{
@@ -236,7 +228,7 @@
             {/each}
           </div>
         {/key}
-        <!-- Only enable re-ordering on today and unordered -->
+      
 
         {#if completedDisplayedTasks}
           <hr />
@@ -244,7 +236,8 @@
             <TaskItem {task} />
           {/each}
         {/if}
-      {/if}
+      {/if} -->
+      <!-- Only enable re-ordering on today and unordered -->
     </div>
     <div id="bottomBar">
       <button
