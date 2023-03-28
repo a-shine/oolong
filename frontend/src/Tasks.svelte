@@ -1,13 +1,10 @@
 <script lang="ts">
   import { openDB } from "idb";
-  import { dndzone } from "svelte-dnd-action"; // https://github.com/isaacHagoel/svelte-dnd-action
-  import { flip } from "svelte/animate";
 
   import type { Task } from "./types/task.type";
 
   import TasksTopBar from "./TasksTopBar.svelte";
   import TaskEditor from "./TaskEditor.svelte";
-  import TaskItem from "./TaskItem.svelte";
   import TodayView from "./TodayView.svelte";
   import TaskList from "./TaskList.svelte";
 
@@ -17,8 +14,6 @@
 
   // Displayed tasks are determined by the scope
   let scope: string = "today";
-
-  let dragDisabled = true;
 
   // TODO: clean and comment
   // BUG: Disable scrolling on mobile when keyboard is open
@@ -104,21 +99,6 @@
     }
   }
 
-  const flipDurationMs = 100;
-  function handleDndConsider(e) {
-    tasks = e.detail.items;
-    // small vibration
-    navigator.vibrate(5);
-  }
-  async function handleDndFinalize(e) {
-    tasks = e.detail.items;
-    // update the order of the tasks
-    for (let i = 0; i < tasks.length; i++) {
-      tasks[i].listOrder = i;
-      (await db).put("incompleteTasks", tasks[i]);
-    }
-  }
-
   async function addTaskToLocalDb(task: Task) {
     (await db).put("incompleteTasks", task);
     // Refresh the displayed tasks based on the current scope
@@ -150,11 +130,10 @@
   }
 
   async function completeTask(task: Task) {
-    console.log("completing task");
     task.completedAt = Date.now();
     (await db).put("completedTasks", task);
     (await db).delete("incompleteTasks", task.id);
-    // Refresh the displayed tasks based on the current scope
+    // TODO: Refresh the displayed tasks based on the current scope (maybe have this happen on a list level instead of here)
   }
 </script>
 
@@ -182,15 +161,7 @@
           tasks = await getCompletedTasks(e.detail[0]);
           break;
         default:
-          // completedDisplayedTasks = null;
           tasks = await getIncompleteTasksTimeline(e.detail[0]);
-      }
-
-      // Disable re-ordering if not today or unassigned
-      if (e.detail[0] == "today" || e.detail[0] == "unassigned") {
-        dragDisabled = false;
-      } else {
-        dragDisabled = true;
       }
     }}
   />
@@ -201,12 +172,19 @@
         <div>Loading...</div>
       {:then db}
         {#if scope == "today"}
-          <TodayView {db} on:toggleDone={(e) => completeTask(e.detail)} />
-          <!-- TODO: get the toggle done broadcast -->
+          <TodayView
+            {db}
+            on:toggleDone={(e) => completeTask(e.detail)}
+            on:toggleEdit={(e) => editTask(e.detail)}
+          />
         {:else}
           <!-- Have the simple list (unassigned, upcoming and completed) - today is the only one with the special set of lists-->
           {#key tasks}
-            <TaskList {tasks} on:toggleDone={(e) => completeTask(e.detail)} />
+            <TaskList
+              {tasks}
+              on:toggleDone={(e) => completeTask(e.detail)}
+              on:toggleEdit={(e) => editTask(e.detail)}
+            />
           {/key}
         {/if}
       {/await}
@@ -216,6 +194,7 @@
   <div id="bottomBar" class="bg-primary">
     <button
       id="newTaskButton"
+      class="bg-accent"
       on:click={() => (displayTaskEditorDialog = true)}
     >
       +
@@ -224,7 +203,6 @@
 {/if}
 
 <style>
-  /* make the task list the height of main minus the  topbar and bottom bar of 50px */
   #container {
     position: fixed;
     top: 50px;
@@ -256,7 +234,5 @@
     height: 50px;
     border-radius: 50%;
     font-size: 30px;
-    background-color: black;
-    color: white;
   }
 </style>

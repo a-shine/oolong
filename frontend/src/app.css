@@ -47,6 +47,24 @@
     background-color: var(--primary-focus-color);
 }
 
+.bg-secondary {
+    background-color: var(--secondary-color);
+    color: var(--secondary-content-color);
+}
+
+.bg-secondary:focus {
+    background-color: var(--secondary-focus-color);
+}
+
+.bg-accent {
+    background-color: var(--accent-color);
+    color: var(--accent-content-color);
+}
+
+.bg-accent:focus {
+    background-color: var(--accent-focus-color);
+}
+
 * {
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;

@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { Task } from "./types/task.type";
   import type { IDBPDatabase } from "idb";
-  import TaskItem from "./TaskItem.svelte";
   import TaskList from "./TaskList.svelte";
   import { createEventDispatcher } from "svelte";
 
@@ -54,32 +53,42 @@
   // This determines what is seen in a a list so scope the db query to this
 
   function toggleDone(task: Task) {
-    console.log("toggleDone", task);
     dispatch("toggleDone", task);
+  }
+
+  function toggleEdit(task: Task) {
+    dispatch("toggleEdit", task);
   }
 </script>
 
-<p>Overdue</p>
 {#await getOverdueTasks()}
   <p>Loading...</p>
 {:then tasks}
-  <TaskList
-    enableOrdering={true}
-    {tasks}
-    on:toggleDone={(e) => toggleDone(e.detail)}
-  />
+  {#if tasks.length > 0}
+    <p>Overdue</p>
+    <TaskList
+      enableOrdering={true}
+      {tasks}
+      on:toggleDone={(e) => toggleDone(e.detail)}
+      on:toggleEdit={(e) => toggleEdit(e.detail)}
+    />
+  {/if}
 {/await}
-<p>Today</p>
 {#await getTodayIncompleteTasks()}
   <p>Loading...</p>
 {:then tasks}
-  <TaskList
-    enableOrdering={true}
-    {tasks}
-    on:toggleDone={(e) => toggleDone(e.detail)}
-  />
+  {#if tasks.length > 0}
+    <p>Today</p>
+    <TaskList
+      enableOrdering={true}
+      {tasks}
+      on:toggleDone={(e) => toggleDone(e.detail)}
+      on:toggleEdit={(e) => toggleEdit(e.detail)}
+    />
+  {/if}
 {/await}
 
+<hr />
 <p>
   <button
     on:click={() => (showCompleted = !showCompleted)}
@@ -97,6 +106,7 @@
         enableOrdering={false}
         {tasks}
         on:toggleDone={(e) => toggleDone(e.detail)}
+        on:toggleEdit={(e) => toggleEdit(e.detail)}
       />
     {/each}
   {/await}
