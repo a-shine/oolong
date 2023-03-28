@@ -20,8 +20,6 @@
 
   let dragDisabled = true;
 
-  let disabledScroll = true;
-
   // TODO: clean and comment
   // BUG: Disable scrolling on mobile when keyboard is open
 
@@ -150,6 +148,14 @@
     displayTaskEditorDialog = true;
     taskCursor = task; // overwrite the taskCursor with the task to edit
   }
+
+  async function completeTask(task: Task) {
+    task.completedAt = Date.now();
+    (await db).put("completedTasks", task);
+    (await db).delete("incompleteTasks", task.id);
+    // Refresh the displayed tasks based on the current scope
+    // tasks = await getIncompleteTasksTimeline(scope);
+  }
 </script>
 
 {#if displayTaskEditorDialog}
@@ -167,117 +173,89 @@
   />
   <!-- Show task list -->
 {:else}
-  <div id="main" class:scroll-lock={disabledScroll}>
-    <TasksTopBar
-      bind:scope
-      on:changeScope={async (e) => {
-        // BUG: this is not working as expected should be able to use completedDisplay tasks
-        switch (e.detail[0]) {
-          case "completed":
-            // incompleteDisplayedTasks = null;
-            // completedDisplayedTasks = [];
-            tasks = await getCompletedTasks(e.detail[0]);
-            // console.log(completedDisplayedTasks);
-            break;
-          default:
-            // completedDisplayedTasks = null;
-            tasks = await getIncompleteTasksTimeline(e.detail[0]);
-        }
+  <TasksTopBar
+    bind:scope
+    on:changeScope={async (e) => {
+      // BUG: this is not working as expected should be able to use completedDisplay tasks
+      switch (e.detail[0]) {
+        case "completed":
+          tasks = await getCompletedTasks(e.detail[0]);
+          break;
+        default:
+          // completedDisplayedTasks = null;
+          tasks = await getIncompleteTasksTimeline(e.detail[0]);
+      }
 
-        // Disable re-ordering if not today or unassigned
-        if (e.detail[0] == "today" || e.detail[0] == "unassigned") {
-          dragDisabled = false;
-        } else {
-          dragDisabled = true;
-        }
-      }}
-    />
+      // Disable re-ordering if not today or unassigned
+      if (e.detail[0] == "today" || e.detail[0] == "unassigned") {
+        dragDisabled = false;
+      } else {
+        dragDisabled = true;
+      }
+    }}
+  />
 
-    <!-- TODO: add overdue tasks in today page (maybe make Today it's own component) -->
-    <div id="task-list">
-      {#if scope == "today"}
-        <TodayView {db} /> <!-- Might need a await here? -->
-      {:else}
-        <!-- Have the simple list (unassigned, upcoming and completed) - today is the only one with the special set of lists-->
-        {#key tasks}
-          <TaskList {tasks} />
-        {/key}
-      {/if}
-      <!-- TODO: test this to re-render component based on refresh -->
-      <!-- {#if incompleteDisplayedTasks}
-        {#key incompleteDisplayedTasks}
-        
-          <div
-            class="tasks"
-            use:dndzone={{
-              items: incompleteDisplayedTasks,
-              flipDurationMs,
-              dragDisabled,
-            }}
-            on:consider={handleDndConsider}
-            on:finalize={handleDndFinalize}
-          >
-            {#each incompleteDisplayedTasks as task (task.id)}
-              <div animate:flip={{ duration: flipDurationMs }}>
-                <TaskItem
-                  {task}
-                  on:toggleEdit={(e) => editTask(e.detail)}
-                  on:toggleDone={(e) => completeTask(e.detail)}
-                />
-              </div>
-            {/each}
-          </div>
-        {/key}
-      
-
-        {#if completedDisplayedTasks}
-          <hr />
-          {#each completedDisplayedTasks as task}
-            <TaskItem {task} />
-          {/each}
+  <div id="container">
+    <div id="tasks">
+      {#await db}
+        <div>Loading...</div>
+      {:then db}
+        {#if scope == "today"}
+          <TodayView {db} /> <!-- TODO: get the toggle done broadcast -->
+        {:else}
+          <!-- Have the simple list (unassigned, upcoming and completed) - today is the only one with the special set of lists-->
+          {#key tasks}
+            <TaskList {tasks} on:toggleDone={(e) => completeTask(e.detail)} />
+          {/key}
         {/if}
-      {/if} -->
-      <!-- Only enable re-ordering on today and unordered -->
+      {/await}
     </div>
-    <div id="bottomBar">
-      <button
-        id="newTaskButton"
-        on:click={() => (displayTaskEditorDialog = true)}
-      >
-        +
-      </button>
-    </div>
+  </div>
+
+  <div id="bottomBar" class="bg-primary">
+    <button
+      id="newTaskButton"
+      on:click={() => (displayTaskEditorDialog = true)}
+    >
+      +
+    </button>
   </div>
 {/if}
 
 <style>
-  #main {
-    height: 100%;
-  }
-
   /* make the task list the height of main minus the  topbar and bottom bar of 50px */
-  #task-list {
-    height: calc(100% - 100px); /* 100px = 50px topbar + 50px bottombar */
+  #container {
+    position: fixed;
+    top: 50px;
+    bottom: 60px;
+    left: 0;
+    right: 0;
+    overflow-y: auto;
+  }
+
+  #tasks {
     max-width: 800px;
-    margin: 0 auto; /* center the task list */
+    margin: 0 auto;
   }
 
+  /* bottom bar fixed at the bottom of the page after the tasks */
   #bottomBar {
-    height: 50px;
+    position: fixed;
+    bottom: 0;
     width: 100%;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  /* large round button center bottom of the screen */
+  /* place the newTaskButton at the bottom center of the page */
   #newTaskButton {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
-    background-color: var(--primary-color);
-    color: white;
     font-size: 30px;
-    border: none;
-    outline: none;
-    cursor: pointer;
-    position: absolute;
+    background-color: black;
+    color: white;
   }
 </style>

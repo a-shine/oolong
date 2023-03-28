@@ -2,14 +2,6 @@
   import type { Task } from "./types/task.type";
   import { createEventDispatcher } from "svelte";
 
-  async function completeTask(task: Task) {
-    task.completedAt = Date.now();
-    (await db).put("completedTasks", task);
-    (await db).delete("incompleteTasks", task.id);
-    // Refresh the displayed tasks based on the current scope
-    // tasks = await getIncompleteTasksTimeline(scope);
-  }
-
   export let task: Task;
 
   const dispatch = createEventDispatcher();

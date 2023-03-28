@@ -1,13 +1,12 @@
 <script lang="ts">
   import type { Task } from "./types/task.type";
-  import { openDB } from "idb";
+  import type { IDBPDatabase } from "idb";
   import TaskItem from "./TaskItem.svelte";
   import TaskList from "./TaskList.svelte";
 
   let showCompleted: boolean = false;
 
-  //   export let db;
-  export const db = openDB("oolongDb", 1);
+  export let db: IDBPDatabase<unknown>;
 
   async function getTodayIncompleteTasks() {
     const tx = (await db).transaction("incompleteTasks", "readwrite");
