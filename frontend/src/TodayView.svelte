@@ -68,7 +68,8 @@
     <p>Overdue</p>
     <TaskList
       enableOrdering={true}
-      {tasks}
+      {db}
+      scope="overdue"
       on:toggleDone={(e) => toggleDone(e.detail)}
       on:toggleEdit={(e) => toggleEdit(e.detail)}
     />
@@ -81,7 +82,8 @@
     <p>Today</p>
     <TaskList
       enableOrdering={true}
-      {tasks}
+      {db}
+      scope="today"
       on:toggleDone={(e) => toggleDone(e.detail)}
       on:toggleEdit={(e) => toggleEdit(e.detail)}
     />
@@ -104,7 +106,8 @@
     {#each tasks as task}
       <TaskList
         enableOrdering={false}
-        {tasks}
+        {db}
+        scope="completed"
         on:toggleDone={(e) => toggleDone(e.detail)}
         on:toggleEdit={(e) => toggleEdit(e.detail)}
       />

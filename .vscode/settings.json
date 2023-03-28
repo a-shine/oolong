@@ -3,5 +3,7 @@
     "[javascript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
-    "editor.rulers": [80, 120]
+    "editor.rulers": [
+        80,
+]
 }

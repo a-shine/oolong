@@ -10,8 +10,6 @@
 
   let displayTaskEditorDialog: boolean = false;
 
-  let tasks: Task[] = [];
-
   // Displayed tasks are determined by the scope
   let scope: string = "today";
 
@@ -52,59 +50,6 @@
     },
   });
 
-  async function getCompletedTasks(scope: string): Promise<Task[]> {
-    const tx = (await db).transaction("completedTasks", "readwrite");
-    const store = tx.objectStore("completedTasks");
-    const index = store.index("dueOnCompletedAt"); // return completed task in order of the most recently completed
-    switch (scope) {
-      case "today":
-        let today = new Date().setHours(0, 0, 0, 0);
-        let range = IDBKeyRange.bound(
-          [today, 0],
-          [today + 86400000, Infinity],
-          false,
-          true
-        );
-        return await index.getAll(range);
-      case "completed":
-        return await index.getAll();
-      default:
-        return await index.getAll();
-    }
-  }
-
-  async function getIncompleteTasksTimeline(scope: string) {
-    const tx = (await db).transaction("incompleteTasks", "readwrite");
-    const store = tx.objectStore("incompleteTasks");
-    const index = store.index("dueOnListOrder");
-    let range;
-    switch (scope) {
-      case "unassigned":
-        let firstUnassignedTask = [-1, 0];
-        let lastUnassignedTask = [-1, Infinity];
-        range = IDBKeyRange.bound(firstUnassignedTask, lastUnassignedTask);
-        return await index.getAll(range);
-      case "today":
-        let today = new Date().setHours(0, 0, 0, 0);
-        let firstTaskToday = [today, 0];
-        let firstTaskTmr = [today + 86400000, 0];
-        range = IDBKeyRange.bound(firstTaskToday, firstTaskTmr, false, true);
-        return await index.getAll(range);
-      case "upcoming":
-        let tmr = new Date().setHours(0, 0, 0, 0) + 86400000;
-        range = IDBKeyRange.lowerBound([tmr, 0]);
-        return await index.getAll(range);
-      default:
-        return await index.getAll();
-    }
-  }
-
-  async function addTaskToLocalDb(task: Task) {
-    (await db).put("incompleteTasks", task);
-    // Refresh the displayed tasks based on the current scope
-    tasks = await getIncompleteTasksTimeline(scope);
-  }
-
   function newBlankTaskObj(): Task {
     return {
       id: undefined,
@@ -129,11 +74,10 @@
     taskCursor = task; // overwrite the taskCursor with the task to edit
   }
 
-  async function completeTask(task: Task) {
-    task.completedAt = Date.now();
-    (await db).put("completedTasks", task);
-    (await db).delete("incompleteTasks", task.id);
-    // TODO: Refresh the displayed tasks based on the current scope (maybe have this happen on a list level instead of here)
+  async function addTaskToLocalDb(task: Task) {
+    (await db).put("incompleteTasks", task);
+    // TODO: Refresh the displayed tasks based on the current scope
+    // tasks = await getIncompleteTasksTimeline(scope);
   }
 </script>
 
@@ -152,41 +96,25 @@
   />
   <!-- Show task list -->
 {:else}
-  <TasksTopBar
-    bind:scope
-    on:changeScope={async (e) => {
-      // BUG: this is not working as expected should be able to use completedDisplay tasks
-      switch (e.detail[0]) {
-        case "completed":
-          tasks = await getCompletedTasks(e.detail[0]);
-          break;
-        default:
-          tasks = await getIncompleteTasksTimeline(e.detail[0]);
-      }
-    }}
-  />
+  <TasksTopBar bind:scope />
 
   <div id="container">
     <div id="tasks">
       {#await db}
         <div>Loading...</div>
       {:then db}
-        {#if scope == "today"}
-          <TodayView
-            {db}
-            on:toggleDone={(e) => completeTask(e.detail)}
-            on:toggleEdit={(e) => editTask(e.detail)}
-          />
-        {:else}
-          <!-- Have the simple list (unassigned, upcoming and completed) - today is the only one with the special set of lists-->
-          {#key tasks}
+        {#key scope}
+          {#if scope == "today"}
+            <TodayView {db} on:toggleEdit={(e) => editTask(e.detail)} />
+          {:else}
             <TaskList
-              {tasks}
-              on:toggleDone={(e) => completeTask(e.detail)}
+              enableOrdering={false}
+              {db}
+              {scope}
               on:toggleEdit={(e) => editTask(e.detail)}
             />
-          {/key}
-        {/if}
+          {/if}
+        {/key}
       {/await}
     </div>
   </div>
