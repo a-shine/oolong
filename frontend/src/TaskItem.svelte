@@ -2,6 +2,8 @@
   import type { Task } from "./types/task.type";
   import { createEventDispatcher } from "svelte";
 
+  //  TODO: Toggle uncomplete tasks
+
   export let task: Task;
 
   const dispatch = createEventDispatcher();

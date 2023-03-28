@@ -79,7 +79,9 @@
     task.completedAt = Date.now();
     (await db).put("completedTasks", task);
     (await db).delete("incompleteTasks", task.id);
-    // TODO: Refresh the displayed tasks based on the current scope (maybe have this happen on a list level instead of here)
+
+    // Refresh the displayed tasks based on the current scope (maybe have this happen on a list level instead of here)
+    tasks = await getTasks();
   }
 
   const flipDurationMs = 100;
