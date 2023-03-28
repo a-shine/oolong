@@ -3,6 +3,7 @@
   import type { IDBPDatabase } from "idb";
   import TaskItem from "./TaskItem.svelte";
   import TaskList from "./TaskList.svelte";
+  import { createEventDispatcher } from "svelte";
 
   let showCompleted: boolean = false;
 
@@ -47,19 +48,36 @@
     );
     return await index.getAll(range);
   }
+
+  const dispatch = createEventDispatcher();
+
+  // This determines what is seen in a a list so scope the db query to this
+
+  function toggleDone(task: Task) {
+    console.log("toggleDone", task);
+    dispatch("toggleDone", task);
+  }
 </script>
 
 <p>Overdue</p>
 {#await getOverdueTasks()}
   <p>Loading...</p>
 {:then tasks}
-  <TaskList enableOrdering={true} {tasks} />
+  <TaskList
+    enableOrdering={true}
+    {tasks}
+    on:toggleDone={(e) => toggleDone(e.detail)}
+  />
 {/await}
 <p>Today</p>
 {#await getTodayIncompleteTasks()}
   <p>Loading...</p>
 {:then tasks}
-  <TaskList enableOrdering={true} {tasks} />
+  <TaskList
+    enableOrdering={true}
+    {tasks}
+    on:toggleDone={(e) => toggleDone(e.detail)}
+  />
 {/await}
 
 <p>
@@ -75,7 +93,11 @@
     <p>Loading...</p>
   {:then tasks}
     {#each tasks as task}
-      <TaskList enableOrdering={false} {tasks} />
+      <TaskList
+        enableOrdering={false}
+        {tasks}
+        on:toggleDone={(e) => toggleDone(e.detail)}
+      />
     {/each}
   {/await}
 {/if}

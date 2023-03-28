@@ -150,11 +150,11 @@
   }
 
   async function completeTask(task: Task) {
+    console.log("completing task");
     task.completedAt = Date.now();
     (await db).put("completedTasks", task);
     (await db).delete("incompleteTasks", task.id);
     // Refresh the displayed tasks based on the current scope
-    // tasks = await getIncompleteTasksTimeline(scope);
   }
 </script>
 
@@ -201,7 +201,8 @@
         <div>Loading...</div>
       {:then db}
         {#if scope == "today"}
-          <TodayView {db} /> <!-- TODO: get the toggle done broadcast -->
+          <TodayView {db} on:toggleDone={(e) => completeTask(e.detail)} />
+          <!-- TODO: get the toggle done broadcast -->
         {:else}
           <!-- Have the simple list (unassigned, upcoming and completed) - today is the only one with the special set of lists-->
           {#key tasks}
