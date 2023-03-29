@@ -11,6 +11,8 @@
 
   export let db: IDBPDatabase<unknown>;
 
+  // BUG: Weird behaviour when re-ordering tasks
+
   onMount(async () => {
     tasksToday = await getTodayIncompleteTasks();
     tasksOverdue = await getTasksOverdue();

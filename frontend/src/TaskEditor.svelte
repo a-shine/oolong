@@ -173,7 +173,9 @@
   #topBar {
     width: 100%;
     margin-bottom: 10px;
-    border: solid 2px black;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
   }
 
   .active {

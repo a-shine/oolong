@@ -14,7 +14,7 @@
   // list is updated
   let scope: string = "today";
 
-  // TODO: Look at refactoring this method
+  // TODO: Look at refactoring this approach to task creation and editing
   let taskCursor: Task = newBlankTaskObj();
 
   // TODO: clean and comment

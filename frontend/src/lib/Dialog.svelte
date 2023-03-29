@@ -31,6 +31,5 @@
     max-width: 32em;
     max-height: calc(100vh - 4em);
     transform: translate(-50%, -50%);
-    border: solid 1px black;
   }
 </style>
