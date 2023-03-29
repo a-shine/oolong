@@ -134,7 +134,7 @@
         >
       {/if}
     {:else}
-      <input in:slide type="date" />
+      <input in:slide type="date" bind:value={dueOn} />
       <button
         on:click={() => {
           addDateDialog = false;

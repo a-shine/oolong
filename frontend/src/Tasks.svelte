@@ -52,6 +52,51 @@
     },
   });
 
+  async function getTasks(): Promise<Task[]> {
+    switch (scope) {
+      case "unassigned":
+        return await getUnassignedTasks();
+      case "upcoming":
+        return await getUpcomingTasks();
+      case "completed":
+        return await getCompletedTasks();
+      default:
+        return;
+    }
+  }
+
+  /**
+   * Get all completed tasks from the local (IndexedDB) database
+   */
+  async function getCompletedTasks(): Promise<Task[]> {
+    const tx = (await db).transaction("completedTasks", "readwrite");
+    const store = tx.objectStore("completedTasks");
+    const index = store.index("dueOnCompletedAt"); // return completed task in order of the most recently completed
+
+    return await index.getAll();
+  }
+
+  async function getUpcomingTasks() {
+    const tx = (await db).transaction("incompleteTasks", "readwrite");
+    const store = tx.objectStore("incompleteTasks");
+    const index = store.index("dueOnListOrder");
+
+    let tmr = new Date().setHours(0, 0, 0, 0) + 86400000;
+    let range = IDBKeyRange.lowerBound([tmr, 0]);
+    return await index.getAll(range);
+  }
+
+  async function getUnassignedTasks(): Promise<Task[]> {
+    const tx = (await db).transaction("incompleteTasks", "readwrite");
+    const store = tx.objectStore("incompleteTasks");
+    const index = store.index("dueOnListOrder");
+
+    let firstUnassignedTask = [-1, 0];
+    let lastUnassignedTask = [-1, Infinity];
+    let range = IDBKeyRange.bound(firstUnassignedTask, lastUnassignedTask);
+    return await index.getAll(range);
+  }
+
   function newBlankTaskObj(): Task {
     return {
       id: undefined,
@@ -119,12 +164,14 @@
           {#if scope == "today"}
             <TodayView {db} on:toggleEdit={(e) => editTask(e.detail)} />
           {:else}
-            <TaskList
-              enableOrdering={false}
-              {db}
-              {scope}
-              on:toggleEdit={(e) => editTask(e.detail)}
-            />
+            {#await getTasks() then tasks}
+              <TaskList
+                enableOrdering={false}
+                {db}
+                {tasks}
+                on:toggleEdit={(e) => editTask(e.detail)}
+              />
+            {/await}
           {/if}
         {/key}
       {/await}

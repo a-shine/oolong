@@ -11,9 +11,12 @@
 
   export let db: IDBPDatabase<unknown>;
 
+  // BUG: This should be happening on the Task List level, not the Today View level
   onMount(async () => {
     tasksToday = await getTodayIncompleteTasks();
-    tasksOverdue = await getOverdueTasks();
+    tasksOverdue = await getTasksOverdue();
+    // console.log(tasksToday);
+    console.log(tasksOverdue);
   });
 
   async function getTodayIncompleteTasks() {
@@ -29,32 +32,25 @@
     return await index.getAll(range);
   }
 
-  async function getOverdueTasks() {
-    const tx = (await db).transaction("incompleteTasks", "readwrite");
+  // BUG: Not returning overdue tasks, returning unassigned tasks instead
+  async function getTasksOverdue() {
+    const tx = db.transaction("incompleteTasks", "readwrite");
     const store = tx.objectStore("incompleteTasks");
     const index = store.index("dueOnListOrder");
-    let range;
 
     let today = new Date().setHours(0, 0, 0, 0);
-    let firstTaskToday = [today, 0];
-    range = IDBKeyRange.upperBound(firstTaskToday);
+    // Get tasks that are not Unassigned but were due yesterday or before
+    let range = IDBKeyRange.bound([-1, Infinity], [today, 0], false, false);
     return await index.getAll(range);
   }
 
-  // BUG: Not showing only today's completed tasks - LOGIC IS WRONG don't look at dueOn but look at completedAt (we care about showing tasks completed today)
-  // TODO: When displaying completed tasks, show the most recently completed tasks first
-  async function getTodayCompletedTasks() {
-    const tx = (await db).transaction("completedTasks", "readwrite");
+  async function getTasksDoneToday() {
+    const tx = db.transaction("completedTasks", "readwrite");
     const store = tx.objectStore("completedTasks");
     const index = store.index("dueOnCompletedAt"); // return completed task in order of the most recently completed
 
     let today = new Date().setHours(0, 0, 0, 0);
-    let range = IDBKeyRange.bound(
-      [today, 0],
-      [today + 86400000, Infinity],
-      false,
-      true
-    );
+    let range = IDBKeyRange.bound([-1, today], [Infinity, today], false, true);
     return await index.getAll(range);
   }
 
@@ -73,7 +69,7 @@
   function unDone(task: Task) {
     if (task.dueOn === new Date().setHours(0, 0, 0, 0)) {
       tasksToday = [...tasksToday, task];
-    } else {
+    } else if (task.dueOn < new Date().setHours(0, 0, 0, 0)) {
       tasksOverdue = [...tasksOverdue, task];
     }
   }
@@ -85,7 +81,7 @@
     <TaskList
       enableOrdering={true}
       {db}
-      scope="overdue"
+      tasks={tasksOverdue}
       on:toggleDone={(e) => toggleDone(e.detail)}
       on:toggleEdit={(e) => toggleEdit(e.detail)}
     />
@@ -97,7 +93,7 @@
     <TaskList
       enableOrdering={true}
       {db}
-      scope="today"
+      tasks={tasksToday}
       on:toggleDone={(e) => toggleDone(e.detail)}
       on:toggleEdit={(e) => toggleEdit(e.detail)}
     />
@@ -110,22 +106,20 @@
     on:click={() => (showCompleted = !showCompleted)}
     class="borderless-button"
   >
-    {showCompleted ? "Hide" : "Show"} completed tasks</button
+    {showCompleted ? "Hide" : "Show"} today's completed tasks</button
   >
 </p>
 {#if showCompleted}
-  {#await getTodayCompletedTasks()}
+  {#await getTasksDoneToday()}
     <p>Loading...</p>
   {:then tasks}
-    {#each tasks as task}
-      <TaskList
-        enableOrdering={false}
-        {db}
-        scope="completed"
-        on:toggleDone={(e) => toggleDone(e.detail)}
-        on:toggleEdit={(e) => toggleEdit(e.detail)}
-        on:undoneTask={(e) => unDone(e.detail)}
-      />
-    {/each}
+    <TaskList
+      enableOrdering={false}
+      {db}
+      {tasks}
+      on:toggleDone={(e) => toggleDone(e.detail)}
+      on:toggleEdit={(e) => toggleEdit(e.detail)}
+      on:undoneTask={(e) => unDone(e.detail)}
+    />
   {/await}
 {/if}
