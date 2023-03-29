@@ -11,12 +11,9 @@
 
   export let db: IDBPDatabase<unknown>;
 
-  // BUG: This should be happening on the Task List level, not the Today View level
   onMount(async () => {
     tasksToday = await getTodayIncompleteTasks();
     tasksOverdue = await getTasksOverdue();
-    // console.log(tasksToday);
-    console.log(tasksOverdue);
   });
 
   async function getTodayIncompleteTasks() {
@@ -32,7 +29,6 @@
     return await index.getAll(range);
   }
 
-  // BUG: Not returning overdue tasks, returning unassigned tasks instead
   async function getTasksOverdue() {
     const tx = db.transaction("incompleteTasks", "readwrite");
     const store = tx.objectStore("incompleteTasks");

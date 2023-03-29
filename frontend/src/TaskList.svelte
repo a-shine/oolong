@@ -9,7 +9,6 @@
 
   export let enableOrdering: boolean = false;
   export let db: IDBPDatabase<unknown>;
-  // export let scope: string;
 
   export let tasks: Task[] = null;
 
@@ -26,12 +25,11 @@
 
     // Refresh the displayed tasks based on the current scope
 
-    // BUG: Remove the task from the list
+    // BUG: When task is moved back to original list, error is thrown
+    // Remove the task from the list
     tasks = tasks.filter((t) => t.id !== task.id);
     dispatch("undoneTask", task);
   }
-
-  // BUG: Able to drag tasks between overdue and today
 
   const flipDurationMs = 100;
 
@@ -65,6 +63,7 @@
       items: tasks,
       flipDurationMs,
       dragDisabled: !enableOrdering,
+      dropFromOthersDisabled: true, // Prevent drag between Overdue and Today
     }}
     on:consider={handleDndConsider}
     on:finalize={handleDndFinalize}

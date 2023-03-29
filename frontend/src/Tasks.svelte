@@ -14,14 +14,18 @@
   // list is updated
   let scope: string = "today";
 
+  // TODO: Look at refactoring this method
   let taskCursor: Task = newBlankTaskObj();
 
   // TODO: clean and comment
 
-  // Get the database promise and create the object stores if required
+  // Open a connection to the local (IndexedDB) database. Create/modify the
+  // necessary object stores if the version has changed
   const db = openDB("oolongDb", 1, {
     upgrade(db) {
       console.log("Upgrading database...");
+      // Creating two object stores. One for incomplete tasks and the other for
+      // completed tasks.
       if (!db.objectStoreNames.contains("incompleteTasks")) {
         const incompleteTasks = db.createObjectStore("incompleteTasks", {
           keyPath: "id",
@@ -52,6 +56,9 @@
     },
   });
 
+  /**
+   * @returns a promise of the tasks list based on the component scope setting
+   */
   async function getTasks(): Promise<Task[]> {
     switch (scope) {
       case "unassigned":
