@@ -79,7 +79,6 @@
   }
 </script>
 
-<!-- TODO: Test undone re-added to list -->
 {#if tasksOverdue.length > 0}
   {#key tasksOverdue}
     <p>Overdue</p>
