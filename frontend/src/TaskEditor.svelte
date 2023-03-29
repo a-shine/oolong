@@ -6,8 +6,6 @@
   import type { Task } from "./types/task.type";
   import { v4 as uuidv4 } from "uuid";
 
-  // TODO: Reflect task due date in task editor
-
   // If no task is passed, we will create a new one so we start with an undefined task
   export let task: Task;
 
@@ -123,14 +121,19 @@
   <div id="task-params">
     {#if !addDateDialog}
       <button
-        class:active={dueOnString === new Date().toISOString().split("T")[0]}
+        class:active={task.dueOn === new Date().setHours(0, 0, 0, 0) ||
+          dueOnString === new Date().toISOString().split("T")[0]}
         on:click={(e) => {
           dueOnString = new Date().toISOString().split("T")[0];
         }}>Today</button
       >
       <button
-        class:active={dueOnString ===
-          new Date(new Date().getTime() + 86400000).toISOString().split("T")[0]}
+        class:active={task.dueOn ===
+          new Date(new Date().getTime() + 86400000).setHours(0, 0, 0, 0) ||
+          dueOnString ===
+            new Date(new Date().getTime() + 86400000)
+              .toISOString()
+              .split("T")[0]}
         on:click={() => {
           dueOnString = new Date(new Date().getTime() + 86400000)
             .toISOString()
@@ -143,10 +146,11 @@
         }}>Other datetime</button
       >
       <!-- remove date button -->
-      {#if dueOnString}
+      {#if dueOnString || task.dueOn}
         <button
           on:click={() => {
             dueOnString = undefined;
+            task.dueOn = -1;
           }}>x</button
         >
       {/if}

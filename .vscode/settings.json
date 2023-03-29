@@ -9,5 +9,6 @@
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "editor.rulers": [80]
+  "editor.rulers": [80],
+  "cSpell.words": ["dndzone", "IDBP", "uuidv"]
 }

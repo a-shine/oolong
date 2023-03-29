@@ -5,14 +5,6 @@
   export let task: Task;
 
   const dispatch = createEventDispatcher();
-
-  function toggleDone() {
-    dispatch("toggleDone", task);
-  }
-
-  function toggleEdit() {
-    dispatch("toggleEdit", task);
-  }
 </script>
 
 <div id="task-item">
@@ -21,11 +13,11 @@
       type="checkbox"
       id="task-checkbox"
       name="task-checkbox"
-      on:click={toggleDone}
+      on:click={() => dispatch("toggleDone", task)}
       bind:checked={task.completedAt}
     />
   </div>
-  <div id="task-info" on:click={toggleEdit}>
+  <div id="task-info" on:click={() => dispatch("toggleEdit", task)}>
     <div id="task-text">
       {task.description}
     </div>
