@@ -17,10 +17,8 @@
   // TODO: Look at refactoring this approach to task creation and editing
   let taskCursor: Task = newBlankTaskObj();
 
-  // TODO: clean and comment
-
   // Open a connection to the local (IndexedDB) database. Create/modify the
-  // necessary object stores if the version has changed
+  // necessary object stores if the version has changed.
   const db = openDB("oolongDb", 1, {
     upgrade(db) {
       console.log("Upgrading database...");
