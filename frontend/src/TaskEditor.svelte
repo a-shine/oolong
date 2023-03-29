@@ -1,7 +1,7 @@
 <script lang="ts">
   import { slide } from "svelte/transition";
 
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher, onMount } from "svelte";
   import Dialog from "./lib/Dialog.svelte";
   import type { Task } from "./types/task.type";
   import { v4 as uuidv4 } from "uuid";
@@ -21,6 +21,12 @@
   let cachedTaskDueOn: number = task.dueOn;
 
   const dispatch = createEventDispatcher();
+
+  onMount(() => {
+    // Focus on the input field
+    const input = document.getElementById("task");
+    input.focus();
+  });
 
   const close = () => {
     dispatch("close");
@@ -114,7 +120,6 @@
     id="task"
     name="task"
     placeholder="Task"
-    autofocus
     autocomplete="off"
     bind:value={task.description}
   />
@@ -193,11 +198,6 @@
 
     /* increase size of placeholder text proportionals */
     font-size: 1.5rem;
-  }
-
-  #dateButton {
-    background: transparent;
-    border: none;
   }
 
   /* darker background on hover */
