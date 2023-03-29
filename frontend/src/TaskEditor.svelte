@@ -1,5 +1,4 @@
 <script lang="ts">
-  // TODO: Remove as modal and just have it as a new page?
   import { slide } from "svelte/transition";
 
   import { createEventDispatcher } from "svelte";
@@ -7,10 +6,13 @@
   import type { Task } from "./types/task.type";
   import { v4 as uuidv4 } from "uuid";
 
+  // BUG: Fix cancel/close warning
+  // TODO: Add delete task warning
+
   // If no task is passed, we will create a new one so we start with an undefined task
   export let task: Task;
 
-  // TODO: fix so that keyboard doesn't add scroll to page on mobile
+  // BUG: fix so that keyboard doesn't add scroll to page on mobile
 
   // cache the initial task description and dueOn date
   let initialTaskDescription: string = task.description;
@@ -25,6 +27,10 @@
   };
 
   const updateTask = () => {
+    task.updatedAt = new Date().getTime();
+    if (dueOn) {
+      task.dueOn = new Date(dueOn).getTime();
+    }
     dispatch("updateTask", task);
   };
 

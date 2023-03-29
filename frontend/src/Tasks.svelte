@@ -10,11 +10,13 @@
 
   let displayTaskEditorDialog: boolean = false;
 
-  // Displayed tasks are determined by the scope
+  // Displayed tasks are determined by the scope, on changes to scope, the task
+  // list is updated
   let scope: string = "today";
 
+  let taskCursor: Task = newBlankTaskObj();
+
   // TODO: clean and comment
-  // BUG: Disable scrolling on mobile when keyboard is open
 
   // Get the database promise and create the object stores if required
   const db = openDB("oolongDb", 1, {
@@ -67,17 +69,17 @@
     };
   }
 
-  let taskCursor: Task = newBlankTaskObj();
-
   function editTask(task: Task) {
     displayTaskEditorDialog = true;
     taskCursor = task; // overwrite the taskCursor with the task to edit
   }
 
+  async function deleteTask(task: Task) {
+    (await db).delete("incompleteTasks", task.id);
+  }
+
   async function addTaskToLocalDb(task: Task) {
     (await db).put("incompleteTasks", task);
-    // TODO: Refresh the displayed tasks based on the current scope
-    // tasks = await getIncompleteTasksTimeline(scope);
   }
 </script>
 
@@ -90,6 +92,16 @@
     }}
     on:newTask={(e) => {
       addTaskToLocalDb(e.detail);
+      taskCursor = newBlankTaskObj();
+      displayTaskEditorDialog = false;
+    }}
+    on:updateTask={(e) => {
+      addTaskToLocalDb(e.detail);
+      taskCursor = newBlankTaskObj();
+      displayTaskEditorDialog = false;
+    }}
+    on:deleteTask={(e) => {
+      deleteTask(e.detail);
       taskCursor = newBlankTaskObj();
       displayTaskEditorDialog = false;
     }}

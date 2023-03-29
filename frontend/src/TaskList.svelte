@@ -109,14 +109,25 @@
   }
 </script>
 
-<div id="task-list">
-  {#if tasks}
-    {#each tasks as task}
-      <TaskItem
-        {task}
-        on:toggleDone={(e) => completeTask(e.detail)}
-        on:toggleEdit={(e) => toggleEdit(e.detail)}
-      />
+{#if tasks}
+  <div
+    id="task-list"
+    use:dndzone={{
+      items: tasks,
+      flipDurationMs,
+      dragDisabled: !enableOrdering,
+    }}
+    on:consider={handleDndConsider}
+    on:finalize={handleDndFinalize}
+  >
+    {#each tasks as task (task.id)}
+      <div animate:flip={{ duration: flipDurationMs }}>
+        <TaskItem
+          {task}
+          on:toggleDone={(e) => completeTask(e.detail)}
+          on:toggleEdit={(e) => toggleEdit(e.detail)}
+        />
+      </div>
     {/each}
-  {/if}
-</div>
+  </div>
+{/if}
