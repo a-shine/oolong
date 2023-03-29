@@ -8,6 +8,8 @@
   import TodayView from "./TodayView.svelte";
   import TaskList from "./TaskList.svelte";
 
+  // TODO: Clean and refactor this file
+
   let displayTaskEditorDialog: boolean = false;
 
   // Displayed tasks are determined by the scope, on changes to scope, the task
