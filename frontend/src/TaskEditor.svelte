@@ -8,6 +8,7 @@
 
   // BUG: Fix cancel/close warning
   // TODO: Add delete task warning
+  // TODO: Reflect task due date in task editor
 
   // If no task is passed, we will create a new one so we start with an undefined task
   export let task: Task;
@@ -46,7 +47,7 @@
     task.createdAt = new Date().getTime();
     task.updatedAt = new Date().getTime();
     if (dueOn) {
-      task.dueOn = new Date(dueOn).getTime();
+      task.dueOn = new Date(dueOn).setHours(0, 0, 0, 0);
     }
 
     dispatch("newTask", task);

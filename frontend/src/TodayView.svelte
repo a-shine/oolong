@@ -2,11 +2,19 @@
   import type { Task } from "./types/task.type";
   import type { IDBPDatabase } from "idb";
   import TaskList from "./TaskList.svelte";
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher, onMount } from "svelte";
 
   let showCompleted: boolean = false;
 
+  let tasksToday: Task[] = [];
+  let tasksOverdue: Task[] = [];
+
   export let db: IDBPDatabase<unknown>;
+
+  onMount(async () => {
+    tasksToday = await getTodayIncompleteTasks();
+    tasksOverdue = await getOverdueTasks();
+  });
 
   async function getTodayIncompleteTasks() {
     const tx = (await db).transaction("incompleteTasks", "readwrite");
@@ -33,6 +41,8 @@
     return await index.getAll(range);
   }
 
+  // BUG: Not showing only today's completed tasks - LOGIC IS WRONG don't look at dueOn but look at completedAt (we care about showing tasks completed today)
+  // TODO: When displaying completed tasks, show the most recently completed tasks first
   async function getTodayCompletedTasks() {
     const tx = (await db).transaction("completedTasks", "readwrite");
     const store = tx.objectStore("completedTasks");
@@ -59,12 +69,19 @@
   function toggleEdit(task: Task) {
     dispatch("toggleEdit", task);
   }
+
+  function unDone(task: Task) {
+    if (task.dueOn === new Date().setHours(0, 0, 0, 0)) {
+      tasksToday = [...tasksToday, task];
+    } else {
+      tasksOverdue = [...tasksOverdue, task];
+    }
+  }
 </script>
 
-{#await getOverdueTasks()}
-  <p>Loading...</p>
-{:then tasks}
-  {#if tasks.length > 0}
+<!-- TODO: Test undone re-added to list -->
+{#if tasksOverdue.length > 0}
+  {#key tasksOverdue}
     <p>Overdue</p>
     <TaskList
       enableOrdering={true}
@@ -73,12 +90,10 @@
       on:toggleDone={(e) => toggleDone(e.detail)}
       on:toggleEdit={(e) => toggleEdit(e.detail)}
     />
-  {/if}
-{/await}
-{#await getTodayIncompleteTasks()}
-  <p>Loading...</p>
-{:then tasks}
-  {#if tasks.length > 0}
+  {/key}
+{/if}
+{#if tasksToday.length > 0}
+  {#key tasksToday}
     <p>Today</p>
     <TaskList
       enableOrdering={true}
@@ -87,8 +102,8 @@
       on:toggleDone={(e) => toggleDone(e.detail)}
       on:toggleEdit={(e) => toggleEdit(e.detail)}
     />
-  {/if}
-{/await}
+  {/key}
+{/if}
 
 <hr />
 <p>
@@ -110,6 +125,7 @@
         scope="completed"
         on:toggleDone={(e) => toggleDone(e.detail)}
         on:toggleEdit={(e) => toggleEdit(e.detail)}
+        on:undoneTask={(e) => unDone(e.detail)}
       />
     {/each}
   {/await}

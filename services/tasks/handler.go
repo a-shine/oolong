@@ -59,8 +59,6 @@ func createTask(w http.ResponseWriter, r *http.Request, db *gorm.DB) {
 	var task Task
 	json.NewDecoder(r.Body).Decode(&task)
 	if task.Id == "" {
-		// TODO: generate the uuid server side
-		// else let the client use a valid generated uuid
 		task.Id = uuid.New().String()
 	}
 	db.Create(&task)

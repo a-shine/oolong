@@ -76,12 +76,20 @@
   }
 
   async function completeTask(task: Task) {
-    task.completedAt = Date.now();
-    (await db).put("completedTasks", task);
-    (await db).delete("incompleteTasks", task.id);
+    if (task.completedAt) {
+      task.completedAt = null;
+      (await db).put("incompleteTasks", task);
+      (await db).delete("completedTasks", task.id);
+    } else {
+      task.completedAt = Date.now();
+      (await db).put("completedTasks", task);
+      (await db).delete("incompleteTasks", task.id);
+    }
 
-    // Refresh the displayed tasks based on the current scope (maybe have this happen on a list level instead of here)
+    // Refresh the displayed tasks based on the current scope
+    // BUG: Task not re-appearing in todays list after being undone
     tasks = await getTasks();
+    dispatch("undoneTask", task);
   }
 
   const flipDurationMs = 100;
