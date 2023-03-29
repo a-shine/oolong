@@ -21,7 +21,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./frontend # context for the dockerfile not this file
+          file: ./frontend/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/client-authentication:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/oolong-web:latest
