@@ -11,8 +11,8 @@
 
   export let db: IDBPDatabase<unknown>;
 
-  // BUG: Weird behaviour when re-ordering tasks (overdue tasks are not re-ordered)
-
+  // BUG: Not able to undo a task that was due today or overdue
+  
   onMount(async () => {
     tasksToday = await getTodayIncompleteTasks();
     tasksOverdue = await getTasksOverdue();
@@ -31,15 +31,18 @@
     return await index.getAll(range);
   }
 
-  async function getTasksOverdue() {
+  async function getTasksOverdue(): Promise<Task[]> {
     const tx = db.transaction("incompleteTasks", "readwrite");
     const store = tx.objectStore("incompleteTasks");
     const index = store.index("dueOnListOrder");
 
     let today = new Date().setHours(0, 0, 0, 0);
     // Get tasks that are not Unassigned but were due yesterday or before
-    let range = IDBKeyRange.bound([-1, Infinity], [today, 0], false, false);
-    return await index.getAll(range);
+    let range = IDBKeyRange.bound([-1, Infinity], [today, 0], false, true);
+    let tasks = await index.getAll(range);
+    console.log(tasks);
+    
+    return tasks;
   }
 
   async function getTasksDoneToday() {

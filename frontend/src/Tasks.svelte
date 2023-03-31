@@ -8,6 +8,129 @@
   import TodayView from "./TodayView.svelte";
   import TaskList from "./TaskList.svelte";
 
+  let task1: Task = {
+    id: "someRandomIdString1",
+    projectLabel: null,
+    description: "This task is overdue",
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    dueOn: new Date("2021-01-01").setHours(0, 0, 0, 0),
+    dueAt: null,
+    recurrence: 0,
+    lane: null,
+    listOrder: 0,
+    laneOrder: 0,
+    completedAt: null,
+  };
+
+  let task2: Task = {
+    id: "someRandomIdString2",
+    projectLabel: null,
+    description: "This task is also overdue",
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    dueOn: new Date("2021-01-01").setHours(0, 0, 0, 0),
+    dueAt: null,
+    recurrence: 0,
+    lane: null,
+    listOrder: 0,
+    laneOrder: 0,
+    completedAt: null,
+  };
+
+  let task3: Task = {
+    id: "someRandomIdString3",
+    projectLabel: null,
+    description: "This task is due today",
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    dueOn: new Date().setHours(0, 0, 0, 0),
+    dueAt: null,
+    recurrence: 0,
+    lane: null,
+    listOrder: 0,
+    laneOrder: 0,
+    completedAt: null,
+  };
+
+  // task with no due date
+  let task4: Task = {
+    id: "someRandomIdString4",
+    projectLabel: null,
+    description: "This task is unassigned",
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    dueOn: -1,
+    dueAt: null,
+    recurrence: 0,
+    lane: null,
+    listOrder: 0,
+    laneOrder: 0,
+    completedAt: null,
+  };
+
+  let task5: Task = {
+    id: "someRandomIdString5",
+    projectLabel: null,
+    description: "This task is also unassigned",
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    dueOn: -1,
+    dueAt: null,
+    recurrence: 0,
+    lane: null,
+    listOrder: 0,
+    laneOrder: 0,
+    completedAt: null,
+  };
+
+  let task6: Task = {
+    id: "someRandomIdString6",
+    projectLabel: null,
+    description: "This task is upcoming",
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    dueOn: Date.now() + 86400000,
+    dueAt: null,
+    recurrence: 0,
+    lane: null,
+    listOrder: 0,
+    laneOrder: 0,
+    completedAt: null,
+  };
+
+  let task7: Task = {
+    id: "someRandomIdString7",
+    projectLabel: null,
+    description: "This task is done today",
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    dueOn: Date.now() + 86400000,
+    dueAt: null,
+    recurrence: 0,
+    lane: null,
+    listOrder: 0,
+    laneOrder: 0,
+    completedAt: Date.now(),
+  };
+
+  let task8: Task = {
+    id: "someRandomIdString8",
+    projectLabel: null,
+    description: "This task is done today but was overdue",
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    dueOn: Date.now() + 86400000,
+    dueAt: null,
+    recurrence: 0,
+    lane: null,
+    listOrder: 0,
+    laneOrder: 0,
+    completedAt: Date.now() + 5,
+  };
+
+
+
   // TODO: Clean and refactor this file
 
   let displayTaskEditorDialog: boolean = false;
@@ -40,6 +163,14 @@
             unique: false,
           }
         );
+
+        // Add some dummy data
+        incompleteTasks.put(task1);
+        incompleteTasks.put(task2);
+        incompleteTasks.put(task3);
+        incompleteTasks.put(task4);
+        incompleteTasks.put(task5);
+        incompleteTasks.put(task6);
       }
       if (!db.objectStoreNames.contains("completedTasks")) {
         const completedTasks = db.createObjectStore("completedTasks", {
@@ -52,6 +183,8 @@
             unique: false,
           }
         );
+        completedTasks.put(task7);
+        completedTasks.put(task8);
       }
     },
   });
