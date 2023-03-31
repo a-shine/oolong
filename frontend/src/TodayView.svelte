@@ -98,26 +98,28 @@
   {/key}
 {/if}
 
-<hr />
-<p>
-  <button
-    on:click={() => (showCompleted = !showCompleted)}
-    class="borderless-button"
-  >
-    {showCompleted ? "Hide" : "Show"} today's completed tasks</button
-  >
-</p>
-{#if showCompleted}
-  {#await getTasksDoneToday()}
-    <p>Loading...</p>
-  {:then tasks}
-    <TaskList
-      enableOrdering={false}
-      {db}
-      {tasks}
-      on:toggleDone={(e) => toggleDone(e.detail)}
-      on:toggleEdit={(e) => toggleEdit(e.detail)}
-      on:undoneTask={(e) => unDone(e.detail)}
-    />
-  {/await}
-{/if}
+{#await getTasksDoneToday()}
+  <p>Loading...</p>
+{:then tasks}
+  {#if tasks.length > 0}
+    <hr />
+    <p>
+      <button
+        on:click={() => (showCompleted = !showCompleted)}
+        class="borderless-button"
+      >
+        {showCompleted ? "Hide" : "Show"} today's completed tasks</button
+      >
+    </p>
+    {#if showCompleted}
+      <TaskList
+        enableOrdering={false}
+        {db}
+        {tasks}
+        on:toggleDone={(e) => toggleDone(e.detail)}
+        on:toggleEdit={(e) => toggleEdit(e.detail)}
+        on:undoneTask={(e) => unDone(e.detail)}
+      />
+    {/if}
+  {/if}
+{/await}

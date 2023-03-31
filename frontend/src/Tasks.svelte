@@ -136,34 +136,37 @@
 </script>
 
 {#if displayTaskEditorDialog}
-  <TaskEditor
-    task={taskCursor}
-    on:close={() => {
-      displayTaskEditorDialog = false;
-      taskCursor = newBlankTaskObj();
-    }}
-    on:newTask={(e) => {
-      addTaskToLocalDb(e.detail);
-      taskCursor = newBlankTaskObj();
-      displayTaskEditorDialog = false;
-    }}
-    on:updateTask={(e) => {
-      addTaskToLocalDb(e.detail);
-      taskCursor = newBlankTaskObj();
-      displayTaskEditorDialog = false;
-    }}
-    on:deleteTask={(e) => {
-      deleteTask(e.detail);
-      taskCursor = newBlankTaskObj();
-      displayTaskEditorDialog = false;
-    }}
-  />
+  <div class="tasks">
+    <TaskEditor
+      task={taskCursor}
+      on:close={() => {
+        displayTaskEditorDialog = false;
+        taskCursor = newBlankTaskObj();
+      }}
+      on:newTask={(e) => {
+        addTaskToLocalDb(e.detail);
+        taskCursor = newBlankTaskObj();
+        displayTaskEditorDialog = false;
+      }}
+      on:updateTask={(e) => {
+        addTaskToLocalDb(e.detail);
+        taskCursor = newBlankTaskObj();
+        displayTaskEditorDialog = false;
+      }}
+      on:deleteTask={(e) => {
+        deleteTask(e.detail);
+        taskCursor = newBlankTaskObj();
+        displayTaskEditorDialog = false;
+      }}
+    />
+  </div>
+
   <!-- Show task list -->
 {:else}
   <TasksTopBar bind:scope />
 
   <div id="container">
-    <div id="tasks">
+    <div id="tasks" class="tasks">
       {#await db}
         <div>Loading...</div>
       {:then db}
@@ -206,7 +209,7 @@
     overflow-y: auto;
   }
 
-  #tasks {
+  .tasks {
     max-width: 800px;
     margin: 0 auto;
   }
