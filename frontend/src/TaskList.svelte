@@ -12,15 +12,18 @@
 
   export let tasks: Task[] = null;
 
+  // BUG: this logic is conflicting with the logic in TodayView.svelte
   async function completeTask(task: Task) {
     if (task.completedAt) {
       task.completedAt = null;
       (await db).put("incompleteTasks", task);
       (await db).delete("completedTasks", task.id);
+      dispatch("undoneTask", task)
     } else {
       task.completedAt = Date.now();
       (await db).put("completedTasks", task);
       (await db).delete("incompleteTasks", task.id);
+      dispatch("doneTask", task);
     }
 
     // Refresh the displayed tasks based on the current scope
@@ -28,7 +31,6 @@
     // BUG: When task is moved back to original list, error is thrown
     // Remove the task from the list
     tasks = tasks.filter((t) => t.id !== task.id);
-    dispatch("undoneTask", task);
   }
 
   const flipDurationMs = 100;

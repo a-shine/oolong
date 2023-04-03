@@ -8,132 +8,19 @@
   import TodayView from "./TodayView.svelte";
   import TaskList from "./TaskList.svelte";
 
-  let task1: Task = {
-    id: "someRandomIdString1",
-    projectLabel: null,
-    description: "This task is overdue",
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    dueOn: new Date("2021-01-01").setHours(0, 0, 0, 0),
-    dueAt: null,
-    recurrence: 0,
-    lane: null,
-    listOrder: 0,
-    laneOrder: 0,
-    completedAt: null,
-  };
-
-  let task2: Task = {
-    id: "someRandomIdString2",
-    projectLabel: null,
-    description: "This task is also overdue",
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    dueOn: new Date("2021-01-01").setHours(0, 0, 0, 0),
-    dueAt: null,
-    recurrence: 0,
-    lane: null,
-    listOrder: 0,
-    laneOrder: 0,
-    completedAt: null,
-  };
-
-  let task3: Task = {
-    id: "someRandomIdString3",
-    projectLabel: null,
-    description: "This task is due today",
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    dueOn: new Date().setHours(0, 0, 0, 0),
-    dueAt: null,
-    recurrence: 0,
-    lane: null,
-    listOrder: 0,
-    laneOrder: 0,
-    completedAt: null,
-  };
-
-  // task with no due date
-  let task4: Task = {
-    id: "someRandomIdString4",
-    projectLabel: null,
-    description: "This task is unassigned",
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    dueOn: -1,
-    dueAt: null,
-    recurrence: 0,
-    lane: null,
-    listOrder: 0,
-    laneOrder: 0,
-    completedAt: null,
-  };
-
-  let task5: Task = {
-    id: "someRandomIdString5",
-    projectLabel: null,
-    description: "This task is also unassigned",
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    dueOn: -1,
-    dueAt: null,
-    recurrence: 0,
-    lane: null,
-    listOrder: 0,
-    laneOrder: 0,
-    completedAt: null,
-  };
-
-  let task6: Task = {
-    id: "someRandomIdString6",
-    projectLabel: null,
-    description: "This task is upcoming",
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    dueOn: Date.now() + 86400000,
-    dueAt: null,
-    recurrence: 0,
-    lane: null,
-    listOrder: 0,
-    laneOrder: 0,
-    completedAt: null,
-  };
-
-  let task7: Task = {
-    id: "someRandomIdString7",
-    projectLabel: null,
-    description: "This task is done today",
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    dueOn: Date.now() + 86400000,
-    dueAt: null,
-    recurrence: 0,
-    lane: null,
-    listOrder: 0,
-    laneOrder: 0,
-    completedAt: Date.now(),
-  };
-
-  let task8: Task = {
-    id: "someRandomIdString8",
-    projectLabel: null,
-    description: "This task is done today but was overdue",
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    dueOn: Date.now() + 86400000,
-    dueAt: null,
-    recurrence: 0,
-    lane: null,
-    listOrder: 0,
-    laneOrder: 0,
-    completedAt: Date.now() + 5,
-  };
+  import {
+    task1,
+    task2,
+    task3,
+    task4,
+    task5,
+    task6,
+    task7,
+    task8,
+  } from "./testTasks";
 
 
-
-  // TODO: Clean and refactor this file
-
-  let displayTaskEditorDialog: boolean = false;
+  let displayTaskEditor: boolean = false;
 
   // Displayed tasks are determined by the scope, on changes to scope, the task
   // list is updated
@@ -146,9 +33,7 @@
   // necessary object stores if the version has changed.
   const db = openDB("oolongDb", 1, {
     upgrade(db) {
-      console.log("Upgrading database...");
-      // Creating two object stores. One for incomplete tasks and the other for
-      // completed tasks.
+      // Creating object store for incomplete tasks
       if (!db.objectStoreNames.contains("incompleteTasks")) {
         const incompleteTasks = db.createObjectStore("incompleteTasks", {
           keyPath: "id",
@@ -172,6 +57,8 @@
         incompleteTasks.put(task5);
         incompleteTasks.put(task6);
       }
+
+      // Creating object store for completed tasks
       if (!db.objectStoreNames.contains("completedTasks")) {
         const completedTasks = db.createObjectStore("completedTasks", {
           keyPath: "id",
@@ -211,11 +98,16 @@
   async function getCompletedTasks(): Promise<Task[]> {
     const tx = (await db).transaction("completedTasks", "readwrite");
     const store = tx.objectStore("completedTasks");
-    const index = store.index("dueOnCompletedAt"); // return completed task in order of the most recently completed
 
+    // Completed tasks in order of due date and then completion date
+    const index = store.index("dueOnCompletedAt");
     return await index.getAll();
   }
 
+  /**
+   * Get all upcoming tasks (tasks due from tomorrow onwards) from the local 
+   * (IndexedDB) database
+   */
   async function getUpcomingTasks() {
     const tx = (await db).transaction("incompleteTasks", "readwrite");
     const store = tx.objectStore("incompleteTasks");
@@ -226,14 +118,19 @@
     return await index.getAll(range);
   }
 
+  /**
+   * Get all unassigned tasks (tasks where dueOn is set to -1) from the local 
+   * (IndexedDB) database
+   */
   async function getUnassignedTasks(): Promise<Task[]> {
     const tx = (await db).transaction("incompleteTasks", "readwrite");
     const store = tx.objectStore("incompleteTasks");
+    
     const index = store.index("dueOnListOrder");
-
-    let firstUnassignedTask = [-1, 0];
-    let lastUnassignedTask = [-1, Infinity];
-    let range = IDBKeyRange.bound(firstUnassignedTask, lastUnassignedTask);
+    
+    // Tasks with dueOn set to -1
+    let range = IDBKeyRange.bound([-1, 0], [-1, Infinity]);
+    
     return await index.getAll(range);
   }
 
@@ -255,7 +152,7 @@
   }
 
   function editTask(task: Task) {
-    displayTaskEditorDialog = true;
+    displayTaskEditor = true;
     taskCursor = task; // overwrite the taskCursor with the task to edit
   }
 
@@ -268,28 +165,28 @@
   }
 </script>
 
-{#if displayTaskEditorDialog}
+{#if displayTaskEditor}
   <div class="tasks">
     <TaskEditor
       task={taskCursor}
       on:close={() => {
-        displayTaskEditorDialog = false;
+        displayTaskEditor = false;
         taskCursor = newBlankTaskObj();
       }}
       on:newTask={(e) => {
         addTaskToLocalDb(e.detail);
         taskCursor = newBlankTaskObj();
-        displayTaskEditorDialog = false;
+        displayTaskEditor = false;
       }}
       on:updateTask={(e) => {
         addTaskToLocalDb(e.detail);
         taskCursor = newBlankTaskObj();
-        displayTaskEditorDialog = false;
+        displayTaskEditor = false;
       }}
       on:deleteTask={(e) => {
         deleteTask(e.detail);
         taskCursor = newBlankTaskObj();
-        displayTaskEditorDialog = false;
+        displayTaskEditor = false;
       }}
     />
   </div>
@@ -325,7 +222,7 @@
     <button
       id="newTaskButton"
       class="bg-accent"
-      on:click={() => (displayTaskEditorDialog = true)}
+      on:click={() => (displayTaskEditor = true)}
     >
       +
     </button>
