@@ -7,20 +7,35 @@
   import { v4 as uuidv4 } from "uuid";
 
   // If no task is passed, we will create a new one so we start with an undefined task
-  export let task: Task;
+  export let task: Task | null = {
+    id: uuidv4(),
+    description: undefined,
+    createdAt: undefined,
+    updatedAt: undefined,
+    dueOn: undefined,
+    projectLabel: undefined,
+    lane: undefined,
+    laneOrder: undefined,
+    listOrder: Infinity,
+    dueAt: undefined,
+    recurrence: undefined,
+    completedAt: undefined,
+  };
 
   let safeCloseModal = false;
   let safeDeleteModal = false;
 
-  let dueOnString: string;
+
 
   // BUG: fix so that keyboard doesn't add scroll to page on mobile
 
-  // BUG: changing due on button not removing active on other button
 
+  let dueOnValue: string = "";
+  let descriptionValue: string = "";
+  
   // cache the initial task description and dueOn date
-  let cachedTaskDescription: string = task.description;
-  let cachedTaskDueOn: number = task.dueOn;
+  let cachedDescription: string = task.description;
+  let cachedDueOn: number = task.dueOn;
 
   const dispatch = createEventDispatcher();
 
@@ -28,42 +43,57 @@
     // Focus on the input field
     const input = document.getElementById("task");
     input.focus();
+
+    if (task.createdAt !== undefined) {
+      // If this is a new task, we want to set the due on date to today
+      dueOnValue = task.dueOn
+        ? new Date(task.dueOn).toISOString().split("T")[0]
+        : new Date().toISOString().split("T")[0];
+
+      descriptionValue = task.description;
+    }
   });
 
-  const close = () => {
-    dispatch("close");
-  };
+  function setTask() {
+    // Set task description and dueOn date
+    task.description = descriptionValue.trim();
+
+    if (dueOnValue !== "" && dueOnValue !== null) {
+      task.dueOn = new Date(dueOnValue).setHours(0, 0, 0, 0);
+    }
+
+    task.updatedAt = new Date().getTime();
+  }
+
+  function createNewTask() {
+    setTask();
+
+    // Set the createdAt and updatedAt dates
+    task.createdAt = new Date().getTime();
+   
+    // Dispatch the saveTask event to the parent component
+    dispatch("saveTask", task);
+  }
 
   const updateTask = () => {
-    task.updatedAt = new Date().getTime();
-    if (dueOnString) {
-      task.dueOn = new Date(dueOnString).getTime();
-    }
-    dispatch("updateTask", task);
+    setTask();
+    dispatch("saveTask", task);
   };
 
   const deleteTask = () => {
     dispatch("deleteTask", task);
   };
 
-  function createNewTask() {
-    task.id = uuidv4();
-    task.description = task.description.trim();
-    task.createdAt = new Date().getTime();
-    task.updatedAt = new Date().getTime();
-    if (dueOnString) {
-      task.dueOn = new Date(dueOnString).setHours(0, 0, 0, 0);
-    }
-
-    dispatch("newTask", task);
-  }
+  const close = () => {
+    dispatch("close");
+  };
 
   let addDateDialog = false;
 
   function safeClose() {
     if (
-      task.description === cachedTaskDescription &&
-      task.dueOn === cachedTaskDueOn
+      task.description === cachedDescription &&
+      task.dueOn === cachedDueOn
     ) {
       close();
     } else {
@@ -123,28 +153,23 @@
     name="task"
     placeholder="Task"
     autocomplete="off"
-    bind:value={task.description}
+    bind:value={descriptionValue}
   />
 
   <!-- BUG: Changing from Today to Tmr or vice versa both buttons stay active -->
   <div id="task-params">
     {#if !addDateDialog}
       <button
-        class:active={task.dueOn === new Date().setHours(0, 0, 0, 0) ||
-          dueOnString === new Date().toISOString().split("T")[0]}
+        class:active={dueOnValue === new Date().toISOString().split("T")[0]}
         on:click={(e) => {
-          dueOnString = new Date().toISOString().split("T")[0];
+          dueOnValue = new Date().toISOString().split("T")[0];
         }}>Today</button
       >
       <button
-        class:active={task.dueOn ===
-          new Date(new Date().getTime() + 86400000).setHours(0, 0, 0, 0) ||
-          dueOnString ===
-            new Date(new Date().getTime() + 86400000)
-              .toISOString()
-              .split("T")[0]}
+        class:active={dueOnValue ===
+          new Date(new Date().getTime() + 86400000).toISOString().split("T")[0]}
         on:click={() => {
-          dueOnString = new Date(new Date().getTime() + 86400000)
+          dueOnValue = new Date(new Date().getTime() + 86400000)
             .toISOString()
             .split("T")[0];
         }}>Tomorrow</button
@@ -155,16 +180,16 @@
         }}>Other datetime</button
       >
       <!-- remove date button -->
-      {#if dueOnString || task.dueOn}
+      {#if dueOnValue !== "" && dueOnValue !== null}
         <button
           on:click={() => {
-            dueOnString = undefined;
+            dueOnValue = undefined;
             task.dueOn = -1;
           }}>x</button
         >
       {/if}
     {:else}
-      <input in:slide type="date" bind:value={dueOnString} />
+      <input in:slide type="date" bind:value={dueOnValue} />
       <button
         on:click={() => {
           addDateDialog = false;

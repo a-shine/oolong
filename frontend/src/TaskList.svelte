@@ -10,7 +10,7 @@
   export let enableOrdering: boolean = false;
   export let db: IDBPDatabase<unknown>;
 
-  export let tasks: Task[] = null;
+  export let tasks: Task[];
 
   // BUG: this logic is conflicting with the logic in TodayView.svelte
   async function completeTask(task: Task) {

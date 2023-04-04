@@ -27,7 +27,7 @@
   let scope: string = "today";
 
   // TODO: Look at refactoring this approach to task creation and editing
-  let taskCursor: Task = newBlankTaskObj();
+  let taskCursor: Task = null;
 
   // Open a connection to the local (IndexedDB) database. Create/modify the
   // necessary object stores if the version has changed.
@@ -134,23 +134,6 @@
     return await index.getAll(range);
   }
 
-  function newBlankTaskObj(): Task {
-    return {
-      id: undefined,
-      projectLabel: null,
-      description: "",
-      createdAt: undefined,
-      updatedAt: undefined,
-      dueOn: -1, // by default no due date
-      dueAt: null,
-      recurrence: 0,
-      lane: null,
-      listOrder: Infinity,
-      laneOrder: Infinity,
-      completedAt: undefined,
-    };
-  }
-
   function editTask(task: Task) {
     displayTaskEditor = true;
     taskCursor = task; // overwrite the taskCursor with the task to edit
@@ -160,7 +143,7 @@
     (await db).delete("incompleteTasks", task.id);
   }
 
-  async function addTaskToLocalDb(task: Task) {
+  async function putTaskLocalDb(task: Task) {
     (await db).put("incompleteTasks", task);
   }
 </script>
@@ -171,22 +154,17 @@
       task={taskCursor}
       on:close={() => {
         displayTaskEditor = false;
-        taskCursor = newBlankTaskObj();
+        taskCursor = null;
       }}
-      on:newTask={(e) => {
-        addTaskToLocalDb(e.detail);
-        taskCursor = newBlankTaskObj();
+      on:saveTask={(e) => {
+        putTaskLocalDb(e.detail);
         displayTaskEditor = false;
-      }}
-      on:updateTask={(e) => {
-        addTaskToLocalDb(e.detail);
-        taskCursor = newBlankTaskObj();
-        displayTaskEditor = false;
+        taskCursor = null;
       }}
       on:deleteTask={(e) => {
         deleteTask(e.detail);
-        taskCursor = newBlankTaskObj();
         displayTaskEditor = false;
+        taskCursor = null;
       }}
     />
   </div>
@@ -206,7 +184,6 @@
           {:else}
             {#await getTasks() then tasks}
               <TaskList
-                enableOrdering={false}
                 {db}
                 {tasks}
                 on:toggleEdit={(e) => editTask(e.detail)}
