@@ -2,6 +2,9 @@ import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { VitePWA } from "vite-plugin-pwa";
 
+// Plugin to build and generate chrome extension
+// https://github.com/StarkShang/vite-plugin-chrome-extension
+
 // https://vitejs.dev/config/
 export default defineConfig({
   base: "/oolong/",
@@ -29,7 +32,7 @@ export default defineConfig({
       manifest: {
         name: "Oolong",
         description: "Opinionated organisation tool",
-        theme_color: "#ffffff",
+        theme_color: "#5c7f67",
         icons: [
           {
             src: "icons/192-192.png",

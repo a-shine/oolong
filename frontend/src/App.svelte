@@ -15,32 +15,28 @@
     if (!("Notification" in window)) {
       alert("This browser does not support desktop notification");
     }
+
     // Request permission to send notifications
     Notification.requestPermission();
   }
 
-  /**
-   * Check if browser has internet access or not
-   */
-  function initOnlineStatus() {
+  // Register event listeners to update onlineStatus when browser goes online
+  // or offline
+  window.addEventListener("offline", (e) => {
+    onlineStatus = false;
+  });
+  window.addEventListener("online", (e) => {
+    onlineStatus = true;
+  });
+
+  onMount(() => {
+    // Initialize onlineStatus
     if (navigator.onLine) {
       onlineStatus = true;
     } else {
       onlineStatus = false;
     }
 
-    // Register event listeners to update onlineStatus when browser goes online
-    // or offline
-    window.addEventListener("offline", (e) => {
-      onlineStatus = false;
-    });
-    window.addEventListener("online", (e) => {
-      onlineStatus = true;
-    });
-  }
-
-  onMount(() => {
-    initOnlineStatus();
     checkOrEnableNotifications();
   });
 </script>

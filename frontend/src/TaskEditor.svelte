@@ -16,6 +16,8 @@
 
   // BUG: fix so that keyboard doesn't add scroll to page on mobile
 
+  // BUG: changing due on button not removing active on other button
+
   // cache the initial task description and dueOn date
   let cachedTaskDescription: string = task.description;
   let cachedTaskDueOn: number = task.dueOn;
@@ -123,6 +125,8 @@
     autocomplete="off"
     bind:value={task.description}
   />
+
+  <!-- BUG: Changing from Today to Tmr or vice versa both buttons stay active -->
   <div id="task-params">
     {#if !addDateDialog}
       <button

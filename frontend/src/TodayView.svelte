@@ -8,14 +8,16 @@
 
   let tasksToday: Task[] = [];
   let tasksOverdue: Task[] = [];
+  let tasksDoneToday: Task[] = [];
 
   export let db: IDBPDatabase<unknown>;
 
-  // BUG: Weird behaviour when re-ordering tasks (overdue tasks are not re-ordered)
+  // BUG: Not able to undo a task that was due today or overdue
 
   onMount(async () => {
     tasksToday = await getTodayIncompleteTasks();
     tasksOverdue = await getTasksOverdue();
+    tasksDoneToday = await getTasksDoneToday();
   });
 
   async function getTodayIncompleteTasks() {
@@ -31,14 +33,14 @@
     return await index.getAll(range);
   }
 
-  async function getTasksOverdue() {
+  async function getTasksOverdue(): Promise<Task[]> {
     const tx = db.transaction("incompleteTasks", "readwrite");
     const store = tx.objectStore("incompleteTasks");
     const index = store.index("dueOnListOrder");
 
     let today = new Date().setHours(0, 0, 0, 0);
     // Get tasks that are not Unassigned but were due yesterday or before
-    let range = IDBKeyRange.bound([-1, Infinity], [today, 0], false, false);
+    let range = IDBKeyRange.bound([-1, Infinity], [today, 0], false, true);
     return await index.getAll(range);
   }
 
@@ -52,24 +54,28 @@
     return await index.getAll(range);
   }
 
-  const dispatch = createEventDispatcher();
 
   // This determines what is seen in a a list so scope the db query to this
 
-  function toggleDone(task: Task) {
-    dispatch("toggleDone", task);
-  }
+  
 
-  function toggleEdit(task: Task) {
-    dispatch("toggleEdit", task);
-  }
+  const dispatch = createEventDispatcher();
+  const toggleEdit = (task: Task) => dispatch("toggleEdit", task);
 
-  function unDone(task: Task) {
+  async function unDone(task: Task) {
+    console.log("unDone", task);
     if (task.dueOn === new Date().setHours(0, 0, 0, 0)) {
+      console.log("here")
       tasksToday = [...tasksToday, task];
     } else if (task.dueOn < new Date().setHours(0, 0, 0, 0)) {
       tasksOverdue = [...tasksOverdue, task];
     }
+  }
+
+  function toggleDone(task: Task) {
+    console.log("toggleDone", task);
+    tasksDoneToday = [...tasksDoneToday, task];
+    console.log("tasksDoneToday", tasksDoneToday);
   }
 </script>
 
@@ -80,7 +86,8 @@
       enableOrdering={true}
       {db}
       tasks={tasksOverdue}
-      on:toggleDone={(e) => toggleDone(e.detail)}
+      on:undoneTask={(e) => unDone(e.detail)}
+      on:doneTask={(e) => toggleDone(e.detail)}
       on:toggleEdit={(e) => toggleEdit(e.detail)}
     />
   {/key}
@@ -92,32 +99,31 @@
       enableOrdering={true}
       {db}
       tasks={tasksToday}
-      on:toggleDone={(e) => toggleDone(e.detail)}
+      on:undoneTask={(e) => unDone(e.detail)}
+      on:doneTask={(e) => toggleDone(e.detail)}
       on:toggleEdit={(e) => toggleEdit(e.detail)}
     />
   {/key}
 {/if}
 
-<hr />
-<p>
-  <button
-    on:click={() => (showCompleted = !showCompleted)}
-    class="borderless-button"
-  >
-    {showCompleted ? "Hide" : "Show"} today's completed tasks</button
-  >
-</p>
-{#if showCompleted}
-  {#await getTasksDoneToday()}
-    <p>Loading...</p>
-  {:then tasks}
+{#if tasksDoneToday.length > 0}
+  <hr />
+  <p>
+    <button
+      on:click={() => (showCompleted = !showCompleted)}
+      class="borderless-button"
+    >
+      {showCompleted ? "Hide" : "Show"} today's completed tasks</button
+    >
+  </p>
+  {#if showCompleted}
     <TaskList
       enableOrdering={false}
       {db}
-      {tasks}
-      on:toggleDone={(e) => toggleDone(e.detail)}
-      on:toggleEdit={(e) => toggleEdit(e.detail)}
+      tasks={tasksDoneToday}
       on:undoneTask={(e) => unDone(e.detail)}
+      on:doneTask={(e) => toggleDone(e.detail)}
+      on:toggleEdit={(e) => toggleEdit(e.detail)}
     />
-  {/await}
+  {/if}
 {/if}

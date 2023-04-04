@@ -8,9 +8,19 @@
   import TodayView from "./TodayView.svelte";
   import TaskList from "./TaskList.svelte";
 
-  // TODO: Clean and refactor this file
+  import {
+    task1,
+    task2,
+    task3,
+    task4,
+    task5,
+    task6,
+    task7,
+    task8,
+  } from "./testTasks";
 
-  let displayTaskEditorDialog: boolean = false;
+
+  let displayTaskEditor: boolean = false;
 
   // Displayed tasks are determined by the scope, on changes to scope, the task
   // list is updated
@@ -23,9 +33,7 @@
   // necessary object stores if the version has changed.
   const db = openDB("oolongDb", 1, {
     upgrade(db) {
-      console.log("Upgrading database...");
-      // Creating two object stores. One for incomplete tasks and the other for
-      // completed tasks.
+      // Creating object store for incomplete tasks
       if (!db.objectStoreNames.contains("incompleteTasks")) {
         const incompleteTasks = db.createObjectStore("incompleteTasks", {
           keyPath: "id",
@@ -40,7 +48,17 @@
             unique: false,
           }
         );
+
+        // Add some dummy data
+        incompleteTasks.put(task1);
+        incompleteTasks.put(task2);
+        incompleteTasks.put(task3);
+        incompleteTasks.put(task4);
+        incompleteTasks.put(task5);
+        incompleteTasks.put(task6);
       }
+
+      // Creating object store for completed tasks
       if (!db.objectStoreNames.contains("completedTasks")) {
         const completedTasks = db.createObjectStore("completedTasks", {
           keyPath: "id",
@@ -52,6 +70,8 @@
             unique: false,
           }
         );
+        completedTasks.put(task7);
+        completedTasks.put(task8);
       }
     },
   });
@@ -78,11 +98,16 @@
   async function getCompletedTasks(): Promise<Task[]> {
     const tx = (await db).transaction("completedTasks", "readwrite");
     const store = tx.objectStore("completedTasks");
-    const index = store.index("dueOnCompletedAt"); // return completed task in order of the most recently completed
 
+    // Completed tasks in order of due date and then completion date
+    const index = store.index("dueOnCompletedAt");
     return await index.getAll();
   }
 
+  /**
+   * Get all upcoming tasks (tasks due from tomorrow onwards) from the local 
+   * (IndexedDB) database
+   */
   async function getUpcomingTasks() {
     const tx = (await db).transaction("incompleteTasks", "readwrite");
     const store = tx.objectStore("incompleteTasks");
@@ -93,14 +118,19 @@
     return await index.getAll(range);
   }
 
+  /**
+   * Get all unassigned tasks (tasks where dueOn is set to -1) from the local 
+   * (IndexedDB) database
+   */
   async function getUnassignedTasks(): Promise<Task[]> {
     const tx = (await db).transaction("incompleteTasks", "readwrite");
     const store = tx.objectStore("incompleteTasks");
+    
     const index = store.index("dueOnListOrder");
-
-    let firstUnassignedTask = [-1, 0];
-    let lastUnassignedTask = [-1, Infinity];
-    let range = IDBKeyRange.bound(firstUnassignedTask, lastUnassignedTask);
+    
+    // Tasks with dueOn set to -1
+    let range = IDBKeyRange.bound([-1, 0], [-1, Infinity]);
+    
     return await index.getAll(range);
   }
 
@@ -122,7 +152,7 @@
   }
 
   function editTask(task: Task) {
-    displayTaskEditorDialog = true;
+    displayTaskEditor = true;
     taskCursor = task; // overwrite the taskCursor with the task to edit
   }
 
@@ -135,35 +165,38 @@
   }
 </script>
 
-{#if displayTaskEditorDialog}
-  <TaskEditor
-    task={taskCursor}
-    on:close={() => {
-      displayTaskEditorDialog = false;
-      taskCursor = newBlankTaskObj();
-    }}
-    on:newTask={(e) => {
-      addTaskToLocalDb(e.detail);
-      taskCursor = newBlankTaskObj();
-      displayTaskEditorDialog = false;
-    }}
-    on:updateTask={(e) => {
-      addTaskToLocalDb(e.detail);
-      taskCursor = newBlankTaskObj();
-      displayTaskEditorDialog = false;
-    }}
-    on:deleteTask={(e) => {
-      deleteTask(e.detail);
-      taskCursor = newBlankTaskObj();
-      displayTaskEditorDialog = false;
-    }}
-  />
+{#if displayTaskEditor}
+  <div class="tasks">
+    <TaskEditor
+      task={taskCursor}
+      on:close={() => {
+        displayTaskEditor = false;
+        taskCursor = newBlankTaskObj();
+      }}
+      on:newTask={(e) => {
+        addTaskToLocalDb(e.detail);
+        taskCursor = newBlankTaskObj();
+        displayTaskEditor = false;
+      }}
+      on:updateTask={(e) => {
+        addTaskToLocalDb(e.detail);
+        taskCursor = newBlankTaskObj();
+        displayTaskEditor = false;
+      }}
+      on:deleteTask={(e) => {
+        deleteTask(e.detail);
+        taskCursor = newBlankTaskObj();
+        displayTaskEditor = false;
+      }}
+    />
+  </div>
+
   <!-- Show task list -->
 {:else}
   <TasksTopBar bind:scope />
 
   <div id="container">
-    <div id="tasks">
+    <div id="tasks" class="tasks">
       {#await db}
         <div>Loading...</div>
       {:then db}
@@ -189,7 +222,7 @@
     <button
       id="newTaskButton"
       class="bg-accent"
-      on:click={() => (displayTaskEditorDialog = true)}
+      on:click={() => (displayTaskEditor = true)}
     >
       +
     </button>
@@ -206,7 +239,7 @@
     overflow-y: auto;
   }
 
-  #tasks {
+  .tasks {
     max-width: 800px;
     margin: 0 auto;
   }

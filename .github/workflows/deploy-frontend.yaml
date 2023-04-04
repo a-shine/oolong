@@ -1,3 +1,8 @@
+# https://vitejs.dev/guide/static-deploy.html#github-pages
+
+# TODO: Add Lighthouse score as part of CI/CD pipeline 
+# https://github.com/GoogleChrome/lighthouse-ci
+
 # Simple workflow for deploying static content to GitHub Pages
 name: Deploy static content to Pages
 
@@ -19,6 +24,7 @@ permissions:
 concurrency:
   group: 'pages'
   cancel-in-progress: true
+
 
 jobs:
   # Single deploy job since we're just deploying
