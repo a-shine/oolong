@@ -49,8 +49,8 @@
       descriptionValue = task.description;
 
       // BUG: these are not the same for some reason
-      console.log(dueOnValue);
-      console.log(new Date().toISOString().split("T")[0])
+      // console.log(dueOnValue);
+      // console.log(new Date().toISOString().split("T")[0])
 
       cachedDescription = task.description;
       cachedDueOn = task.dueOn;
@@ -70,6 +70,8 @@
       console.log(dueOnValue);
       task.dueOn = new Date(dueOnValue).setHours(0, 0, 0, 0);
       console.log(new Date(task.dueOn).toISOString().split("T")[0]);
+    } else {
+      task.dueOn = -1;
     }
 
     task.updatedAt = new Date().getTime();
@@ -189,11 +191,10 @@
         }}>Other datetime</button
       >
       <!-- remove date button -->
-      {#if dueOnValue !== null}
+      {#if dueOnValue !== undefined}
         <button
           on:click={() => {
-            dueOnValue = null;
-            task.dueOn = -1;
+            dueOnValue = undefined;
           }}>x</button
         >
       {/if}

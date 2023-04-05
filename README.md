@@ -1,9 +1,8 @@
 # Oolong
 
-> Simple, opinionated, offline-first task manager app (and potentially more in
-> the future...)
+> Opinionated, offline-first task manager PWA.
 
-## Design decisions
+## Design decision log
 
 As an exercise to promote thoughtful design, each feature and design decision is
 logged here. The app should be as simple and quick to use as possible, and
