@@ -6,60 +6,70 @@
   import type { Task } from "./types/task.type";
   import { v4 as uuidv4 } from "uuid";
 
-  // If no task is passed, we will create a new one so we start with an undefined task
-  export let task: Task | null = {
-    id: uuidv4(),
-    description: undefined,
-    createdAt: undefined,
-    updatedAt: undefined,
-    dueOn: undefined,
-    projectLabel: undefined,
-    lane: undefined,
-    laneOrder: undefined,
-    listOrder: Infinity,
-    dueAt: undefined,
-    recurrence: undefined,
-    completedAt: undefined,
-  };
+
+  // BUG: Fix so that keyboard doesn't add scroll to page on mobile
+
+  // If no task is passed, it defaults to null
+  export let task: Task = {
+        id: uuidv4(),
+        description: undefined,
+        createdAt: undefined,
+        updatedAt: undefined,
+        dueOn: undefined,
+        projectLabel: undefined,
+        lane: undefined,
+        laneOrder: undefined,
+        listOrder: Infinity,
+        dueAt: undefined,
+        recurrence: undefined,
+        completedAt: undefined,
+      };;
+
+  // Component values binded to the task description and dueOn date inputs
+  let descriptionValue: string;
+  let dueOnValue: string;
+  
+  // Cache the initial task description and dueOn date so we can cancel the
+  // changes if the user discards them
+  let cachedDescription: string;
+  let cachedDueOn: number;
+
 
   let safeCloseModal = false;
   let safeDeleteModal = false;
 
 
-
-  // BUG: fix so that keyboard doesn't add scroll to page on mobile
-
-
-  let dueOnValue: string = "";
-  let descriptionValue: string = "";
-  
-  // cache the initial task description and dueOn date
-  let cachedDescription: string = task.description;
-  let cachedDueOn: number = task.dueOn;
-
   const dispatch = createEventDispatcher();
 
   onMount(() => {
-    // Focus on the input field
+    // If task is null, we want to create a new task
+    if (task.createdAt) {
+      // If task is not a new task, we want to set the appropriate values
+      dueOnValue = new Date(task.dueOn).toISOString().split("T")[0];
+      descriptionValue = task.description;
+
+      // BUG: these are not the same for some reason
+      console.log(dueOnValue);
+      console.log(new Date().toISOString().split("T")[0])
+
+      cachedDescription = task.description;
+      cachedDueOn = task.dueOn;
+    }
+
+    // Focus on the Task description input field
     const input = document.getElementById("task");
     input.focus();
-
-    if (task.createdAt !== undefined) {
-      // If this is a new task, we want to set the due on date to today
-      dueOnValue = task.dueOn
-        ? new Date(task.dueOn).toISOString().split("T")[0]
-        : new Date().toISOString().split("T")[0];
-
-      descriptionValue = task.description;
-    }
   });
 
   function setTask() {
     // Set task description and dueOn date
     task.description = descriptionValue.trim();
 
-    if (dueOnValue !== "" && dueOnValue !== null) {
+    // BUG: Misinterpreting date format
+    if (dueOnValue !== undefined) {
+      console.log(dueOnValue);
       task.dueOn = new Date(dueOnValue).setHours(0, 0, 0, 0);
+      console.log(new Date(task.dueOn).toISOString().split("T")[0]);
     }
 
     task.updatedAt = new Date().getTime();
@@ -156,7 +166,6 @@
     bind:value={descriptionValue}
   />
 
-  <!-- BUG: Changing from Today to Tmr or vice versa both buttons stay active -->
   <div id="task-params">
     {#if !addDateDialog}
       <button
@@ -180,10 +189,10 @@
         }}>Other datetime</button
       >
       <!-- remove date button -->
-      {#if dueOnValue !== "" && dueOnValue !== null}
+      {#if dueOnValue !== null}
         <button
           on:click={() => {
-            dueOnValue = undefined;
+            dueOnValue = null;
             task.dueOn = -1;
           }}>x</button
         >
@@ -197,7 +206,7 @@
       >
     {/if}
   </div>
-  {#if task.id}
+  {#if task.createdAt}
     <button type="button" on:click={() => (safeDeleteModal = !safeDeleteModal)}
       >Delete</button
     >

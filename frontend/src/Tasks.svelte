@@ -8,26 +8,19 @@
   import TodayView from "./TodayView.svelte";
   import TaskList from "./TaskList.svelte";
 
-  import {
-    task1,
-    task2,
-    task3,
-    task4,
-    task5,
-    task6,
-    task7,
-    task8,
-  } from "./testTasks";
-
-
-  let displayTaskEditor: boolean = false;
-
+  
   // Displayed tasks are determined by the scope, on changes to scope, the task
   // list is updated
   let scope: string = "today";
 
-  // TODO: Look at refactoring this approach to task creation and editing
-  let taskCursor: Task = null;
+  // The task that is currently being edited (undefined if no task is being 
+  // edited)
+  // WARNING: It is important that this is undefined and not null as null is a value while undefined is not and so when setting the value to null you actually provide a value to the prop while with undefined you use the default value
+  let taskCursor: Task = undefined;
+
+  
+  let displayTaskEditor: boolean = false;
+
 
   // Open a connection to the local (IndexedDB) database. Create/modify the
   // necessary object stores if the version has changed.
@@ -48,14 +41,6 @@
             unique: false,
           }
         );
-
-        // Add some dummy data
-        incompleteTasks.put(task1);
-        incompleteTasks.put(task2);
-        incompleteTasks.put(task3);
-        incompleteTasks.put(task4);
-        incompleteTasks.put(task5);
-        incompleteTasks.put(task6);
       }
 
       // Creating object store for completed tasks
@@ -70,8 +55,6 @@
             unique: false,
           }
         );
-        completedTasks.put(task7);
-        completedTasks.put(task8);
       }
     },
   });
@@ -134,9 +117,12 @@
     return await index.getAll(range);
   }
 
+  /**
+   * Open the task editor for the given task (by setting the taskCursor)
+  */
   function editTask(task: Task) {
+    taskCursor = task;
     displayTaskEditor = true;
-    taskCursor = task; // overwrite the taskCursor with the task to edit
   }
 
   async function deleteTask(task: Task) {
@@ -149,32 +135,30 @@
 </script>
 
 {#if displayTaskEditor}
-  <div class="tasks">
+  <div class="center">
     <TaskEditor
       task={taskCursor}
       on:close={() => {
         displayTaskEditor = false;
-        taskCursor = null;
+        taskCursor = undefined;
       }}
       on:saveTask={(e) => {
         putTaskLocalDb(e.detail);
         displayTaskEditor = false;
-        taskCursor = null;
+        taskCursor = undefined;
       }}
       on:deleteTask={(e) => {
         deleteTask(e.detail);
         displayTaskEditor = false;
-        taskCursor = null;
+        taskCursor = undefined;
       }}
     />
   </div>
-
-  <!-- Show task list -->
 {:else}
   <TasksTopBar bind:scope />
 
   <div id="container">
-    <div id="tasks" class="tasks">
+    <div id="tasks" class="center">
       {#await db}
         <div>Loading...</div>
       {:then db}
@@ -216,7 +200,7 @@
     overflow-y: auto;
   }
 
-  .tasks {
+  .center {
     max-width: 800px;
     margin: 0 auto;
   }
