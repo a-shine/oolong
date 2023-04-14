@@ -16,8 +16,9 @@ export default defineConfig({
         runtimeCaching: [
           {
             handler: "NetworkOnly",
-            urlPattern: /http:\/\/localhost:8000\/(.*)/, // looks for any request matching this pattern and caches them if offline
-            method: "POST", // BUG: might want to add delete and put here
+            // I think this looks for any request to the backend matching this pattern
+            urlPattern: /http:\/\/localhost:8000\/(.*)/,
+            method: "POST", // BUG: Might want to add delete and put here
             options: {
               backgroundSync: {
                 name: "api-queue",
