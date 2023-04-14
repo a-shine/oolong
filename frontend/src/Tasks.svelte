@@ -210,7 +210,7 @@
     position: fixed;
     bottom: 0;
     width: 100%;
-    height: 60px;
+    height: 70px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -218,9 +218,9 @@
 
   /* place the newTaskButton at the bottom center of the page */
   #newTaskButton {
-    width: 50px;
-    height: 50px;
+    width: 65px;
+    height: 65px;
     border-radius: 50%;
-    font-size: 30px;
+    font-size: 50px;
   }
 </style>
