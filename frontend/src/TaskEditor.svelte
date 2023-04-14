@@ -149,75 +149,85 @@
   </Dialog>
 {/if}
 
-<div id="topBar">
-  <button
-    type="button"
-    id="close"
-    on:click={() => {
-      safeClose();
-    }}>&#x2715;</button
-  >
-</div>
-<div id="taskForm">
-  <input
-    type="text"
-    id="task"
-    name="task"
-    placeholder="Task"
-    autocomplete="off"
-    bind:value={descriptionValue}
-  />
+<div id="container">
+  <div id="topBar">
+    <button
+      type="button"
+      id="close"
+      on:click={() => {
+        safeClose();
+      }}>&#x2715;</button
+    >
+  </div>
+  <div id="taskForm">
+    <input
+      type="text"
+      id="task"
+      name="task"
+      placeholder="Task"
+      autocomplete="off"
+      bind:value={descriptionValue}
+    />
 
-  <div id="task-params">
-    {#if !addDateDialog}
-      <button
-        class:active={dueOnValue === new Date().toISOString().split("T")[0]}
-        on:click={(e) => {
-          dueOnValue = new Date().toISOString().split("T")[0];
-        }}>Today</button
-      >
-      <button
-        class:active={dueOnValue ===
-          new Date(new Date().getTime() + 86400000).toISOString().split("T")[0]}
-        on:click={() => {
-          dueOnValue = new Date(new Date().getTime() + 86400000)
-            .toISOString()
-            .split("T")[0];
-        }}>Tomorrow</button
-      >
-      <button
-        on:click={() => {
-          addDateDialog = true;
-        }}>Other datetime</button
-      >
-      <!-- remove date button -->
-      {#if dueOnValue !== undefined}
+    <div id="task-params">
+      {#if !addDateDialog}
+        <button
+          class:active={dueOnValue === new Date().toISOString().split("T")[0]}
+          on:click={(e) => {
+            dueOnValue = new Date().toISOString().split("T")[0];
+          }}>Today</button
+        >
+        <button
+          class:active={dueOnValue ===
+            new Date(new Date().getTime() + 86400000)
+              .toISOString()
+              .split("T")[0]}
+          on:click={() => {
+            dueOnValue = new Date(new Date().getTime() + 86400000)
+              .toISOString()
+              .split("T")[0];
+          }}>Tomorrow</button
+        >
         <button
           on:click={() => {
-            dueOnValue = undefined;
+            addDateDialog = true;
+          }}>Other datetime</button
+        >
+        <!-- remove date button -->
+        {#if dueOnValue !== undefined}
+          <button
+            on:click={() => {
+              dueOnValue = undefined;
+            }}>x</button
+          >
+        {/if}
+      {:else}
+        <input in:slide type="date" bind:value={dueOnValue} />
+        <button
+          on:click={() => {
+            addDateDialog = false;
           }}>x</button
         >
       {/if}
-    {:else}
-      <input in:slide type="date" bind:value={dueOnValue} />
+    </div>
+    {#if task.createdAt}
       <button
-        on:click={() => {
-          addDateDialog = false;
-        }}>x</button
+        type="button"
+        on:click={() => (safeDeleteModal = !safeDeleteModal)}>Delete</button
       >
+      <button type="button" on:click={updateTask}>Save</button>
+    {:else}
+      <button type="button" id="task-add" on:click={createNewTask}>Add</button>
     {/if}
   </div>
-  {#if task.createdAt}
-    <button type="button" on:click={() => (safeDeleteModal = !safeDeleteModal)}
-      >Delete</button
-    >
-    <button type="button" on:click={updateTask}>Save</button>
-  {:else}
-    <button type="button" id="task-add" on:click={createNewTask}>Add</button>
-  {/if}
 </div>
 
 <style>
+  /* Container adding padding on the sides  */
+  #container {
+    padding: 0 1rem;
+  }
+
   #topBar {
     width: 100%;
     margin-bottom: 10px;

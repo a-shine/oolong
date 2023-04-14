@@ -179,22 +179,19 @@
     </div>
   </div>
 
-  <div id="bottomBar" class="bg-primary">
-    <button
-      id="newTaskButton"
-      class="bg-accent"
-      on:click={() => (displayTaskEditor = true)}
-    >
-      +
-    </button>
-  </div>
+  <button
+    id="newTaskButton"
+    class="bg-accent"
+    on:click={() => (displayTaskEditor = true)}
+  >
+    +
+  </button>
 {/if}
 
 <style>
   #container {
     position: fixed;
     top: 50px;
-    bottom: 60px;
     left: 0;
     right: 0;
     overflow-y: auto;
@@ -205,22 +202,18 @@
     margin: 0 auto;
   }
 
-  /* bottom bar fixed at the bottom of the page after the tasks */
-  #bottomBar {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    height: 70px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
   /* place the newTaskButton at the bottom center of the page */
   #newTaskButton {
     width: 65px;
     height: 65px;
     border-radius: 50%;
     font-size: 50px;
+    position: fixed;
+    bottom: 0;
+
+    /* Move to the center by moving left and then translating from the center 
+    point of the button right */
+    left: 50%;
+    transform: translateX(-50%);
   }
 </style>
