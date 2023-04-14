@@ -1,36 +1,57 @@
 # Oolong
 
-> Opinionated, offline-first task manager PWA.
+> Simple, opinionated task manager.
 
-## Design decision log
+## Installation
 
-As an exercise to promote thoughtful design, each feature and design decision is
-logged here. The app should be as simple and quick to use as possible, and
-allow you to get on with other things. Here we are only concerned with the user
-level design decisions, not the technical ones. Technical decisions are
-documented as appropriate in the code.
+The app is available as a Progressive Web App (PWA) at
+[a-shine.github.io/oolong/](https://a-shine.github.io/oolong/).
 
-- As we are offline-first, we read/write to the IndexedDB first when creating new tasks
-- If online we also add the task to the cloud DB via the API
-- Store pending (to sync) tasks IDs in a different table and sync them when a connection becomes available (using the background sync API)
-- Custom sync logic (using lastOnlineDate state) to only sync new content to the local app without re-downloading the whole db
+As PWA features are not implemented consistently across browsers, it is
+recommended to use Google Chrome (both on desktop and mobile). On mobile devices
+a modal will be displayed on first viewing to allow the user to add the app to
+their home screen.
 
-- Offline-first resources - https://github.com/pazguille/offline-first
-- SyncedDB lib for indexedDB - https://github.com/paldepind/synceddb#how-is-it-different (not updated in a while)
-- Incomplete logic - https://offering.solutions/blog/articles/2018/11/21/online-and-offline-sync-with-angular-and-indexeddb/
-- Custom service worker script vitePWA - https://css-tricks.com/vitepwa-plugin-offline-service-worker/ (this would be use to enable background sync which in turn would allow syncing of pending tasks in the background)
-- Background sync email example - https://learn.microsoft.com/en-us/microsoft-edge/progressive-web-apps-chromium/how-to/background-syncs
-- https://neighbourhood.ie/blog/2019/05/10/an-offline-first-todo-list-with-svelte-pouchdb-and-couchdb/ - svelte/pouchdb implementation
+## Design
 
-// FEATURE: Want to handle toggle completed tasks a little differently:
-// - make completed tasks a new separate scope (like today, upcoming, unassigned)
-// - have a button to see completed tasks specific to the today scope (so we get a sense of what we've achieved today)
+The app should be as simple and quick to use as possible to allow users to get
+on with their tasks rather than spend time managing them. As an exercise to
+promote thoughtful design, each usability level feature is logged in the
+[Oolong project board](https://github.com/users/a-shine/projects/5).
 
-- [ ] Final PWA feature would be to enable push notifications for timely tasks (i.e. when they have a time associated) - I don't actually need service side (push) notifications (cause the app is offline first) - instead simply use the notification API which works independently of the viewport anyway and hence doesn't need to be configured through the sw
-      (https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API)
-      https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Re-engageable_Notifications_Push
+Technical decisions are documented in the code.
 
-https://css-tricks.com/vitepwa-plugin-offline-service-worker/ - ability to add custome scripts if needed
+## About PWAs
 
-// tracking deletion is a bit more complicated - we either need to keep track of all devices and queue the deletion so that each delete is sent to every node
-// or we can implement logical deletion by having a deleted flag on the task (this is not optimal as the database will be overgrowing but may be the easiest solution)
+Progressive Web Apps (PWAs) are web applications that are installable and work
+offline. They are built using web technologies such as HTML, CSS and JavaScript
+and can be delivered through the web, installed on the user's home screen, and
+work offline.
+
+As an app developer, they have the advantage of being able to use the same code
+base for both the web and mobile platforms. As a user, they have the advantage
+of being able to install the app on their home screen and use it offline thanks
+to the service worker.
+
+### PWA limitations
+
+Poor support for PWA features across browsers means that the app may not work as
+expected.
+
+Offline scheduled push notifications are not supported at all as captured in
+[Chromium Issue 891339](https://bugs.chromium.org/p/chromium/issues/detail?id=891339#c79).
+This means that the app will not be able to notify the user of tasks that are
+due at a specific time unless it is a server side push notification (which
+requires internet access). Frustratingly, by the sound of it, this is unlikely
+to be supported in the near future.
+
+## Development
+
+<!-- TODO: Complete the development part of the README -->
+
+### Resources
+
+- [Offline-first web application resource review](https://github.com/pazguille/offline-first)
+- [Tutorial on using `VitePWA` plugin](https://css-tricks.com/vitepwa-plugin-offline-service-worker)
+- [Background sync email example](https://learn.microsoft.com/en-us/microsoft-edge/progressive-web-apps-chromium/how-to/background-syncs)
+- [Svelte PouchDB/CouchDB tutorial](https://neighbourhood.ie/blog/2019/05/10/an-offline-first-todo-list-with-svelte-pouchdb-and-couchdb/)

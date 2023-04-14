@@ -8,6 +8,13 @@
   import TodayView from "./TodayView.svelte";
   import TaskList from "./TaskList.svelte";
 
+  // TODO: Store pending (to sync) tasks IDs in a different table and sync them when a connection becomes available (using the background sync API)
+
+  // TODO: Tracking deletion is complicated. We either need to keep track of all
+  // devices and queue the deletion so that each delete is sent to every node or
+  // we can implement logical deletion by having a deleted flag on the task 
+  // (this is not optimal as the database will be overgrowing but may be the 
+  // easiest solution).
   
   // Displayed tasks are determined by the scope, on changes to scope, the task
   // list is updated
