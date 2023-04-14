@@ -8,7 +8,10 @@
   import TodayView from "./TodayView.svelte";
   import TaskList from "./TaskList.svelte";
 
-  // TODO: Store pending (to sync) tasks IDs in a different table and sync them when a connection becomes available (using the background sync API)
+  import { getToday, getTomorrow } from "./lib/date.utils";
+
+  // TODO: Store pending (to sync) tasks IDs in a different table and sync them
+  //  when a connection becomes available (using the background sync API)
 
   // TODO: Tracking deletion is complicated. We either need to keep track of all
   // devices and queue the deletion so that each delete is sent to every node or
@@ -82,6 +85,37 @@
     }
   }
 
+    /**
+   * Get all unassigned tasks (tasks where dueOn is set to -1) from the local 
+   * (IndexedDB) database
+   */
+   async function getUnassignedTasks(): Promise<Task[]> {
+    const tx = (await db).transaction("incompleteTasks", "readwrite");
+    const store = tx.objectStore("incompleteTasks");
+    
+    const index = store.index("dueOnListOrder");
+    
+    // Tasks with dueOn set to -1
+    let range = IDBKeyRange.bound([-1, 0], [-1, Infinity]);
+    
+    return await index.getAll(range);
+  }
+
+   /**
+   * Get all upcoming tasks (tasks due from tomorrow onwards) from the local 
+   * (IndexedDB) database
+   */
+   async function getUpcomingTasks() {
+    const tx = (await db).transaction("incompleteTasks", "readwrite");
+    const store = tx.objectStore("incompleteTasks");
+    const index = store.index("dueOnListOrder");
+
+    // Composite key where the first key is the due date and the second key is
+    // the list order
+    let range = IDBKeyRange.lowerBound([getTomorrow(), 0]);
+    return await index.getAll(range);
+  }
+
   /**
    * Get all completed tasks from the local (IndexedDB) database
    */
@@ -94,35 +128,8 @@
     return await index.getAll();
   }
 
-  /**
-   * Get all upcoming tasks (tasks due from tomorrow onwards) from the local 
-   * (IndexedDB) database
-   */
-  async function getUpcomingTasks() {
-    const tx = (await db).transaction("incompleteTasks", "readwrite");
-    const store = tx.objectStore("incompleteTasks");
-    const index = store.index("dueOnListOrder");
+ 
 
-    let tmr = new Date().setHours(0, 0, 0, 0) + 86400000;
-    let range = IDBKeyRange.lowerBound([tmr, 0]);
-    return await index.getAll(range);
-  }
-
-  /**
-   * Get all unassigned tasks (tasks where dueOn is set to -1) from the local 
-   * (IndexedDB) database
-   */
-  async function getUnassignedTasks(): Promise<Task[]> {
-    const tx = (await db).transaction("incompleteTasks", "readwrite");
-    const store = tx.objectStore("incompleteTasks");
-    
-    const index = store.index("dueOnListOrder");
-    
-    // Tasks with dueOn set to -1
-    let range = IDBKeyRange.bound([-1, 0], [-1, Infinity]);
-    
-    return await index.getAll(range);
-  }
 
   /**
    * Open the task editor for the given task (by setting the taskCursor)
@@ -217,10 +224,12 @@
     font-size: 50px;
     position: fixed;
     bottom: 0;
+    margin-bottom: 20px;
 
     /* Move to the center by moving left and then translating from the center 
     point of the button right */
     left: 50%;
     transform: translateX(-50%);
+    border: none;
   }
 </style>

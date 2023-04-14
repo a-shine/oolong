@@ -4,6 +4,8 @@
   import TaskList from "./TaskList.svelte";
   import { createEventDispatcher, onMount } from "svelte";
 
+  import { getToday, getTomorrow } from "./lib/date.utils";
+
   let showCompleted: boolean = false;
 
   let tasksToday: Task[] = [];
@@ -26,9 +28,8 @@
     const index = store.index("dueOnListOrder");
     let range;
 
-    let today = new Date().setHours(0, 0, 0, 0);
-    let firstTaskToday = [today, 0];
-    let firstTaskTmr = [today + 86400000, 0];
+    let firstTaskToday = [getToday(), 0];
+    let firstTaskTmr = [getTomorrow(), 0];
     range = IDBKeyRange.bound(firstTaskToday, firstTaskTmr, false, true);
     return await index.getAll(range);
   }
@@ -38,9 +39,8 @@
     const store = tx.objectStore("incompleteTasks");
     const index = store.index("dueOnListOrder");
 
-    let today = new Date().setHours(0, 0, 0, 0);
     // Get tasks that are not Unassigned but were due yesterday or before
-    let range = IDBKeyRange.bound([-1, Infinity], [today, 0], false, true);
+    let range = IDBKeyRange.bound([-1, Infinity], [getToday(), 0], false, true);
     return await index.getAll(range);
   }
 
@@ -49,8 +49,7 @@
     const store = tx.objectStore("completedTasks");
     const index = store.index("dueOnCompletedAt"); // return completed task in order of the most recently completed
 
-    let today = new Date().setHours(0, 0, 0, 0);
-    let range = IDBKeyRange.bound([-1, today], [Infinity, today], false, true);
+    let range = IDBKeyRange.bound([-1, getToday()], [Infinity, getToday()], false, true);
     return await index.getAll(range);
   }
 
@@ -64,10 +63,10 @@
 
   async function unDone(task: Task) {
     console.log("unDone", task);
-    if (task.dueOn === new Date().setHours(0, 0, 0, 0)) {
+    if (task.dueOn === getToday()) {
       console.log("here")
       tasksToday = [...tasksToday, task];
-    } else if (task.dueOn < new Date().setHours(0, 0, 0, 0)) {
+    } else if (task.dueOn < getToday()) {
       tasksOverdue = [...tasksOverdue, task];
     }
   }
