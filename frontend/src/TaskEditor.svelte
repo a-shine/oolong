@@ -8,6 +8,7 @@
 
 
   // BUG: Fix so that keyboard doesn't add scroll to page on mobile
+  // BUG: Unable to delete completed tasks from the TodayView
 
   // If no task is passed, it defaults to null
   export let task: Task = {
