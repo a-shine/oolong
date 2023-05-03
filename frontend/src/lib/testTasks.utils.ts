@@ -1,7 +1,12 @@
-import type { Task } from "./types/task.type";
+import type { Task } from "../types/task.type";
 
-export let task1: Task = {
-  id: "someRandomIdString1",
+// pouchdb type
+import type { PouchDB } from "pouchdb-browser";
+import { v4 as uuidv4 } from "uuid";
+
+let task1: Task = {
+  _id: uuidv4(),
+  _rev: null,
   projectLabel: null,
   description: "This task is overdue",
   createdAt: Date.now(),
@@ -15,8 +20,9 @@ export let task1: Task = {
   completedAt: null,
 };
 
-export let task2: Task = {
-  id: "someRandomIdString2",
+let task2: Task = {
+  _id: uuidv4(),
+  _rev: null,
   projectLabel: null,
   description: "This task is also overdue",
   createdAt: Date.now(),
@@ -30,8 +36,9 @@ export let task2: Task = {
   completedAt: null,
 };
 
-export let task3: Task = {
-  id: "someRandomIdString3",
+let task3: Task = {
+  _id: uuidv4(),
+  _rev: null,
   projectLabel: null,
   description: "This task is due today",
   createdAt: Date.now(),
@@ -46,8 +53,9 @@ export let task3: Task = {
 };
 
 // task with no due date
-export let task4: Task = {
-  id: "someRandomIdString4",
+let task4: Task = {
+  _id: uuidv4(),
+  _rev: null,
   projectLabel: null,
   description: "This task is unassigned",
   createdAt: Date.now(),
@@ -61,8 +69,9 @@ export let task4: Task = {
   completedAt: null,
 };
 
-export let task5: Task = {
-  id: "someRandomIdString5",
+let task5: Task = {
+  _id: uuidv4(),
+  _rev: null,
   projectLabel: null,
   description: "This task is also unassigned",
   createdAt: Date.now(),
@@ -76,13 +85,14 @@ export let task5: Task = {
   completedAt: null,
 };
 
-export let task6: Task = {
-  id: "someRandomIdString6",
+let task6: Task = {
+  _id: uuidv4(),
+  _rev: null,
   projectLabel: null,
   description: "This task is upcoming",
   createdAt: Date.now(),
   updatedAt: Date.now(),
-  dueOn: new Date().setHours(0,0,0,0) + 86400000,
+  dueOn: new Date().setHours(0, 0, 0, 0) + 86400000,
   dueAt: null,
   recurrence: 0,
   lane: null,
@@ -91,13 +101,14 @@ export let task6: Task = {
   completedAt: null,
 };
 
-export let task7: Task = {
-  id: "someRandomIdString7",
+let task7: Task = {
+  _id: uuidv4(),
+  _rev: null,
   projectLabel: null,
   description: "This task is done today",
   createdAt: Date.now(),
   updatedAt: Date.now(),
-  dueOn: new Date().setHours(0,0,0,0),
+  dueOn: new Date().setHours(0, 0, 0, 0),
   dueAt: null,
   recurrence: 0,
   lane: null,
@@ -106,8 +117,9 @@ export let task7: Task = {
   completedAt: Date.now(),
 };
 
-export let task8: Task = {
-  id: "someRandomIdString8",
+let task8: Task = {
+  _id: uuidv4(),
+  _rev: null,
   projectLabel: null,
   description: "This task is done today but was overdue",
   createdAt: Date.now(),
@@ -120,3 +132,14 @@ export let task8: Task = {
   laneOrder: 0,
   completedAt: Date.now() + 5,
 };
+
+export function addTestTaskData(db: PouchDB.Database<Task>) {
+  db.put(task1);
+  db.put(task2);
+  db.put(task3);
+  db.put(task4);
+  db.put(task5);
+  db.put(task6);
+  db.put(task7);
+  db.put(task8);
+}
