@@ -13,5 +13,11 @@
     "editor.defaultFormatter": "svelte.svelte-vscode"
   },
   "editor.rulers": [80],
-  "cSpell.words": ["dndzone", "gorm", "IDBP", "uuidv"]
+  "cSpell.words": [
+    "dndzone",
+    "gorm",
+    "IDBP",
+    "Oolong",
+    "uuidv"
+  ]
 }

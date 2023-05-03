@@ -1,24 +1,15 @@
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { VitePWA } from "vite-plugin-pwa";
-
-// Plugin to build and generate chrome extension
-// https://github.com/StarkShang/vite-plugin-chrome-extension
+import { crx } from "@crxjs/vite-plugin";
+import manifest from "./manifest.json";
 
 // https://vitejs.dev/config/
 export default defineConfig({
   define: { global: "window" },
-  // server: {
-  //   proxy: {
-  //     "/api": {
-  //       target: "http://localhost:5984",
-  //       changeOrigin: true,
-  //       rewrite: (path) => path.replace(/^\/api/, ""),
-  //     },
-  //   },
-  // },
   plugins: [
     svelte(),
+    // crx({ manifest }),
     VitePWA({
       registerType: "autoUpdate",
       // workbox: {
