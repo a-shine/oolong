@@ -6,39 +6,36 @@
   import type { Task } from "./types/task.type";
   import { v4 as uuidv4 } from "uuid";
 
-
   // BUG: Fix so that keyboard doesn't add scroll to page on mobile
   // BUG: Unable to delete completed tasks from the TodayView
 
   // If no task is passed, it defaults to null
   export let task: Task = {
-        id: uuidv4(),
-        description: undefined,
-        createdAt: undefined,
-        updatedAt: undefined,
-        dueOn: undefined,
-        projectLabel: undefined,
-        lane: undefined,
-        laneOrder: undefined,
-        listOrder: Infinity,
-        dueAt: undefined,
-        recurrence: undefined,
-        completedAt: undefined,
-      };;
+    _id: uuidv4(),
+    description: undefined,
+    createdAt: undefined,
+    updatedAt: undefined,
+    dueOn: undefined,
+    projectLabel: undefined,
+    lane: undefined,
+    laneOrder: undefined,
+    listOrder: Infinity,
+    dueAt: undefined,
+    recurrence: undefined,
+    completedAt: undefined,
+  };
 
   // Component values binded to the task description and dueOn date inputs
   let descriptionValue: string;
   let dueOnValue: string;
-  
+
   // Cache the initial task description and dueOn date so we can cancel the
   // changes if the user discards them
   let cachedDescription: string;
   let cachedDueOn: number;
 
-
   let safeCloseModal = false;
   let safeDeleteModal = false;
-
 
   const dispatch = createEventDispatcher();
 
@@ -83,7 +80,7 @@
 
     // Set the createdAt and updatedAt dates
     task.createdAt = new Date().getTime();
-   
+
     // Dispatch the saveTask event to the parent component
     dispatch("saveTask", task);
   }
@@ -104,10 +101,7 @@
   let addDateDialog = false;
 
   function safeClose() {
-    if (
-      task.description === cachedDescription &&
-      task.dueOn === cachedDueOn
-    ) {
+    if (task.description === cachedDescription && task.dueOn === cachedDueOn) {
       close();
     } else {
       safeCloseModal = true;

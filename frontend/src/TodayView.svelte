@@ -1,10 +1,12 @@
 <script lang="ts">
-  import type { Task } from "./types/task.type";
-  import type { IDBPDatabase } from "idb";
-  import TaskList from "./TaskList.svelte";
   import { createEventDispatcher, onMount } from "svelte";
-
   import { getToday, getTomorrow } from "./lib/date.utils";
+
+  // Types
+  import type { Task } from "./types/task.type";
+
+  // Components
+  import TaskList from "./TaskList.svelte";
 
   let showCompleted: boolean = false;
 
@@ -12,51 +14,67 @@
   let tasksOverdue: Task[] = [];
   let tasksDoneToday: Task[] = [];
 
-  export let db: IDBPDatabase<unknown>;
+  export let db: PouchDB.Database<Task>;
 
   // BUG: Not able to undo a task that was due today or overdue
 
   onMount(async () => {
     tasksToday = await getTodayIncompleteTasks();
+    tasksToday = tasksToday.docs;
     tasksOverdue = await getTasksOverdue();
+    tasksOverdue = tasksOverdue.docs;
     tasksDoneToday = await getTasksDoneToday();
+    tasksDoneToday = tasksDoneToday.docs;
   });
 
   async function getTodayIncompleteTasks() {
-    const tx = (await db).transaction("incompleteTasks", "readwrite");
-    const store = tx.objectStore("incompleteTasks");
-    const index = store.index("dueOnListOrder");
-    let range;
+    // const tx = (await db).transaction("incompleteTasks", "readwrite");
+    // const store = tx.objectStore("incompleteTasks");
+    // const index = store.index("dueOnListOrder");
+    // let range;
 
-    let firstTaskToday = [getToday(), 0];
-    let firstTaskTmr = [getTomorrow(), 0];
-    range = IDBKeyRange.bound(firstTaskToday, firstTaskTmr, false, true);
-    return await index.getAll(range);
+    // let firstTaskToday = [getToday(), 0];
+    // let firstTaskTmr = [getTomorrow(), 0];
+    // range = IDBKeyRange.bound(firstTaskToday, firstTaskTmr, false, true);
+    // return await index.getAll(range);
+    return db.find({
+      selector: {
+        dueOn: { $eq: getToday() },
+      },
+      // sort: [{ listOrder: "asc" }],
+    });
   }
 
-  async function getTasksOverdue(): Promise<Task[]> {
-    const tx = db.transaction("incompleteTasks", "readwrite");
-    const store = tx.objectStore("incompleteTasks");
-    const index = store.index("dueOnListOrder");
-
-    // Get tasks that are not Unassigned but were due yesterday or before
-    let range = IDBKeyRange.bound([-1, Infinity], [getToday(), 0], false, true);
-    return await index.getAll(range);
+  async function getTasksOverdue() {
+    return db.find({
+      selector: {
+        dueOn: { $lt: getToday() },
+      },
+      // sort: [{ listOrder: "asc" }],
+    });
   }
 
   async function getTasksDoneToday() {
-    const tx = db.transaction("completedTasks", "readwrite");
-    const store = tx.objectStore("completedTasks");
-    const index = store.index("dueOnCompletedAt"); // return completed task in order of the most recently completed
+    // const tx = db.transaction("completedTasks", "readwrite");
+    // const store = tx.objectStore("completedTasks");
+    // const index = store.index("dueOnCompletedAt"); // return completed task in order of the most recently completed
 
-    let range = IDBKeyRange.bound([-1, getToday()], [Infinity, getToday()], false, true);
-    return await index.getAll(range);
+    // let range = IDBKeyRange.bound(
+    //   [-1, getToday()],
+    //   [Infinity, getToday()],
+    //   false,
+    //   true
+    // );
+    // return await index.getAll(range);
+    return db.find({
+      selector: {
+        dueOn: { $eq: getToday() },
+      },
+      // sort: [{ completedAt: "desc" }],
+    });
   }
 
-
   // This determines what is seen in a a list so scope the db query to this
-
-  
 
   const dispatch = createEventDispatcher();
   const toggleEdit = (task: Task) => dispatch("toggleEdit", task);
@@ -64,7 +82,7 @@
   async function unDone(task: Task) {
     console.log("unDone", task);
     if (task.dueOn === getToday()) {
-      console.log("here")
+      console.log("here");
       tasksToday = [...tasksToday, task];
     } else if (task.dueOn < getToday()) {
       tasksOverdue = [...tasksOverdue, task];
@@ -83,7 +101,7 @@
     <p>Overdue</p>
     <TaskList
       enableOrdering={true}
-      {db}
+      pdb={db}
       tasks={tasksOverdue}
       on:undoneTask={(e) => unDone(e.detail)}
       on:doneTask={(e) => toggleDone(e.detail)}
@@ -96,7 +114,7 @@
     <p>Today</p>
     <TaskList
       enableOrdering={true}
-      {db}
+      pdb={db}
       tasks={tasksToday}
       on:undoneTask={(e) => unDone(e.detail)}
       on:doneTask={(e) => toggleDone(e.detail)}
@@ -118,7 +136,7 @@
   {#if showCompleted}
     <TaskList
       enableOrdering={false}
-      {db}
+      pdb={db}
       tasks={tasksDoneToday}
       on:undoneTask={(e) => unDone(e.detail)}
       on:doneTask={(e) => toggleDone(e.detail)}

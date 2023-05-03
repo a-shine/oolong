@@ -1,14 +1,15 @@
 <script lang="ts">
   import type { Task } from "./types/task.type";
-  import type { IDBPDatabase } from "idb";
   import TaskItem from "./TaskItem.svelte";
   import { createEventDispatcher, onMount } from "svelte";
 
   import { dndzone } from "svelte-dnd-action"; // https://github.com/isaacHagoel/svelte-dnd-action
+  import { overrideItemIdKeyNameBeforeInitialisingDndZones } from "svelte-dnd-action";
+  overrideItemIdKeyNameBeforeInitialisingDndZones("_id"); // https://github.com/isaacHagoel/svelte-dnd-action#overriding-the-item-id-key-name
   import { flip } from "svelte/animate";
 
   export let enableOrdering: boolean = false;
-  export let db: IDBPDatabase<unknown>;
+  export let pdb: PouchDB.Database<Task>;
 
   export let tasks: Task[];
 
@@ -16,13 +17,11 @@
   async function completeTask(task: Task) {
     if (task.completedAt) {
       task.completedAt = null;
-      (await db).put("incompleteTasks", task);
-      (await db).delete("completedTasks", task.id);
-      dispatch("undoneTask", task)
+      pdb.put(task);
+      dispatch("undoneTask", task);
     } else {
       task.completedAt = Date.now();
-      (await db).put("completedTasks", task);
-      (await db).delete("incompleteTasks", task.id);
+      pdb.put(task);
       dispatch("doneTask", task);
     }
 
@@ -30,7 +29,7 @@
 
     // BUG: When task is moved back to original list, error is thrown
     // Remove the task from the list
-    tasks = tasks.filter((t) => t.id !== task.id);
+    tasks = tasks.filter((t) => t._id !== task._id);
   }
 
   const flipDurationMs = 100;
@@ -45,7 +44,8 @@
     // update the order of the tasks
     for (let i = 0; i < tasks.length; i++) {
       tasks[i].listOrder = i;
-      (await db).put("incompleteTasks", tasks[i]);
+      pdb.put(tasks[i]);
+      // (await db).put("incompleteTasks", tasks[i]);
     }
   }
 
@@ -70,7 +70,7 @@
     on:consider={handleDndConsider}
     on:finalize={handleDndFinalize}
   >
-    {#each tasks as task (task.id)}
+    {#each tasks as task (task._id)}
       <div animate:flip={{ duration: flipDurationMs }}>
         <TaskItem
           {task}

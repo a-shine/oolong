@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { openDB } from "idb";
+  import { addTestTaskData } from "./lib/testTasks.utils";
 
   import type { Task } from "./types/task.type";
 
@@ -10,64 +10,20 @@
 
   import { getToday, getTomorrow } from "./lib/date.utils";
 
-  // TODO: Store pending (to sync) tasks IDs in a different table and sync them
-  //  when a connection becomes available (using the background sync API)
+  export let db: PouchDB.Database<{}>;
 
-  // TODO: Tracking deletion is complicated. We either need to keep track of all
-  // devices and queue the deletion so that each delete is sent to every node or
-  // we can implement logical deletion by having a deleted flag on the task 
-  // (this is not optimal as the database will be overgrowing but may be the 
-  // easiest solution).
-  
   // Displayed tasks are determined by the scope, on changes to scope, the task
   // list is updated
   let scope: string = "today";
 
-  // The task that is currently being edited (undefined if no task is being 
+  // The task that is currently being edited (undefined if no task is being
   // edited)
   // WARNING: It is important that this is undefined and not null as null is a value while undefined is not and so when setting the value to null you actually provide a value to the prop while with undefined you use the default value
   let taskCursor: Task = undefined;
 
-  
   let displayTaskEditor: boolean = false;
 
-
-  // Open a connection to the local (IndexedDB) database. Create/modify the
-  // necessary object stores if the version has changed.
-  const db = openDB("oolongDb", 1, {
-    upgrade(db) {
-      // Creating object store for incomplete tasks
-      if (!db.objectStoreNames.contains("incompleteTasks")) {
-        const incompleteTasks = db.createObjectStore("incompleteTasks", {
-          keyPath: "id",
-        });
-        incompleteTasks.createIndex("dueOnListOrder", ["dueOn", "listOrder"], {
-          unique: false,
-        });
-        incompleteTasks.createIndex(
-          "projectLabelLaneLaneOrder",
-          ["projectLabel", "lane", "laneOrder"],
-          {
-            unique: false,
-          }
-        );
-      }
-
-      // Creating object store for completed tasks
-      if (!db.objectStoreNames.contains("completedTasks")) {
-        const completedTasks = db.createObjectStore("completedTasks", {
-          keyPath: "id",
-        });
-        completedTasks.createIndex(
-          "dueOnCompletedAt",
-          ["dueOn", "completedAt"],
-          {
-            unique: false,
-          }
-        );
-      }
-    },
-  });
+  // addTestTaskData(pdb);
 
   /**
    * @returns a promise of the tasks list based on the component scope setting
@@ -75,76 +31,74 @@
   async function getTasks(): Promise<Task[]> {
     switch (scope) {
       case "unassigned":
-        return await getUnassignedTasks();
+        return (await getUnassignedTasks()).docs;
       case "upcoming":
-        return await getUpcomingTasks();
+        return (await getUpcomingTasks()).docs;
       case "completed":
-        return await getCompletedTasks();
+        return (await getCompletedTasks()).docs;
       default:
         return;
     }
   }
 
-    /**
-   * Get all unassigned tasks (tasks where dueOn is set to -1) from the local 
+  /**
+   * Get all unassigned tasks (tasks where dueOn is set to -1) from the local
    * (IndexedDB) database
    */
-   async function getUnassignedTasks(): Promise<Task[]> {
-    const tx = (await db).transaction("incompleteTasks", "readwrite");
-    const store = tx.objectStore("incompleteTasks");
-    
-    const index = store.index("dueOnListOrder");
-    
-    // Tasks with dueOn set to -1
-    let range = IDBKeyRange.bound([-1, 0], [-1, Infinity]);
-    
-    return await index.getAll(range);
+  async function getUnassignedTasks() {
+    let jhg = db.find({
+      selector: {
+        dueOn: -1,
+      },
+    });
+
+    return await jhg;
   }
 
-   /**
-   * Get all upcoming tasks (tasks due from tomorrow onwards) from the local 
+  /**
+   * Get all upcoming tasks (tasks due from tomorrow onwards) from the local
    * (IndexedDB) database
    */
-   async function getUpcomingTasks() {
-    const tx = (await db).transaction("incompleteTasks", "readwrite");
-    const store = tx.objectStore("incompleteTasks");
-    const index = store.index("dueOnListOrder");
+  async function getUpcomingTasks() {
+    let jgjg = db.find({
+      selector: {
+        dueOn: {
+          $gte: getTomorrow(),
+        },
+      },
+    });
 
-    // Composite key where the first key is the due date and the second key is
-    // the list order
-    let range = IDBKeyRange.lowerBound([getTomorrow(), 0]);
-    return await index.getAll(range);
+    return await jgjg;
   }
 
   /**
    * Get all completed tasks from the local (IndexedDB) database
    */
-  async function getCompletedTasks(): Promise<Task[]> {
-    const tx = (await db).transaction("completedTasks", "readwrite");
-    const store = tx.objectStore("completedTasks");
-
-    // Completed tasks in order of due date and then completion date
-    const index = store.index("dueOnCompletedAt");
-    return await index.getAll();
+  async function getCompletedTasks() {
+    return await db.find({
+      selector: {
+        completedAt: {
+          $gte: 0,
+        },
+      },
+    });
   }
-
- 
-
 
   /**
    * Open the task editor for the given task (by setting the taskCursor)
-  */
+   */
   function editTask(task: Task) {
     taskCursor = task;
     displayTaskEditor = true;
   }
 
   async function deleteTask(task: Task) {
-    (await db).delete("incompleteTasks", task.id);
+    db.remove(task);
   }
 
-  async function putTaskLocalDb(task: Task) {
-    (await db).put("incompleteTasks", task);
+  async function putTask(task: Task) {
+    console.log(db);
+    db.put(task);
   }
 </script>
 
@@ -157,7 +111,7 @@
         taskCursor = undefined;
       }}
       on:saveTask={(e) => {
-        putTaskLocalDb(e.detail);
+        putTask(e.detail);
         displayTaskEditor = false;
         taskCursor = undefined;
       }}
@@ -173,23 +127,19 @@
 
   <div id="container">
     <div id="tasks" class="center">
-      {#await db}
-        <div>Loading...</div>
-      {:then db}
-        {#key scope}
-          {#if scope == "today"}
-            <TodayView {db} on:toggleEdit={(e) => editTask(e.detail)} />
-          {:else}
-            {#await getTasks() then tasks}
-              <TaskList
-                {db}
-                {tasks}
-                on:toggleEdit={(e) => editTask(e.detail)}
-              />
-            {/await}
-          {/if}
-        {/key}
-      {/await}
+      {#key scope}
+        {#if scope == "today"}
+          <TodayView {db} on:toggleEdit={(e) => editTask(e.detail)} />
+        {:else}
+          {#await getTasks() then tasks}
+            <TaskList
+              pdb={db}
+              {tasks}
+              on:toggleEdit={(e) => editTask(e.detail)}
+            />
+          {/await}
+        {/if}
+      {/key}
     </div>
   </div>
 

@@ -1,24 +1,23 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import Router, { replace } from "svelte-spa-router";
 
+  import Router, { replace } from "svelte-spa-router";
   import wrap from "svelte-spa-router/wrap";
 
-  import Login from "./Login.svelte";
-  import Tasks from "./Tasks.svelte";
-  import NotFound from "./NotFound.svelte";
-
   // This was tricky to get working!
-  // https://stackoverflow.com/questions/75808603/vitesveltepouchdb-uncaught-typeerror-class-extends-value-object-object-is
+  // - https://stackoverflow.com/questions/75808603/vitesveltepouchdb-uncaught-typeerror-class-extends-value-object-object-is
+  // - https://github.com/pouchdb/pouchdb/issues/8516
   import PouchDb from "pouchdb-browser";
-
-  // https://github.com/pouchdb/pouchdb/issues/8516
   import PouchDBFind from "pouchdb-find";
-
   import PouchDbAuth from "pouchdb-authentication";
-  import Logout from "./Logout.svelte";
   PouchDb.plugin(PouchDBFind);
   PouchDb.plugin(PouchDbAuth);
+
+  // Components
+  import Login from "./Login.svelte";
+  import Logout from "./Logout.svelte";
+  import Tasks from "./Tasks.svelte";
+  import NotFound from "./NotFound.svelte";
 
   let onlineStatus: boolean;
 
@@ -78,14 +77,13 @@
   const remoteCouch = new PouchDb("http://localhost:5984");
 
   // We can put all sorts of things in the user db (not only tasks)
-  let db;
-  let remoteDb;
 
   // Need to get name of active user in order to get the correct database
-  async () => {
+
+  async function setupDb(): Promise<any> {
     const dbName = await getActiveUserDatabaseName(remoteCouch);
-    db = new PouchDb(dbName);
-    remoteDb = new PouchDb("http://localhost:5984/" + dbName, {
+    const db = new PouchDb(dbName);
+    const remoteDb = new PouchDb("http://localhost:5984/" + dbName, {
       skip_setup: true,
     });
 
@@ -102,7 +100,8 @@
         fields: ["completedAt"],
       },
     });
-  };
+    return db;
+  }
 
   async function isAuth(): Promise<boolean> {
     const response = await remoteCouch.getSession();
@@ -141,27 +140,29 @@
   });
 </script>
 
-<Router
-  routes={{
-    // Exact paths
-    "/": wrap({
-      component: Tasks,
-      conditions: [isAuth],
-      props: { db },
-    }),
-    "/login": wrap({
-      component: Login,
-      conditions: [isNotAuth],
-      props: { remoteCouch },
-    }),
-    "/logout": wrap({
-      component: Logout,
-      conditions: [isAuth],
-      props: { remoteCouch },
-    }),
+{#await setupDb() then db}
+  <Router
+    routes={{
+      // Exact paths
+      "/": wrap({
+        component: Tasks,
+        conditions: [isAuth],
+        props: { db },
+      }),
+      "/login": wrap({
+        component: Login,
+        conditions: [isNotAuth],
+        props: { remoteCouch },
+      }),
+      "/logout": wrap({
+        component: Logout,
+        conditions: [isAuth],
+        props: { remoteCouch },
+      }),
 
-    // Catch-all (optional, but if present must be the last)
-    "*": NotFound,
-  }}
-  on:conditionsFailed={conditionsFailed}
-/>
+      // Catch-all (optional, but if present must be the last)
+      "*": NotFound,
+    }}
+    on:conditionsFailed={conditionsFailed}
+  />
+{/await}
