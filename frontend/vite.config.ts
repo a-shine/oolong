@@ -7,29 +7,38 @@ import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: "/oolong/",
+  define: { global: "window" },
+  // server: {
+  //   proxy: {
+  //     "/api": {
+  //       target: "http://localhost:5984",
+  //       changeOrigin: true,
+  //       rewrite: (path) => path.replace(/^\/api/, ""),
+  //     },
+  //   },
+  // },
   plugins: [
     svelte(),
     VitePWA({
       registerType: "autoUpdate",
-      workbox: {
-        runtimeCaching: [
-          {
-            handler: "NetworkOnly",
-            // I think this looks for any request to the backend matching this pattern
-            urlPattern: /http:\/\/localhost:8000\/(.*)/,
-            method: "POST", // BUG: Might want to add delete and put here
-            options: {
-              backgroundSync: {
-                name: "api-queue",
-                options: {
-                  maxRetentionTime: 24 * 60,
-                },
-              },
-            },
-          },
-        ],
-      },
+      // workbox: {
+      //   runtimeCaching: [
+      //     {
+      //       handler: "NetworkOnly",
+      //       // I think this looks for any request to the backend matching this pattern
+      //       urlPattern: /http:\/\/localhost:8000\/(.*)/,
+      //       method: "POST", // BUG: Might want to add delete and put here
+      //       options: {
+      //         backgroundSync: {
+      //           name: "api-queue",
+      //           options: {
+      //             maxRetentionTime: 24 * 60,
+      //           },
+      //         },
+      //       },
+      //     },
+      //   ],
+      // },
       manifest: {
         name: "Oolong",
         description: "Opinionated organisation tool",
