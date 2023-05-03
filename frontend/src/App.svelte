@@ -2,6 +2,12 @@
   import { onMount } from "svelte";
   import Router, { replace } from "svelte-spa-router";
 
+  import wrap from "svelte-spa-router/wrap";
+
+  import Login from "./Login.svelte";
+  import Tasks from "./Tasks.svelte";
+  import NotFound from "./NotFound.svelte";
+
   // This was tricky to get working!
   // https://stackoverflow.com/questions/75808603/vitesveltepouchdb-uncaught-typeerror-class-extends-value-object-object-is
   import PouchDb from "pouchdb-browser";
@@ -10,6 +16,7 @@
   import PouchDBFind from "pouchdb-find";
 
   import PouchDbAuth from "pouchdb-authentication";
+  import Logout from "./Logout.svelte";
   PouchDb.plugin(PouchDBFind);
   PouchDb.plugin(PouchDbAuth);
 
@@ -53,17 +60,52 @@
     return prefix + bytes.join("");
   }
 
+  async function getActiveUser(
+    remoteDb: PouchDB.Database<{}>
+  ): Promise<string> {
+    const response = await remoteDb.getSession();
+    return response.userCtx.name;
+  }
+
+  async function getActiveUserDatabaseName(
+    remoteDb: PouchDB.Database<{}>
+  ): Promise<string> {
+    const activeUser = await getActiveUser(remoteDb);
+    return getUserDatabaseName(activeUser);
+  }
+
+  // Used for authentication
+  const remoteCouch = new PouchDb("http://localhost:5984");
+
   // We can put all sorts of things in the user db (not only tasks)
-  const pdb = new PouchDb("user-db");
-  const pdbRemote = new PouchDb(
-    "http://localhost:5984/${getUserDatabaseName(batman)}",
-    {
+  let db;
+  let remoteDb;
+
+  // Need to get name of active user in order to get the correct database
+  async () => {
+    const dbName = await getActiveUserDatabaseName(remoteCouch);
+    db = new PouchDb(dbName);
+    remoteDb = new PouchDb("http://localhost:5984/" + dbName, {
       skip_setup: true,
-    }
-  );
+    });
+
+    // Enable syncing
+    db.sync(remoteDb, { live: true });
+
+    db.createIndex({
+      index: {
+        fields: ["dueOn", "listOrder"],
+      },
+    });
+    db.createIndex({
+      index: {
+        fields: ["completedAt"],
+      },
+    });
+  };
 
   async function isAuth(): Promise<boolean> {
-    const response = await pdbRemote.getSession();
+    const response = await remoteCouch.getSession();
     return response.userCtx.name ? true : false;
   }
 
@@ -71,27 +113,6 @@
     const response = !(await isAuth());
     return !(await isAuth());
   }
-
-  // Enable syncing
-  pdb.sync(pdbRemote, { live: true });
-  // .on("error", console.log.bind(console));
-
-  pdb.createIndex({
-    index: {
-      fields: ["dueOn", "listOrder"],
-    },
-  });
-  pdb.createIndex({
-    index: {
-      fields: ["completedAt"],
-    },
-  });
-
-  import wrap from "svelte-spa-router/wrap";
-
-  import Login from "./Login.svelte";
-  import Tasks from "./Tasks.svelte";
-  import NotFound from "./NotFound.svelte";
 
   // Handles the "conditionsFailed" event dispatched by the router when a component can't be loaded because one of its
   // pre-condition failed. If the pre-condition failed on a route other than the "/login" route then it must mean that
@@ -108,11 +129,6 @@
     }
   }
 
-  async function logout() {
-    await pdbRemote.logOut();
-    replace("/login");
-  }
-
   onMount(() => {
     // Initialize onlineStatus
     if (navigator.onLine) {
@@ -125,20 +141,23 @@
   });
 </script>
 
-<button on:click={logout}>Logout</button>
-
 <Router
   routes={{
-    // Exact path
+    // Exact paths
     "/": wrap({
       component: Tasks,
       conditions: [isAuth],
-      props: { pdb, pdbRemote },
+      props: { db },
     }),
     "/login": wrap({
       component: Login,
       conditions: [isNotAuth],
-      props: { pdbRemote },
+      props: { remoteCouch },
+    }),
+    "/logout": wrap({
+      component: Logout,
+      conditions: [isAuth],
+      props: { remoteCouch },
     }),
 
     // Catch-all (optional, but if present must be the last)

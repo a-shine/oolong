@@ -1,26 +1,15 @@
 <script lang="ts">
   import { replace } from "svelte-spa-router";
 
-  export let pdbRemote;
+  export let remoteCouch: PouchDB.Database<{}>;
 
   let email: string;
   let password: string;
 
   let errorMsg = "";
 
-  // TODO: Move the db and hence auth system to app level
-  // pdbRemote.logIn("admin", "admin", function (err, response) {
-  //   if (err) {
-  //     if (err.name === "unauthorized" || err.name === "forbidden") {
-  //       // name or password incorrect
-  //     } else {
-  //       // cosmic rays, a meteor, etc.
-  //     }
-  //   }
-  // });
-
   async function login() {
-    pdbRemote.login(email, password, function (err, response) {
+    remoteCouch.login(email, password, function (err, response) {
       if (err) {
         if (err.name === "unauthorized" || err.name === "forbidden") {
           // name or password incorrect
