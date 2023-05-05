@@ -2,23 +2,34 @@
  *
  * @returns unix time at midnight of the current day
  */
-export function getToday(): number {
-  return new Date().setHours(0, 0, 0, 0);
+export function getToday(): string {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth() + 1; // JavaScript months are 0-indexed
+  const day = today.getDate();
+
+  const yyyy = year.toString();
+  const mm = month < 10 ? `0${month}` : month.toString();
+  const dd = day < 10 ? `0${day}` : day.toString();
+
+  return `${yyyy}-${mm}-${dd}`;
 }
 
 /**
  *
- * @returns unix time at midnight of the next day
+ * @returns tmr's date in yyyymmdd format
  */
-export function getTomorrow(): number {
-  return getToday() + 24 * 60 * 60 * 1000;
-}
+export function getTomorrow(): string {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
 
-function convertUnixTimeToDateString(unixTime: number): string {
-  const date = new Date(unixTime);
-  return date.toLocaleDateString();
-}
+  const year = tomorrow.getFullYear();
+  const month = tomorrow.getMonth() + 1; // JavaScript months are 0-indexed
+  const day = tomorrow.getDate();
 
-export function getTodayString(): string {
-  return convertUnixTimeToDateString(getToday());
+  const yyyy = year.toString();
+  const mm = month < 10 ? `0${month}` : month.toString();
+  const dd = day < 10 ? `0${day}` : day.toString();
+
+  return `${yyyy}-${mm}-${dd}`;
 }

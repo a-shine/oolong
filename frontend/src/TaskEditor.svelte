@@ -7,11 +7,12 @@
   import { v4 as uuidv4 } from "uuid";
 
   // BUG: Fix so that keyboard doesn't add scroll to page on mobile
-  // BUG: Unable to delete completed tasks from the TodayView
+  // BUG: There's a small amount of scroll when the editor is open
 
   // If no task is passed, it defaults to null
   export let task: Task = {
     _id: uuidv4(),
+    _rev: undefined,
     description: undefined,
     createdAt: undefined,
     updatedAt: undefined,
@@ -32,7 +33,7 @@
   // Cache the initial task description and dueOn date so we can cancel the
   // changes if the user discards them
   let cachedDescription: string;
-  let cachedDueOn: number;
+  let cachedDueOn: string;
 
   let safeCloseModal = false;
   let safeDeleteModal = false;
@@ -45,10 +46,6 @@
       // If task is not a new task, we want to set the appropriate values
       dueOnValue = new Date(task.dueOn).toISOString().split("T")[0];
       descriptionValue = task.description;
-
-      // BUG: these are not the same for some reason
-      // console.log(dueOnValue);
-      // console.log(new Date().toISOString().split("T")[0])
 
       cachedDescription = task.description;
       cachedDueOn = task.dueOn;
@@ -63,13 +60,12 @@
     // Set task description and dueOn date
     task.description = descriptionValue.trim();
 
-    // BUG: Misinterpreting date format
+    // If we've specified a date, then assign the date to the task
+    // Else, undefined tasks have a dueOn of -1 so they are still present in the Index
     if (dueOnValue !== undefined) {
-      console.log(dueOnValue);
-      task.dueOn = new Date(dueOnValue).setHours(0, 0, 0, 0);
-      console.log(new Date(task.dueOn).toISOString().split("T")[0]);
+      task.dueOn = dueOnValue;
     } else {
-      task.dueOn = -1;
+      task.dueOn = "-1";
     }
 
     task.updatedAt = new Date().getTime();

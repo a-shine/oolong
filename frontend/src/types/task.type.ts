@@ -5,7 +5,7 @@ export type Task = {
   description: string;
   createdAt: number;
   updatedAt: number;
-  dueOn: number;
+  dueOn: string;
   dueAt: number;
   recurrence: number;
   // Whether a task is completed is in a different table (if completed the state is set to null)
