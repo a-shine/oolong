@@ -51,7 +51,7 @@
   async function getUnassignedTasks() {
     let jhg = db.find({
       selector: {
-        dueOn: -1,
+        dueOn: "-1",
       },
     });
 

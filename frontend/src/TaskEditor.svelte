@@ -69,6 +69,7 @@
     }
 
     task.updatedAt = new Date().getTime();
+    task.completedAt = null;
   }
 
   function createNewTask() {

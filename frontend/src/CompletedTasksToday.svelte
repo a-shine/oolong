@@ -8,18 +8,18 @@
   let showCompleted = false;
 
   async function getTasksDoneToday() {
-    return db.find({
+    const response = await db.find({
       selector: {
         dueOn: { $eq: getToday() },
       },
       // sort: [{ completedAt: "desc" }],
-    }).docs;
+    });
+    return response.docs;
   }
 </script>
 
-{#await getTasksDoneToday then DoneTasks}
+{#await getTasksDoneToday() then DoneTasks}
   {#if DoneTasks.length > 0}
-    <hr />
     <p>
       <button
         on:click={() => (showCompleted = !showCompleted)}
@@ -29,6 +29,7 @@
       >
     </p>
     {#if showCompleted}
+      <hr />
       <TaskList
         enableOrdering={false}
         pdb={db}

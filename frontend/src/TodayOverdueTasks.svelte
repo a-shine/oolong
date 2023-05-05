@@ -7,7 +7,7 @@
   async function getTasksOverdue() {
     let response = await db.find({
       selector: {
-        dueOn: { $lt: getToday() },
+        dueOn: { $lt: getToday(), $gt: "-1" },
       },
       // sort: [{ listOrder: "asc" }],
     });

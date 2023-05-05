@@ -10,8 +10,6 @@
   import CompletedTasksToday from "./CompletedTasksToday.svelte";
   import TodayOverdueTasks from "./TodayOverdueTasks.svelte";
 
-  let showCompleted: boolean = false;
-
   let tasksToday: Task[] = [];
   let tasksOverdue: Task[] = [];
   let tasksDoneToday: Task[] = [];
@@ -22,25 +20,17 @@
 
   onMount(async () => {
     tasksToday = await getTodayIncompleteTasks();
-    tasksToday = tasksToday.docs;
   });
 
   async function getTodayIncompleteTasks() {
-    // const tx = (await db).transaction("incompleteTasks", "readwrite");
-    // const store = tx.objectStore("incompleteTasks");
-    // const index = store.index("dueOnListOrder");
-    // let range;
-
-    // let firstTaskToday = [getToday(), 0];
-    // let firstTaskTmr = [getTomorrow(), 0];
-    // range = IDBKeyRange.bound(firstTaskToday, firstTaskTmr, false, true);
-    // return await index.getAll(range);
-    return db.find({
+    const response = await db.find({
       selector: {
         dueOn: { $eq: getToday() },
+        completedAt: { $eq: null },
       },
       // sort: [{ listOrder: "asc" }],
     });
+    return response.docs;
   }
 
   // This determines what is seen in a a list so scope the db query to this
