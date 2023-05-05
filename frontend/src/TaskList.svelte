@@ -4,8 +4,7 @@
   import { createEventDispatcher, onMount } from "svelte";
 
   import { dndzone } from "svelte-dnd-action"; // https://github.com/isaacHagoel/svelte-dnd-action
-  import { overrideItemIdKeyNameBeforeInitialisingDndZones } from "svelte-dnd-action";
-  overrideItemIdKeyNameBeforeInitialisingDndZones("_id"); // https://github.com/isaacHagoel/svelte-dnd-action#overriding-the-item-id-key-name
+
   import { flip } from "svelte/animate";
 
   export let enableOrdering: boolean = false;

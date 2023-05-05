@@ -7,6 +7,8 @@
 
   // Components
   import TaskList from "./TaskList.svelte";
+  import CompletedTasksToday from "./CompletedTasksToday.svelte";
+  import TodayOverdueTasks from "./TodayOverdueTasks.svelte";
 
   let showCompleted: boolean = false;
 
@@ -21,10 +23,6 @@
   onMount(async () => {
     tasksToday = await getTodayIncompleteTasks();
     tasksToday = tasksToday.docs;
-    tasksOverdue = await getTasksOverdue();
-    tasksOverdue = tasksOverdue.docs;
-    tasksDoneToday = await getTasksDoneToday();
-    tasksDoneToday = tasksDoneToday.docs;
   });
 
   async function getTodayIncompleteTasks() {
@@ -42,35 +40,6 @@
         dueOn: { $eq: getToday() },
       },
       // sort: [{ listOrder: "asc" }],
-    });
-  }
-
-  async function getTasksOverdue() {
-    return db.find({
-      selector: {
-        dueOn: { $lt: getToday() },
-      },
-      // sort: [{ listOrder: "asc" }],
-    });
-  }
-
-  async function getTasksDoneToday() {
-    // const tx = db.transaction("completedTasks", "readwrite");
-    // const store = tx.objectStore("completedTasks");
-    // const index = store.index("dueOnCompletedAt"); // return completed task in order of the most recently completed
-
-    // let range = IDBKeyRange.bound(
-    //   [-1, getToday()],
-    //   [Infinity, getToday()],
-    //   false,
-    //   true
-    // );
-    // return await index.getAll(range);
-    return db.find({
-      selector: {
-        dueOn: { $eq: getToday() },
-      },
-      // sort: [{ completedAt: "desc" }],
     });
   }
 
@@ -96,19 +65,8 @@
   }
 </script>
 
-{#if tasksOverdue.length > 0}
-  {#key tasksOverdue}
-    <p>Overdue</p>
-    <TaskList
-      enableOrdering={true}
-      pdb={db}
-      tasks={tasksOverdue}
-      on:undoneTask={(e) => unDone(e.detail)}
-      on:doneTask={(e) => toggleDone(e.detail)}
-      on:toggleEdit={(e) => toggleEdit(e.detail)}
-    />
-  {/key}
-{/if}
+<TodayOverdueTasks {db} />
+
 {#if tasksToday.length > 0}
   {#key tasksToday}
     <p>Today</p>
@@ -123,24 +81,4 @@
   {/key}
 {/if}
 
-{#if tasksDoneToday.length > 0}
-  <hr />
-  <p>
-    <button
-      on:click={() => (showCompleted = !showCompleted)}
-      class="borderless-button"
-    >
-      {showCompleted ? "Hide" : "Show"} today's completed tasks</button
-    >
-  </p>
-  {#if showCompleted}
-    <TaskList
-      enableOrdering={false}
-      pdb={db}
-      tasks={tasksDoneToday}
-      on:undoneTask={(e) => unDone(e.detail)}
-      on:doneTask={(e) => toggleDone(e.detail)}
-      on:toggleEdit={(e) => toggleEdit(e.detail)}
-    />
-  {/if}
-{/if}
+<CompletedTasksToday {db} />

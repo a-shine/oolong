@@ -3,6 +3,9 @@
 
   import type { Task } from "./types/task.type";
 
+  import { overrideItemIdKeyNameBeforeInitialisingDndZones } from "svelte-dnd-action";
+  overrideItemIdKeyNameBeforeInitialisingDndZones("_id"); // https://github.com/isaacHagoel/svelte-dnd-action#overriding-the-item-id-key-name
+
   import TasksTopBar from "./TasksTopBar.svelte";
   import TaskEditor from "./TaskEditor.svelte";
   import TodayView from "./TodayView.svelte";
