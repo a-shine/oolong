@@ -47,8 +47,11 @@
   async function getTodayCompletedTasks() {
     const response = await pdb.find({
       selector: {
-        dueOn: { $eq: getToday() },
-        completedAt: { $ne: null },
+        // Completed between 12:00am and 11:59pm in unix time
+        completedAt: {
+          $gte: Date.parse(getToday()),
+          $lt: Date.parse(getToday()) + 86400000,
+        },
       },
     });
     return response.docs;
