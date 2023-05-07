@@ -31,8 +31,6 @@
   let safeCloseModal = false;
   let safeDeleteModal = false;
 
-  const dispatch = createEventDispatcher();
-
   async function getTask() {
     if (params.taskId == "-1") {
       // If no task is passed, it defaults to null
@@ -94,7 +92,8 @@
 
   const updateTask = () => {
     setTask();
-    dispatch("saveTask", task);
+    pdb.put(task);
+    pop();
   };
 
   const deleteTask = () => {

@@ -104,16 +104,12 @@
   function updateOrder(tasks: Task[]) {
     pdb.bulkDocs(tasks);
   }
-
-  function removeFromList(task: Task) {
-    displayedTasks = displayedTasks.filter((t) => t._id !== task._id);
-  }
 </script>
 
 <div id="container">
   <div id="tasks" class="center">
     {#if params.scope == "today"}
-      <TodayView db={pdb} />
+      <TodayView {pdb} />
     {:else}
       <TaskList
         bind:tasks={displayedTasks}

@@ -8,7 +8,6 @@
   import TaskList from "./TaskList.svelte";
 
   // Props
-  export let db: PouchDB.Database<any>;
   export let todayCompletedTasks: Task[] = [];
 
   const dispatch = createEventDispatcher();
@@ -17,10 +16,6 @@
 
   function unComplete(task: Task) {
     dispatch("unComplete", task);
-  }
-
-  function toggleEdit(task: Task) {
-    dispatch("toggleEdit", task);
   }
 </script>
 
@@ -37,10 +32,8 @@
     <hr />
     <TaskList
       enableOrdering={false}
-      pdb={db}
       tasks={todayCompletedTasks}
       on:toggleComplete={(e) => unComplete(e.detail)}
-      on:toggleEdit={(e) => toggleEdit(e.detail)}
     />
   {/if}
 {/if}

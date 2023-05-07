@@ -45,10 +45,6 @@
     // TODO: update task in db
     dispatch("toggleComplete", task);
   }
-
-  function dispatchToggleEdit(task: Task) {
-    dispatch("toggleEdit", task);
-  }
 </script>
 
 {#if tasks}
