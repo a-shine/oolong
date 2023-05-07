@@ -47,7 +47,7 @@ jobs:
         run: npm install
       - name: modify vite base config for github pages
         working-directory: ./frontend
-        run: sed -i 's/base: \'\//base: \'\/oolong\//g' vite.config.js
+        run: "sed -i 's/base: \'\//base: \'\/oolong\//g' vite.config.js"
       - name: Build
         working-directory: ./frontend
         run: npm run build
