@@ -78,7 +78,7 @@
   }
 
   // Used for authentication
-  const remoteCouch = new PouchDb("http://localhost:5984");
+  const remoteCouch = new PouchDb(import.meta.env.VITE_COUCH_URL);
 
   // We can put all sorts of things in the user db (not only tasks)
 
@@ -87,7 +87,7 @@
   async function setupDb(): Promise<any> {
     const dbName = await getActiveUserDatabaseName(remoteCouch);
     const pdb = new PouchDb(dbName);
-    const remoteDb = new PouchDb("http://localhost:5984/" + dbName, {
+    const remoteDb = new PouchDb(import.meta.env.VITE_COUCH_URL + dbName, {
       skip_setup: true,
     });
 
