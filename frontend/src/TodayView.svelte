@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from "svelte";
-  import { getToday, getTomorrow } from "./lib/date.utils";
+  import { getToday } from "./lib/date.utils";
 
   // Types
   import type { Task } from "./types/task.type";
@@ -10,17 +10,30 @@
   import CompletedTasksToday from "./CompletedTasksToday.svelte";
   import TodayOverdueTasks from "./TodayOverdueTasks.svelte";
 
-  let tasksToday: Task[] = [];
-  let tasksOverdue: Task[] = [];
-  let tasksDoneToday: Task[] = [];
-
+  // Props
   export let db: PouchDB.Database<Task>;
 
-  // BUG: Not able to undo a task that was due today or overdue
+  const dispatch = createEventDispatcher();
+
+  let overdueTasks: Task[] = [];
+  let todayIncompleteTasks: Task[] = [];
+  let todayCompletedTasks: Task[] = [];
 
   onMount(async () => {
-    tasksToday = await getTodayIncompleteTasks();
+    overdueTasks = await getOverdueTasks();
+    todayIncompleteTasks = await getTodayIncompleteTasks();
+    todayCompletedTasks = await getTodayCompletedTasks();
   });
+
+  async function getOverdueTasks() {
+    let response = await db.find({
+      selector: {
+        dueOn: { $lt: getToday(), $ne: "-1" },
+      },
+      sort: [{ dueOn: "desc" }],
+    });
+    return response.docs;
+  }
 
   async function getTodayIncompleteTasks() {
     const response = await db.find({
@@ -28,47 +41,75 @@
         dueOn: { $eq: getToday() },
         completedAt: { $eq: null },
       },
-      // sort: [{ listOrder: "asc" }],
     });
     return response.docs;
   }
 
-  // This determines what is seen in a a list so scope the db query to this
+  async function getTodayCompletedTasks() {
+    const response = await db.find({
+      selector: {
+        dueOn: { $eq: getToday() },
+        completedAt: { $ne: null },
+      },
+      // sort: [{ completedAt: "desc" }],
+    });
+    return response.docs;
+  }
 
-  const dispatch = createEventDispatcher();
   const toggleEdit = (task: Task) => dispatch("toggleEdit", task);
 
-  async function unDone(task: Task) {
-    console.log("unDone", task);
-    if (task.dueOn === getToday()) {
-      console.log("here");
-      tasksToday = [...tasksToday, task];
-    } else if (task.dueOn < getToday()) {
-      tasksOverdue = [...tasksOverdue, task];
+  function unComplete(task) {
+    // Remove from completed tasks
+    todayCompletedTasks = todayCompletedTasks.filter((t) => t._id !== task._id);
+
+    const today = Date.parse(getToday());
+    const taskDueOn = Date.parse(task.dueOn);
+    if (taskDueOn < today) {
+      overdueTasks = [...overdueTasks, task];
+    } else {
+      todayIncompleteTasks = [...todayIncompleteTasks, task];
     }
   }
 
-  function toggleDone(task: Task) {
-    console.log("toggleDone", task);
-    tasksDoneToday = [...tasksDoneToday, task];
-    console.log("tasksDoneToday", tasksDoneToday);
+  function complete(task) {
+    // Add to completed tasks
+    todayCompletedTasks = [...todayCompletedTasks, task];
+
+    const today = Date.parse(getToday());
+    const taskDueOn = Date.parse(task.dueOn);
+    if (taskDueOn < today) {
+      overdueTasks = overdueTasks.filter((t) => t._id !== task._id);
+    } else {
+      todayIncompleteTasks = todayIncompleteTasks.filter(
+        (t) => t._id !== task._id
+      );
+    }
   }
 </script>
 
-<TodayOverdueTasks {db} />
+<TodayOverdueTasks
+  {db}
+  bind:overdueTasks
+  on:toggleEdit={(e) => toggleEdit(e.detail)}
+  on:complete={(e) => complete(e.detail)}
+/>
 
-{#if tasksToday.length > 0}
-  {#key tasksToday}
+{#if todayIncompleteTasks.length > 0}
+  {#key todayIncompleteTasks}
     <p>Today</p>
     <TaskList
       enableOrdering={true}
       pdb={db}
-      tasks={tasksToday}
-      on:undoneTask={(e) => unDone(e.detail)}
-      on:doneTask={(e) => toggleDone(e.detail)}
+      tasks={todayIncompleteTasks}
       on:toggleEdit={(e) => toggleEdit(e.detail)}
+      on:toggleComplete={(e) => complete(e.detail)}
     />
   {/key}
 {/if}
 
-<CompletedTasksToday {db} />
+<CompletedTasksToday
+  {db}
+  bind:todayCompletedTasks
+  on:toggleEdit={(e) => toggleEdit(e.detail)}
+  on:unComplete={(e) => unComplete(e.detail)}
+/>

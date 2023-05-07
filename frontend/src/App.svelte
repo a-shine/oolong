@@ -1,8 +1,10 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
-  import Router, { replace } from "svelte-spa-router";
+  import Router, { replace, location } from "svelte-spa-router";
   import wrap from "svelte-spa-router/wrap";
+
+  // TODO: Big code refactor, clean and debug
 
   // This was tricky to get working!
   // - https://stackoverflow.com/questions/75808603/vitesveltepouchdb-uncaught-typeerror-class-extends-value-object-object-is
@@ -14,10 +16,12 @@
   PouchDb.plugin(PouchDbAuth);
 
   // Components
+  import TopBar from "./TopBar.svelte";
   import Login from "./Login.svelte";
   import Logout from "./Logout.svelte";
   import Tasks from "./Tasks.svelte";
   import NotFound from "./NotFound.svelte";
+  import TaskEditor from "./TaskEditor.svelte";
 
   let onlineStatus: boolean;
 
@@ -82,25 +86,25 @@
 
   async function setupDb(): Promise<any> {
     const dbName = await getActiveUserDatabaseName(remoteCouch);
-    const db = new PouchDb(dbName);
+    const pdb = new PouchDb(dbName);
     const remoteDb = new PouchDb("http://localhost:5984/" + dbName, {
       skip_setup: true,
     });
 
     // Enable syncing
-    db.sync(remoteDb, { live: true });
+    pdb.sync(remoteDb, { live: true });
 
-    db.createIndex({
+    pdb.createIndex({
       index: {
         fields: ["dueOn", "listOrder"],
       },
     });
-    db.createIndex({
+    pdb.createIndex({
       index: {
         fields: ["completedAt"],
       },
     });
-    return db;
+    return pdb;
   }
 
   async function isAuth(): Promise<boolean> {
@@ -120,7 +124,7 @@
   function conditionsFailed(event) {
     switch (event.detail.route) {
       case "/login":
-        replace("/");
+        replace("/tasks");
         break;
       default:
         replace("/login");
@@ -140,29 +144,59 @@
   });
 </script>
 
-{#await setupDb() then db}
-  <Router
-    routes={{
-      // Exact paths
-      "/": wrap({
-        component: Tasks,
-        conditions: [isAuth],
-        props: { db },
-      }),
-      "/login": wrap({
-        component: Login,
-        conditions: [isNotAuth],
-        props: { remoteCouch },
-      }),
-      "/logout": wrap({
-        component: Logout,
-        conditions: [isAuth],
-        props: { remoteCouch },
-      }),
+<TopBar />
 
-      // Catch-all (optional, but if present must be the last)
-      "*": NotFound,
-    }}
-    on:conditionsFailed={conditionsFailed}
-  />
-{/await}
+<div id="container">
+  {#await setupDb() then pdb}
+    <Router
+      routes={{
+        // Exact paths
+        "/": wrap({
+          component: function () {
+            replace("/tasks/today");
+          },
+          conditions: [isAuth],
+        }),
+        "/tasks": wrap({
+          component: function () {
+            replace("/tasks/today");
+          },
+          conditions: [isAuth],
+        }),
+        "/tasks/:scope": wrap({
+          component: Tasks,
+          conditions: [isAuth],
+          props: { pdb },
+        }),
+        "/tasks/editor/:taskId": wrap({
+          component: TaskEditor,
+          conditions: [isAuth],
+          props: { pdb },
+        }),
+        "/login": wrap({
+          component: Login,
+          conditions: [isNotAuth],
+          props: { remoteCouch },
+        }),
+        "/logout": wrap({
+          component: Logout,
+          conditions: [isAuth],
+          props: { remoteCouch },
+        }),
+
+        // Catch-all (optional, but if present must be the last)
+        "*": NotFound,
+      }}
+      on:conditionsFailed={conditionsFailed}
+    />
+  {/await}
+</div>
+
+<style>
+  /* start 50px under the top bar */
+  #container {
+    position: fixed;
+    top: 50px;
+    width: 100%;
+  }
+</style>

@@ -1,7 +1,11 @@
 <script lang="ts">
-  import type { Task } from "./types/task.type";
   import { createEventDispatcher } from "svelte";
+  import { push } from "svelte-spa-router";
 
+  // Types
+  import type { Task } from "./types/task.type";
+
+  // Props
   export let task: Task;
 
   const dispatch = createEventDispatcher();
@@ -13,11 +17,11 @@
       type="checkbox"
       id="task-checkbox"
       name="task-checkbox"
-      on:click={() => dispatch("toggleDone", task)}
+      on:click={() => dispatch("toggleComplete", task)}
       bind:checked={task.completedAt}
     />
   </div>
-  <div id="task-info" on:click={() => dispatch("toggleEdit", task)}>
+  <div id="task-info" on:click={() => push("/tasks/editor/" + task._id)}>
     <div id="task-text">
       {task.description}
     </div>

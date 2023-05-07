@@ -1,4 +1,8 @@
-# node
+# NodeJS
 node_modules/
+
+# Artifacts created by PWA vite plugin 
 dev-dist/
+
+# Svelte compiler build output
 dist/

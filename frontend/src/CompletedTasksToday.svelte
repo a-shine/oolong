@@ -1,43 +1,46 @@
 <script lang="ts">
-  import { onMount } from "svelte";
-  import TaskList from "./TaskList.svelte";
-  import { getToday } from "./lib/date.utils";
+  import { createEventDispatcher } from "svelte";
 
+  // Types
+  import type { Task } from "./types/task.type";
+
+  // Components
+  import TaskList from "./TaskList.svelte";
+
+  // Props
   export let db: PouchDB.Database<any>;
+  export let todayCompletedTasks: Task[] = [];
+
+  const dispatch = createEventDispatcher();
 
   let showCompleted = false;
 
-  async function getTasksDoneToday() {
-    const response = await db.find({
-      selector: {
-        dueOn: { $eq: getToday() },
-      },
-      // sort: [{ completedAt: "desc" }],
-    });
-    return response.docs;
+  function unComplete(task: Task) {
+    dispatch("unComplete", task);
+  }
+
+  function toggleEdit(task: Task) {
+    dispatch("toggleEdit", task);
   }
 </script>
 
-{#await getTasksDoneToday() then DoneTasks}
-  {#if DoneTasks.length > 0}
-    <p>
-      <button
-        on:click={() => (showCompleted = !showCompleted)}
-        class="borderless-button"
-      >
-        {showCompleted ? "Hide" : "Show"} today's completed tasks</button
-      >
-    </p>
-    {#if showCompleted}
-      <hr />
-      <TaskList
-        enableOrdering={false}
-        pdb={db}
-        tasks={DoneTasks}
-        on:undoneTask={(e) => unDone(e.detail)}
-        on:doneTask={(e) => toggleDone(e.detail)}
-        on:toggleEdit={(e) => toggleEdit(e.detail)}
-      />
-    {/if}
+{#if todayCompletedTasks.length > 0}
+  <p>
+    <button
+      on:click={() => (showCompleted = !showCompleted)}
+      class="borderless-button"
+    >
+      {showCompleted ? "Hide" : "Show"} today's completed tasks</button
+    >
+  </p>
+  {#if showCompleted}
+    <hr />
+    <TaskList
+      enableOrdering={false}
+      pdb={db}
+      tasks={todayCompletedTasks}
+      on:toggleComplete={(e) => unComplete(e.detail)}
+      on:toggleEdit={(e) => toggleEdit(e.detail)}
+    />
   {/if}
-{/await}
+{/if}

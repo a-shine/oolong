@@ -12,24 +12,6 @@ export default defineConfig({
     // crx({ manifest }),
     VitePWA({
       registerType: "autoUpdate",
-      // workbox: {
-      //   runtimeCaching: [
-      //     {
-      //       handler: "NetworkOnly",
-      //       // I think this looks for any request to the backend matching this pattern
-      //       urlPattern: /http:\/\/localhost:8000\/(.*)/,
-      //       method: "POST", // BUG: Might want to add delete and put here
-      //       options: {
-      //         backgroundSync: {
-      //           name: "api-queue",
-      //           options: {
-      //             maxRetentionTime: 24 * 60,
-      //           },
-      //         },
-      //       },
-      //     },
-      //   ],
-      // },
       manifest: {
         name: "Oolong",
         description: "Opinionated organisation tool",
