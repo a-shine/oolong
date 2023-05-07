@@ -64,6 +64,9 @@
         dueOn: {
           $gte: getTomorrow(),
         },
+        completedAt: {
+          $eq: null,
+        },
       },
     });
 
