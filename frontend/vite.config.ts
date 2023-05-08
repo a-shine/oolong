@@ -6,7 +6,7 @@ import manifest from "./manifest.json";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: "/oolong/", // for github pages to fetch assets
+  // base: "/oolong/", // for github pages to fetch assets
   define: { global: "window" },
   plugins: [
     svelte(),
