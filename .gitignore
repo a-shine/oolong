@@ -6,3 +6,8 @@ dev-dist/
 
 # Svelte compiler build output
 dist/
+
+# Production tooling and configurations
+docker-compose.prod.yml
+20-custom-couch-conf.ini
+services/user-creation/
