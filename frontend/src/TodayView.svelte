@@ -27,7 +27,7 @@
   async function getOverdueTasks() {
     let response = await pdb.find({
       selector: {
-        dueOn: { $lt: getToday() },
+        dueOn: { $lt: getToday(), $ne: "-1" },
         completedAt: { $eq: null },
       },
     });
