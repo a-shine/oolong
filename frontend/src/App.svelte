@@ -151,18 +151,6 @@
     <Router
       routes={{
         // Exact paths
-        "/": wrap({
-          component: function () {
-            replace("/tasks/today");
-          },
-          conditions: [isAuth],
-        }),
-        "/tasks": wrap({
-          component: function () {
-            replace("/tasks/today");
-          },
-          conditions: [isAuth],
-        }),
         "/tasks/:scope": wrap({
           component: Tasks,
           conditions: [isAuth],

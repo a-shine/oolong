@@ -18,7 +18,7 @@
           // cosmic rays, a meteor, etc.
         }
       } else {
-        replace("/");
+        replace("/tasks/today");
       }
     });
   }
