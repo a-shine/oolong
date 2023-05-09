@@ -35,8 +35,6 @@
     }
   }
 
-  // BUG: Seeing completed tasks as well
-
   /**
    * Get all unassigned tasks (tasks where dueOn is set to -1) from the local
    * (IndexedDB) database

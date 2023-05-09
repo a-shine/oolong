@@ -24,12 +24,28 @@
   }
 </script>
 
-<h1>Login</h1>
 <form on:submit|preventDefault={login}>
+  <h1>Login</h1>
   <label for="email">Email</label>
   <input type="email" bind:value={email} />
   <label for="password">Password</label>
   <input type="password" bind:value={password} />
   <button type="submit">Login</button>
+  <p>{errorMsg}</p>
 </form>
-<p>{errorMsg}</p>
+
+<style>
+  /* center form horizontally */
+  form {
+    display: flex;
+    flex-direction: column;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  input {
+    margin-bottom: 10px;
+  }
+  button {
+    margin-top: 10px;
+  }
+</style>

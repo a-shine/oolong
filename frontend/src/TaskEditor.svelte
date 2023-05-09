@@ -17,7 +17,6 @@
   let task: Task;
 
   // BUG: Fix so that keyboard doesn't add scroll to page on mobile
-  // BUG: There's a small amount of scroll when the editor is open
 
   // Component values bind-ed to the task description and dueOn date inputs
   let descriptionValue: string;
