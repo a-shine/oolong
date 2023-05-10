@@ -22,12 +22,11 @@
       <!-- have an option on this page to see completed tasks of today to show progress -->
       <option value="upcoming">Upcoming</option>
     </optgroup>
-    <optgroup label="All">
-      <option value="completed">Completed</option>
-    </optgroup>
+    <optgroup label="Project" />
     <!-- return all completed in order of most recently completed and do it by day -->
     <!-- <optgroup label="Project">
       </optgroup> -->
+    <option value="completed">Completed</option>
   </select>
 </div>
 

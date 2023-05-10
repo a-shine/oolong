@@ -3,13 +3,13 @@
   import TopBarTasksScopeSelector from "./TopBarTasksScopeSelector.svelte";
 
   // extract the first part of the path, e.g. /tasks/today -> /tasks
-  function extractPath(path: string): string {
-    return path.split("/")[1];
+  function extractPath(path: string): string[] {
+    return path.split("/");
   }
 </script>
 
 <div id="container" class="bg-primary">
-  {#if extractPath($location) === "tasks"}
+  {#if extractPath($location)[1] === "tasks" && extractPath($location)[2] !== "editor"}
     <div class="bar-item">
       <TopBarTasksScopeSelector />
     </div>
