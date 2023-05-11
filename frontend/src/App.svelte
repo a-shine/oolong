@@ -80,6 +80,8 @@
   // Used for authentication
   const remoteCouch = new PouchDb(import.meta.env.VITE_COUCH_URL);
 
+  // remoteCouch.signUp("alex@test.com", "test");
+
   // We can put all sorts of things in the user db (not only tasks)
 
   // Need to get name of active user in order to get the correct database
@@ -123,13 +125,23 @@
   // it means the user must be authenticated and hence the user is redirected to the "/" route.
   function conditionsFailed(event) {
     switch (event.detail.route) {
+      case "/":
+        replace("/tasks/today");
+        break;
       case "/login":
         replace("/tasks");
+        break;
+      case "/tasks":
+        replace("/tasks/today");
         break;
       default:
         replace("/login");
         break;
     }
+  }
+
+  function alwaysFail() {
+    return false;
   }
 
   onMount(() => {
@@ -151,6 +163,14 @@
     <Router
       routes={{
         // Exact paths
+        "/": wrap({
+          component: Tasks,
+          conditions: [alwaysFail],
+        }),
+        "/tasks": wrap({
+          component: Tasks,
+          conditions: [alwaysFail],
+        }),
         "/tasks/:scope": wrap({
           component: Tasks,
           conditions: [isAuth],
