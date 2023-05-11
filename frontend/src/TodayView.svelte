@@ -97,7 +97,7 @@
 </script>
 
 {#if overdueTasks.length > 0}
-  <p>Overdue</p>
+  <p style="color:#FF0000">Overdue</p>
   <TaskList
     enableOrdering={true}
     tasks={overdueTasks}
