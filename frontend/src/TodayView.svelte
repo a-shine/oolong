@@ -10,7 +10,7 @@
   import CompletedTasksToday from "./CompletedTasksToday.svelte";
 
   // Props
-  export let pdb: PouchDB.Database<Task>;
+  import { userDb } from "./couch";
 
   const dispatch = createEventDispatcher();
 
@@ -25,7 +25,7 @@
   });
 
   async function getOverdueTasks() {
-    let response = await pdb.find({
+    let response = await userDb.find({
       selector: {
         dueOn: { $lt: getToday(), $ne: "-1" },
         completedAt: { $eq: null },
@@ -35,7 +35,7 @@
   }
 
   async function getTodayIncompleteTasks() {
-    const response = await pdb.find({
+    const response = await userDb.find({
       selector: {
         dueOn: { $eq: getToday() },
         completedAt: { $eq: null },
@@ -45,7 +45,7 @@
   }
 
   async function getTodayCompletedTasks() {
-    const response = await pdb.find({
+    const response = await userDb.find({
       selector: {
         // Completed between 12:00am and 11:59pm in unix time
         completedAt: {
@@ -70,7 +70,7 @@
     } else {
       todayIncompleteTasks = [...todayIncompleteTasks, task];
     }
-    pdb.put({
+    userDb.put({
       ...task,
       completedAt: null, // BUG: Put task completedAt update in the list component
     });
@@ -89,7 +89,7 @@
         (t) => t._id !== task._id
       );
     }
-    pdb.put({
+    userDb.put({
       ...task,
       completedAt: Date.now(), // BUG: Put task completedAt update in the list component
     });

@@ -3,6 +3,7 @@
   import { overrideItemIdKeyNameBeforeInitialisingDndZones } from "svelte-dnd-action";
   overrideItemIdKeyNameBeforeInitialisingDndZones("_id"); // https://github.com/isaacHagoel/svelte-dnd-action#overriding-the-item-id-key-name
   import { getTomorrow } from "./lib/date.utils";
+  import { userDb } from "./couch";
 
   // Types
   import type { Task } from "./types/task.type";
@@ -12,7 +13,6 @@
   import TaskList from "./TaskList.svelte";
 
   // Props
-  export let pdb: PouchDB.Database<{}>;
   export let params: { scope: string };
 
   // Displayed tasks are determined by the scope, on changes to scope, the task
@@ -40,7 +40,7 @@
    * (IndexedDB) database
    */
   async function getUnassignedTasks() {
-    let jhg = pdb.find({
+    let jhg = userDb.find({
       selector: {
         dueOn: "-1",
         completedAt: {
@@ -57,7 +57,7 @@
    * (IndexedDB) database
    */
   async function getUpcomingTasks() {
-    let jgjg = pdb.find({
+    let jgjg = userDb.find({
       selector: {
         dueOn: {
           $gte: getTomorrow(),
@@ -75,7 +75,7 @@
    * Get all completed tasks from the local (IndexedDB) database
    */
   async function getCompletedTasks() {
-    return await pdb.find({
+    return await userDb.find({
       selector: {
         completedAt: {
           $gte: 0,
@@ -92,7 +92,7 @@
 
   // Toggle between complete and incomplete
   function toggleComplete(task: Task) {
-    pdb.put({
+    userDb.put({
       ...task,
       completedAt: task.completedAt ? null : Date.now(),
     });
@@ -100,14 +100,14 @@
   }
 
   function updateOrder(tasks: Task[]) {
-    pdb.bulkDocs(tasks);
+    userDb.bulkDocs(tasks);
   }
 </script>
 
 <div id="container">
   <div id="tasks" class="center">
     {#if params.scope == "today"}
-      <TodayView {pdb} />
+      <TodayView />
     {:else}
       <TaskList
         bind:tasks={displayedTasks}
