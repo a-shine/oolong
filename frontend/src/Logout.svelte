@@ -1,10 +1,12 @@
 <script lang="ts">
   import { replace } from "svelte-spa-router";
-
-  export let remoteCouch: PouchDB.Database<{}>;
+  import { authDb, userDb } from "./couch";
 
   async function logout() {
-    await remoteCouch.logOut();
+    await authDb.logOut(); // TODO: may need to do this in web worker
+    localStorage.removeItem("userDbName");
+    // delete the pouchdb database
+    userDb.destroy();
     replace("/login");
   }
 </script>
