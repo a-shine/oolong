@@ -110,6 +110,13 @@ button:hover {
     border-color: var(--primary-focus-color);
 }
 
+/* Disable hover on mobile devices */
+@media (hover: none) {
+    button:hover {
+       color: inherit;
+    }
+}
+
 /* square text input with solid border */
 input[type=text] {
     background: transparent;
