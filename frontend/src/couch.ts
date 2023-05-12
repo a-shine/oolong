@@ -71,6 +71,11 @@ export function notSetup(): boolean {
   return !setup();
 }
 
+export async function getUserMetaData() {
+  //  TODO: Will requires some middleware backend service to query _user db with
+  //  admin credentials for extra user metadata
+}
+
 export async function initUserDb() {
   // Get DB name from storage
   let userDbName = localStorage.getItem("userDbName");
@@ -87,6 +92,15 @@ export async function initUserDb() {
       skip_setup: true,
     }
   );
+
+  // Shared project db (let projects only work remotely?)
+  // for (const project of (await userDb.allDocs()).rows) {
+  // const projectDb = new PouchDb(
+  //   import.meta.env.VITE_COUCH_URL + "shared-project-database",
+  //   {
+  //     skip_setup: true,
+  //   }
+  // );
 
   // Sync between the local and remote user specific database
   userDb.sync(remoteUserDb, { live: true });
