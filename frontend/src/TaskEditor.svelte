@@ -3,6 +3,7 @@
   import { slide } from "svelte/transition";
   import { v4 as uuidv4 } from "uuid";
   import { pop } from "svelte-spa-router";
+  import { userDb } from "./couch";
 
   // Types
   import type { Task } from "./types/task.type";
@@ -11,7 +12,6 @@
   import Dialog from "./lib/Dialog.svelte";
 
   // Props
-  export let pdb: PouchDB.Database;
   export let params: { taskId: string };
 
   let task: Task;
@@ -40,7 +40,7 @@
         createdAt: undefined,
         updatedAt: undefined,
         dueOn: undefined,
-        projectLabel: undefined,
+        projectTag: undefined,
         lane: undefined,
         laneOrder: undefined,
         listOrder: Infinity,
@@ -49,7 +49,7 @@
         completedAt: undefined,
       };
     } else {
-      task = await pdb.get(params.taskId);
+      task = await userDb.get(params.taskId);
     }
 
     // If task is null, we want to create a new task
@@ -199,6 +199,27 @@
             }}>x</button
           >
         {/if}
+        <div>
+          <select
+            name="project-association"
+            id="project-association"
+            bind:value={task.projectTag}
+          >
+            <option value="" selected>Associate with project</option>
+          </select>
+          {#if task.projectTag === "unregistered"}
+            <input type="text" bind:value={task.projectTag} />
+          {/if}
+        </div>
+        <div>
+          <textarea
+            name=""
+            id=""
+            cols="30"
+            rows="10"
+            placeholder="Add notes..."
+          />
+        </div>
       </div>
       {#if task.createdAt}
         <button
@@ -219,6 +240,7 @@
   /* Container adding padding on the sides  */
   #container {
     padding: 0 1rem;
+    margin-top: 10px;
   }
 
   .active {

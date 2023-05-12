@@ -1,7 +1,7 @@
 export type Task = {
   _id: string;
   _rev: string;
-  projectLabel: string;
+  projectTag: string;
   description: string;
   createdAt: number;
   updatedAt: number;
