@@ -36,7 +36,6 @@
   }
 </script>
 
-<p>{onlineStatus}</p>
 {#if onlineStatus}
   <form on:submit|preventDefault={login}>
     <h1>Login</h1>
@@ -48,7 +47,7 @@
     <p>{errorMsg}</p>
   </form>
 {:else}
-  <p>Please login in when you are next online</p>
+  <p>Please login in when you are next online.</p>
 {/if}
 
 <style>
