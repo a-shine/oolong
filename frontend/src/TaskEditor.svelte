@@ -71,7 +71,7 @@
   function setTask() {
     // Set task description and dueOn date
     task.description = descriptionValue.trim();
-    task.notes = notesValue.trim();
+    task.notes = notesValue;
 
     // If we've specified a date, then assign the date to the task
     // Else, undefined tasks have a dueOn of -1 so they are still present in the Index
