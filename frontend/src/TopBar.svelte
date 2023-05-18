@@ -27,6 +27,11 @@
   <div id="right-side">
     <!-- If not on /login page -->
     {#if $location !== "/login"}
+      <button
+        on:click={() => {
+          window.location.reload();
+        }}>Refresh Page</button
+      >
       <div class="bar-item">
         <button on:click={() => (showModal = true)}>&#8942;</button>
       </div>
