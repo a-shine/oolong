@@ -58,7 +58,9 @@
     // If task is null, we want to create a new task
     if (task.createdAt) {
       // If task is not a new task, we want to set the appropriate values
-      dueOnValue = new Date(task.dueOn).toISOString().split("T")[0];
+      if (task.dueOn !== "-1") {
+        dueOnValue = new Date(task.dueOn).toISOString().split("T")[0];
+      }
       descriptionValue = task.description;
       notesValue = task.notes;
 
