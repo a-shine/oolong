@@ -92,7 +92,7 @@
       onlineStatus = false;
     }
 
-    checkOrEnableNotifications();
+    // checkOrEnableNotifications();
   });
 </script>
 

@@ -1,7 +1,14 @@
 <script lang="ts">
-  import { push } from "svelte-spa-router";
+  import { push, replace, location } from "svelte-spa-router";
+  import { get } from "svelte/store";
 
-  let scope: string = "today";
+  function getCurrentScope() {
+    // Extract scope from url (second value in uri)
+    const uri = $location.split("/");
+    return uri[2];
+  }
+
+  let scope: string = getCurrentScope();
 
   // dispatch change scope with new scope value
   const changeTaskViewScope = () => {
@@ -23,6 +30,7 @@
       <option value="upcoming">Upcoming</option>
     </optgroup>
     <optgroup label="Project" />
+
     <!-- return all completed in order of most recently completed and do it by day -->
     <!-- <optgroup label="Project">
       </optgroup> -->

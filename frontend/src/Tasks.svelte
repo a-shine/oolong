@@ -11,6 +11,7 @@
   // Components
   import TodayView from "./TodayView.svelte";
   import TaskList from "./TaskList.svelte";
+  import UpcomingView from "./UpcomingView.svelte";
 
   // Props
   export let params: { scope: string };
@@ -22,16 +23,20 @@
   /**
    * @returns a promise of the tasks list based on the component scope setting
    */
-  async function getTasks(scope: string): Promise<Task[]> {
+  async function getTasks(scope: string) {
     switch (scope) {
       case "unassigned":
-        return (await getUnassignedTasks()).docs;
+        displayedTasks = (await getUnassignedTasks()).docs;
+        break;
       case "upcoming":
-        return (await getUpcomingTasks()).docs;
+        displayedTasks = (await getUpcomingTasks()).docs;
+        break;
       case "completed":
-        return (await getCompletedTasks()).docs;
+        displayedTasks = (await getCompletedTasks()).docs;
+        break;
       default:
-        return;
+        console.log("Incorrect task retrieval scope");
+      // break;
     }
   }
 
@@ -46,7 +51,10 @@
         completedAt: {
           $eq: null,
         },
+        // listOrder: { $gte: 0 },
       },
+      // sort: ["listOrder"],
+      // sort by listOrder
     });
 
     return await jhg;
@@ -84,17 +92,10 @@
     });
   }
 
-  // listen for changes to params.scope
-  $: {
-    console.log("params.scope changed to", params.scope);
-    getTasks(params.scope).then((tasks) => (displayedTasks = tasks));
-  }
-
   // Toggle between complete and incomplete
   function toggleComplete(task: Task) {
     userDb.put({
       ...task,
-      completedAt: task.completedAt ? null : Date.now(),
     });
     displayedTasks = displayedTasks.filter((t) => t._id !== task._id);
   }
@@ -108,12 +109,19 @@
   <div id="tasks" class="center">
     {#if params.scope == "today"}
       <TodayView />
+      <!-- {:else if params.scope == "upcoming"}
+      {#await getTasks(params.scope) then}
+        <UpcomingView tasks={displayedTasks} />
+      {/await} -->
     {:else}
-      <TaskList
-        bind:tasks={displayedTasks}
-        on:toggleComplete={(e) => toggleComplete(e.detail)}
-        on:updateOrder={(e) => updateOrder(e.detail)}
-      />
+      {#await getTasks(params.scope) then}
+        <TaskList
+          enableOrdering={false}
+          tasks={displayedTasks}
+          on:toggleComplete={(e) => toggleComplete(e.detail)}
+          on:updateOrder={(e) => updateOrder(e.detail)}
+        />
+      {/await}
     {/if}
   </div>
 </div>

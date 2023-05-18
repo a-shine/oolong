@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { location, querystring } from "svelte-spa-router";
+  import { location } from "svelte-spa-router";
   import TopBarTasksScopeSelector from "./TopBarTasksScopeSelector.svelte";
-  import Dialog from "./lib/Dialog.svelte";
+  import Modal from "./lib/Modal.svelte";
   import Logout from "./Logout.svelte";
 
-  let showDialog = false;
+  let showModal = false;
 
   // extract the first part of the path, e.g. /tasks/today -> /tasks
   function extractPath(path: string): string[] {
@@ -12,10 +12,10 @@
   }
 </script>
 
-{#if showDialog}
-  <Dialog on:close={() => (showDialog = false)}>
-    <Logout on:logout={() => (showDialog = false)} />
-  </Dialog>
+{#if showModal}
+  <Modal on:close={() => (showModal = false)}>
+    <Logout on:logout={() => (showModal = false)} />
+  </Modal>
 {/if}
 
 <div id="container" class="bg-primary">
@@ -28,7 +28,7 @@
     <!-- If not on /login page -->
     {#if $location !== "/login"}
       <div class="bar-item">
-        <button on:click={() => (showDialog = true)}>&#8942;</button>
+        <button on:click={() => (showModal = true)}>&#8942;</button>
       </div>
     {/if}
   </div>

@@ -1,15 +1,15 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount } from "svelte";
   import { slide } from "svelte/transition";
   import { v4 as uuidv4 } from "uuid";
   import { pop } from "svelte-spa-router";
   import { userDb } from "./couch";
+  import { fly } from "svelte/transition";
 
   // Types
   import type { Task } from "./types/task.type";
 
   // Components
-  import Dialog from "./lib/Dialog.svelte";
+  import Modal from "./lib/Modal.svelte";
 
   // Props
   export let params: { taskId: string };
@@ -20,11 +20,13 @@
 
   // Component values bind-ed to the task description and dueOn date inputs
   let descriptionValue: string;
+  let notesValue: string;
   let dueOnValue: string;
 
   // Cache the initial task description and dueOn date so we can cancel the
   // changes if the user discards them
   let cachedDescription: string;
+  let cachedNotes: string;
   let cachedDueOn: string;
 
   let safeCloseModal = false;
@@ -37,6 +39,7 @@
         _id: uuidv4(),
         _rev: undefined,
         description: undefined,
+        notes: undefined,
         createdAt: undefined,
         updatedAt: undefined,
         dueOn: undefined,
@@ -57,15 +60,18 @@
       // If task is not a new task, we want to set the appropriate values
       dueOnValue = new Date(task.dueOn).toISOString().split("T")[0];
       descriptionValue = task.description;
+      notesValue = task.notes;
 
       cachedDescription = task.description;
       cachedDueOn = task.dueOn;
+      cachedNotes = task.notes;
     }
   }
 
   function setTask() {
     // Set task description and dueOn date
     task.description = descriptionValue.trim();
+    task.notes = notesValue.trim();
 
     // If we've specified a date, then assign the date to the task
     // Else, undefined tasks have a dueOn of -1 so they are still present in the Index
@@ -112,7 +118,7 @@
 </script>
 
 {#if safeCloseModal}
-  <Dialog>
+  <Modal>
     Are you sure you want to exit?
     <button
       on:click={() => {
@@ -125,11 +131,11 @@
         close();
       }}>Yes</button
     >
-  </Dialog>
+  </Modal>
 {/if}
 
 {#if safeDeleteModal}
-  <Dialog>
+  <Modal>
     Are you sure you want to delete?
     <button
       on:click={() => {
@@ -143,10 +149,10 @@
         close();
       }}>Yes</button
     >
-  </Dialog>
+  </Modal>
 {/if}
 
-<div id="container">
+<div id="container" in:fly={{ y: 200, duration: 250 }}>
   {#await getTask() then}
     <div id="taskForm">
       <input
@@ -200,16 +206,11 @@
           >
         {/if}
         <div>
-          <select
-            name="project-association"
-            id="project-association"
-            bind:value={task.projectTag}
-          >
-            <option value="" selected>Associate with project</option>
+          Associate with project:
+          <select name="project" id="projectSelect">
+            <option value="none">None</option>
+            <!-- TODO: Iterate over existing registered projects -->
           </select>
-          {#if task.projectTag === "unregistered"}
-            <input type="text" bind:value={task.projectTag} />
-          {/if}
         </div>
         <div>
           <textarea
@@ -218,6 +219,7 @@
             cols="30"
             rows="10"
             placeholder="Add notes..."
+            bind:value={notesValue}
           />
         </div>
       </div>

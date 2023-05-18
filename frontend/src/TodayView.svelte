@@ -40,6 +40,7 @@
         dueOn: { $eq: getToday() },
         completedAt: { $eq: null },
       },
+      // sort: [{ listOrder: "asc" }],
     });
     return response.docs;
   }
@@ -72,7 +73,7 @@
     }
     userDb.put({
       ...task,
-      completedAt: null, // BUG: Put task completedAt update in the list component
+      // completedAt: null, // BUG: Put task completedAt update in the list component
     });
   }
 
@@ -91,8 +92,13 @@
     }
     userDb.put({
       ...task,
-      completedAt: Date.now(), // BUG: Put task completedAt update in the list component
+      // completedAt: Date.now(), // BUG: Put task completedAt update in the list component
     });
+  }
+
+  function updateOrder(tasks: Task[]) {
+    console.log("updateOrder", tasks);
+    userDb.bulkDocs(tasks);
   }
 </script>
 
@@ -102,6 +108,7 @@
     enableOrdering={true}
     tasks={overdueTasks}
     on:toggleComplete={(e) => complete(e.detail)}
+    on:updateOrder={(e) => updateOrder(e.detail)}
   />
 {/if}
 
@@ -112,7 +119,7 @@
       enableOrdering={true}
       tasks={todayIncompleteTasks}
       on:toggleComplete={(e) => complete(e.detail)}
-      on:updateOrder={(e) => console.log("TODO: Update order", e.detail)}
+      on:updateOrder={(e) => updateOrder(e.detail)}
     />
   {/key}
 {/if}

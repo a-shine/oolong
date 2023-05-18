@@ -17,7 +17,10 @@
       type="checkbox"
       id="task-checkbox"
       name="task-checkbox"
-      on:click={() => dispatch("toggleComplete", task)}
+      on:click={() => {
+        task.completedAt = task.completedAt ? null : Date.now();
+        dispatch("toggleComplete", task);
+      }}
       bind:checked={task.completedAt}
     />
   </div>
@@ -59,7 +62,6 @@
   /* Fill remaining width of task-item */
   #task-text {
     width: 100%;
-
     overflow: hidden;
     text-overflow: ellipsis;
   }

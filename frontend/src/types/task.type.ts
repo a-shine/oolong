@@ -3,6 +3,7 @@ export type Task = {
   _rev: string;
   projectTag: string;
   description: string;
+  notes: string;
   createdAt: number;
   updatedAt: number;
   dueOn: string;

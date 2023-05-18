@@ -7,9 +7,22 @@
   // On escape key press, close the modal
   // On background click, close the modal
   // On close button click, close the modal
+
+  // Listen for escape key press
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      dispatch("close");
+    }
+  });
 </script>
 
-<div class="modal-background" transition:fade={{ duration: 200 }} />
+<div
+  class="modal-background"
+  transition:fade={{ duration: 200 }}
+  on:click={() => {
+    dispatch("close");
+  }}
+/>
 
 <div
   class="modal"
