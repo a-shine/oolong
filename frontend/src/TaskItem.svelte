@@ -12,18 +12,18 @@
 </script>
 
 <div id="task-item">
-  <div id="done-checkbox">
-    <input
-      type="checkbox"
-      id="task-checkbox"
-      name="task-checkbox"
-      on:click={() => {
-        task.completedAt = task.completedAt ? null : Date.now();
-        dispatch("toggleComplete", task);
-      }}
-      bind:checked={task.completedAt}
-    />
-  </div>
+  <!-- <div id="done-checkbox"> -->
+  <input
+    type="checkbox"
+    id="task-checkbox"
+    name="task-checkbox"
+    on:click={() => {
+      task.completedAt = task.completedAt ? null : Date.now();
+      dispatch("toggleComplete", task);
+    }}
+    bind:checked={task.completedAt}
+  />
+  <!-- </div> -->
   <div id="task-info" on:click={() => push("/tasks/editor/" + task._id)}>
     <div id="task-text">
       {task.description}
@@ -49,19 +49,14 @@
     align-items: center;
   }
 
-  #done-checkbox {
-    margin-right: 5px;
-  }
-
   /* Fill the remaining space of the task-item */
   #task-info {
-    width: 100%;
     overflow: hidden;
   }
 
   /* Fill remaining width of task-item */
   #task-text {
-    width: 100%;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
