@@ -8,6 +8,7 @@
   async function logout() {
     await authDb.logOut(); // TODO: may need to do this in web worker
     localStorage.removeItem("userDbName");
+    localStorage.removeItem("_pouch_check_localstorage");
     // Delete the pouchdb database
     userDb.destroy();
     dispatch("logout");

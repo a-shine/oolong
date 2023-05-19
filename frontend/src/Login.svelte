@@ -1,6 +1,6 @@
 <script lang="ts">
   import { replace } from "svelte-spa-router";
-  import { authDb, getActiveUserDatabaseName } from "./couch";
+  import { authDb, getActiveUserDatabaseName, initUserDb } from "./couch";
 
   let onlineStatus: boolean = navigator.onLine;
 
@@ -30,6 +30,7 @@
       } else {
         const userDbName = await getActiveUserDatabaseName();
         localStorage.setItem("userDbName", userDbName);
+        initUserDb();
         replace("/");
       }
     });
