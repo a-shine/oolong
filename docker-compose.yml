@@ -7,6 +7,6 @@ services:
       - 5984:5984
     environment:
       COUCHDB_USER: admin
-      COUCHDB_PASSWORD: admin
+      COUCHDB_PASSWORD: password
     volumes:
       - ./10-custom-couch-conf.ini:/opt/couchdb/etc/local.d/10-custom-couch-conf.ini
