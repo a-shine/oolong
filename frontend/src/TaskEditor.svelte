@@ -154,7 +154,7 @@
   </Modal>
 {/if}
 
-<div id="container" in:fly={{ y: 200, duration: 250 }}>
+<div id="container" class="center" in:fly={{ y: 200, duration: 250 }}>
   {#await getTask() then}
     <div id="taskForm">
       <input
@@ -213,6 +213,7 @@
             <option value="none">None</option>
             <!-- TODO: Iterate over existing registered projects -->
           </select>
+          <button>+</button>
         </div>
         <div>
           <textarea

@@ -145,11 +145,6 @@
     overflow-y: auto;
   }
 
-  .center {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-
   /* place the newTaskButton at the bottom center of the page */
   #newTaskButton {
     width: 65px;

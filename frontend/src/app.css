@@ -152,3 +152,8 @@ select:hover {
   .borderless-button:hover {
     background: var(--primary-focus-color);
   }
+
+  .center {
+    max-width: 800px;
+    margin: 0 auto;
+  }
