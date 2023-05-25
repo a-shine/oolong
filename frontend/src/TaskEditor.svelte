@@ -207,14 +207,13 @@
             }}>x</button
           >
         {/if}
-        <div>
+        <!-- <div>
           Associate with project:
           <select name="project" id="projectSelect">
             <option value="none">None</option>
-            <!-- TODO: Iterate over existing registered projects -->
           </select>
           <button>+</button>
-        </div>
+        </div> -->
         <div>
           <textarea
             name=""
