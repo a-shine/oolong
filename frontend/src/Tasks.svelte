@@ -143,6 +143,7 @@
     left: 0;
     right: 0;
     overflow-y: auto;
+    height: 100%;
   }
 
   /* place the newTaskButton at the bottom center of the page */
@@ -160,6 +161,5 @@
     left: 50%;
     transform: translateX(-50%);
     border: none;
-    -webkit-appearance: none;
   }
 </style>

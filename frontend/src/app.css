@@ -1,32 +1,32 @@
 :root {
     /* Avoiding setting color directly in component css, instead use classes */
 
-    /* Primary color and darker focus color */
+    /* Primary colour and darker focus colour */
     --primary-color: hsl(138.86 15.982% 42.941%);
     --primary-focus-color: hsl(138.86 15.982% 34.353%);
     --primary-content-color: hsl(138.86 100% 88.588%);
 
-    /* Secondary color */
+    /* Secondary colour */
     --secondary-color: hsl(96.923 37.143% 93.137%);
     --secondary-focus-color: hsl(96.923 37.143% 74.51%);
     --secondary-content-color: hsl(996 32.468% 15.098%);
 
-    /* Accent color  */
+    /* Accent colour  */
     --accent-color: hsl(0 67.742% 93.922%);
     --accent-focus-color: hsl(0 67.742% 75.137%);
     --accent-content-color: hsl(0 21.951% 16.078%);
 
-    /* Neutral color */
+    /* Neutral colour */
     --neutral-color: hsl(0 3.9106% 35.098%);
     --neutral-focus-color: hsl(0 3.9106% 28.078%);
     --neutral-content-color: hsl(0 4.3478% 90.98%);
 
-    /* Base colors */
+    /* Base colours */
     --base-100-color: hsl(0 4.3478% 90.98%);
     --base-200-color: hsl(0 4.3478% 81.882%);
     --base-300-color: hsl(0 4.3478% 73.694%);
 
-    /* Special colors */
+    /* Special colours */
     --info-color: hsl(198 93% 60%);
     --info-content-color: hsl(198 100% 12%);
     --success-color: hsl(158 64% 52%);
@@ -110,7 +110,7 @@ button:hover {
     border-color: var(--primary-focus-color);
 }
 
-/* Disable hover on mobile devices */
+/* TODO: Disable hover on mobile devices */
 @media (hover: none) {
     button:hover {
        color: inherit;
