@@ -109,10 +109,13 @@
   <div id="tasks" class="center">
     {#if params.scope == "today"}
       <TodayView />
-      <!-- {:else if params.scope == "upcoming"}
+    {:else if params.scope == "upcoming"}
       {#await getTasks(params.scope) then}
-        <UpcomingView tasks={displayedTasks} />
-      {/await} -->
+        <UpcomingView
+          tasks={displayedTasks}
+          on:toggleComplete={(e) => toggleComplete(e.detail)}
+        />
+      {/await}
     {:else}
       {#await getTasks(params.scope) then}
         <TaskList

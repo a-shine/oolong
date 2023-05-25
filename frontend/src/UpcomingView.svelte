@@ -2,6 +2,11 @@
   import TaskList from "./TaskList.svelte";
   import type { Task } from "./types/task.type";
 
+  // Create dispatch function
+  import { createEventDispatcher } from "svelte";
+
+  const dispatch = createEventDispatcher();
+
   export let tasks: Task[];
 
   let sortedTasks: { date: string; tasks: Task[] }[];
@@ -36,9 +41,36 @@
       };
     });
   };
+
+  function setSortTasks() {
+    sortedTasks = plotTasks();
+    console.log(sortedTasks);
+  }
+  setSortTasks();
 </script>
 
-{#each plotTasks() as { date, tasks }}
+{#each sortedTasks as { date, tasks }}
   <h2>{date}</h2>
-  <TaskList {tasks} />
+  <TaskList
+    {tasks}
+    on:toggleComplete={(e) => {
+      // remove the task from the sublist of tasks for the date in sortedTasks
+      let task = e.detail;
+      let date = getTaskDate(task);
+      // convert task date to dd/mm/yyyy format
+
+      let index = sortedTasks.findIndex((task) => task.date === date);
+
+      // remove the task from the sublist of tasks for the date in sortedTasks
+      sortedTasks[index].tasks = sortedTasks[index].tasks.filter(
+        (task) => task._id !== e.detail._id
+      );
+
+      // if no more tasks for the date, remove the date from sortedTasks
+      if (sortedTasks[index].tasks.length === 0) {
+        sortedTasks.splice(index, 1);
+      }
+      dispatch("toggleComplete", e.detail);
+    }}
+  />
 {/each}
