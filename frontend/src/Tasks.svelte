@@ -160,5 +160,6 @@
     left: 50%;
     transform: translateX(-50%);
     border: none;
+    -webkit-appearance: none;
   }
 </style>
