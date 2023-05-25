@@ -5,13 +5,13 @@ import PouchDbAuth from "pouchdb-authentication";
 PouchDb.plugin(PouchDBFind);
 PouchDb.plugin(PouchDbAuth);
 
-async function isAuth(): Promise<boolean> {
+async function isSeshAuth(): Promise<boolean> {
   const response = await authDb.getSession();
   return response.userCtx.name ? true : false;
 }
 
 async function isNotAuth(): Promise<boolean> {
-  return !(await isAuth());
+  return !(await isSeshAuth());
 }
 
 /**
@@ -79,11 +79,16 @@ export async function getUserMetaData() {
 export async function initUserDb() {
   // Get DB name from storage
   let userDbName = localStorage.getItem("userDbName");
+
   if (!userDbName) {
     console.log("No userDbName found in localStorage, please sign in first.");
     return;
   }
+
   userDb = new PouchDb(userDbName);
+
+  let dbInfo = await userDb.info();
+  console.log(dbInfo);
 
   // Try and connect to remote db if possible and sync
   const remoteUserDb = new PouchDb(
@@ -93,17 +98,8 @@ export async function initUserDb() {
     }
   );
 
-  // Shared project db (let projects only work remotely?)
-  // for (const project of (await userDb.allDocs()).rows) {
-  // const projectDb = new PouchDb(
-  //   import.meta.env.VITE_COUCH_URL + "shared-project-database",
-  //   {
-  //     skip_setup: true,
-  //   }
-  // );
-
   // Sync between the local and remote user specific database
-  userDb.sync(remoteUserDb, { live: true });
+  userDb.sync(remoteUserDb, { live: true, retry: true });
 
   userDb.createIndex({
     index: {
@@ -117,5 +113,9 @@ export async function initUserDb() {
   });
 }
 
-// export const localUserDb = new PouchDb("local_user_db", {skip_setup : true});
-// export const remoteUserDb = new PouchDb(import.meta.env.VITE_COUCH_URL + "/user_db", {skip_setup : true});
+function updateTaskUI(scope) {}
+
+// TODO: Listener for changes to database for a specefic query?
+// userDb.on("change", (change) => {
+//   console.log("change", change);
+// });

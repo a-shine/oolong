@@ -82,8 +82,6 @@
     return false;
   }
 
-  initUserDb();
-
   onMount(async () => {
     // Initialize onlineStatus
     if (navigator.onLine) {
@@ -91,48 +89,50 @@
     } else {
       onlineStatus = false;
     }
-
-    // checkOrEnableNotifications();
   });
 </script>
 
 <TopBar />
 
-<div id="container">
-  <Router
-    routes={{
-      // Exact paths
-      "/": wrap({
-        component: Tasks,
-        conditions: [alwaysFail],
-      }),
-      "/tasks": wrap({
-        component: Tasks,
-        conditions: [alwaysFail],
-      }),
-      "/tasks/:scope": wrap({
-        component: Tasks,
-        conditions: [setup],
-      }),
-      "/tasks/editor/:taskId": wrap({
-        component: TaskEditor,
-        conditions: [setup],
-      }),
-      "/login": wrap({
-        component: Login,
-        conditions: [notSetup],
-      }),
-      "/logout": wrap({
-        component: Logout,
-        conditions: [setup],
-      }),
+{#await initUserDb()}
+  <p>Loading...</p>
+{:then _}
+  <div id="container">
+    <Router
+      routes={{
+        // Exact paths
+        "/": wrap({
+          component: Tasks,
+          conditions: [alwaysFail],
+        }),
+        "/tasks": wrap({
+          component: Tasks,
+          conditions: [alwaysFail],
+        }),
+        "/tasks/:scope": wrap({
+          component: Tasks,
+          conditions: [setup],
+        }),
+        "/tasks/editor/:taskId": wrap({
+          component: TaskEditor,
+          conditions: [setup],
+        }),
+        "/login": wrap({
+          component: Login,
+          conditions: [notSetup],
+        }),
+        "/logout": wrap({
+          component: Logout,
+          conditions: [setup],
+        }),
 
-      // Catch-all (must be the last)
-      "*": NotFound,
-    }}
-    on:conditionsFailed={conditionsFailed}
-  />
-</div>
+        // Catch-all (must be the last)
+        "*": NotFound,
+      }}
+      on:conditionsFailed={conditionsFailed}
+    />
+  </div>
+{/await}
 
 <style>
   /* start 50px under the top bar */
