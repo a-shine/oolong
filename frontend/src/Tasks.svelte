@@ -85,10 +85,9 @@
   async function getCompletedTasks() {
     return await userDb.find({
       selector: {
-        completedAt: {
-          $gte: 0,
-        },
+        completedAt: { $gte: 0 },
       },
+      sort: [{ completedAt: "desc" }],
     });
   }
 

@@ -2,6 +2,10 @@ import PouchDb from "pouchdb-browser";
 import PouchDBFind from "pouchdb-find";
 import PouchDbAuth from "pouchdb-authentication";
 
+// Unable to get worker-pouch to work. Lack of maintenance, does not support
+// pouch-find, unable to add to service worker generated file.
+// Repo: https://github.com/pouchdb-community/worker-pouch
+
 PouchDb.plugin(PouchDBFind);
 PouchDb.plugin(PouchDbAuth);
 
@@ -87,35 +91,22 @@ export async function initUserDb() {
 
   userDb = new PouchDb(userDbName);
 
-  let dbInfo = await userDb.info();
-  console.log(dbInfo);
-
-  // Try and connect to remote db if possible and sync
-  const remoteUserDb = new PouchDb(
-    import.meta.env.VITE_COUCH_URL + userDbName,
-    {
-      skip_setup: true,
-    }
-  );
-
-  // Sync between the local and remote user specific database
-  userDb.sync(remoteUserDb, { live: true, retry: true });
-
   userDb.createIndex({
     index: {
       fields: ["dueOn", "listOrder"],
     },
   });
+
   userDb.createIndex({
     index: {
       fields: ["completedAt"],
     },
   });
+
+  // Sync between the local and remote user database
+  userDb.sync(import.meta.env.VITE_COUCH_URL + userDbName, {
+    live: true,
+    retry: true,
+    skip_setup: true,
+  });
 }
-
-function updateTaskUI(scope) {}
-
-// TODO: Listener for changes to database for a specefic query?
-// userDb.on("change", (change) => {
-//   console.log("change", change);
-// });

@@ -44,7 +44,6 @@
 
   function setSortTasks() {
     sortedTasks = plotTasks();
-    console.log(sortedTasks);
   }
   setSortTasks();
 </script>
