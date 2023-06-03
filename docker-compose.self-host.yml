@@ -1,0 +1,15 @@
+services:
+  couchdb:
+    image: couchdb:3.3
+    ports:
+      - 5984:5984
+    environment:
+      COUCHDB_USER: <YOUR_ADMIN_USER>
+      COUCHDB_PASSWORD: <YOUR_ADMIN_USER_PWD>
+  oolong:
+    image: oolongt:latest
+    ports:
+      - 80:80
+    environment:
+      COUCHDB_HOST: <COUCHDB_HOST>
+      COUCHDB_PORT: 5984

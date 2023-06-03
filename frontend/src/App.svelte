@@ -12,10 +12,8 @@
   import PouchDb from "pouchdb-browser";
   import PouchDBFind from "pouchdb-find";
   import PouchDbAuth from "pouchdb-authentication";
-  // import PouchDbAllDbs from "pouchdb-all-dbs";
   PouchDb.plugin(PouchDBFind);
   PouchDb.plugin(PouchDbAuth);
-  // PouchDb.plugin(PouchDbAllDbs);
 
   // Components
   import TopBar from "./TopBar.svelte";

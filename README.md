@@ -1,25 +1,29 @@
 # Oolong
 
-> Simple, opinionated task manager.
+## Getting started
 
-## Installation
+Oolong is a simple task manager with one interface that works on all platform by
+using PWA technology. The stack is fully open source and you can self-host the
+webapp nginc server and CouchDB database.
 
-The app is available as a Progressive Web App (PWA) at
-[a-shine.github.io/oolong/](https://a-shine.github.io/oolong/).
+On a server simply run the following commands:
 
-As PWA features are not implemented consistently across browsers, it is
-recommended to use Google Chrome (both on desktop and mobile). On mobile devices
-a modal will be displayed on first viewing to allow the user to add the app to
-their home screen.
+```bash
+docker compose -f docker-compose.yml - docker-compose.self-host.yml up -d
+```
+Make sure to set the `COUCHDB_USER` and `COUCHDB_PASSWORD` environment variables
+and the `COUCHDB_HOST` and `COUCHDB_PORT` environment variables in the
+`docker-compose.self-host.yml` file.
 
-## Design
+Once the containers are up and running, setup your user account for
+authenticating access to the database from the app and setting up the necessary
+database by running the user-creation script:
 
-The app should be as simple and quick to use as possible to allow users to get
-on with their tasks rather than spend time managing them. As an exercise to
-promote thoughtful design, each usability level feature is logged in the
-[Oolong project board](https://github.com/users/a-shine/projects/5).
+```bash
+./user-creation.sh
+```
 
-Technical decisions are documented in the code.
+<!-- TODO convert the user creation js scrip to a bash script using curl -->
 
 ## About PWAs
 
@@ -44,14 +48,3 @@ This means that the app will not be able to notify the user of tasks that are
 due at a specific time unless it is a server side push notification (which
 requires internet access). Frustratingly, by the sound of it, this is unlikely
 to be supported in the near future.
-
-## Development
-
-<!-- TODO: Complete the development part of the README -->
-
-### Resources
-
-- [Offline-first web application resource review](https://github.com/pazguille/offline-first)
-- [Tutorial on using `VitePWA` plugin](https://css-tricks.com/vitepwa-plugin-offline-service-worker)
-- [Background sync email example](https://learn.microsoft.com/en-us/microsoft-edge/progressive-web-apps-chromium/how-to/background-syncs)
-- [Svelte PouchDB/CouchDB tutorial](https://neighbourhood.ie/blog/2019/05/10/an-offline-first-todo-list-with-svelte-pouchdb-and-couchdb/)

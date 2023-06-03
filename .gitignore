@@ -6,6 +6,3 @@ dev-dist/
 
 # Svelte compiler build output
 dist/
-
-# Production tooling and configurations
-docker-compose.prod.yml

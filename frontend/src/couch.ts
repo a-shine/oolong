@@ -9,6 +9,9 @@ import PouchDbAuth from "pouchdb-authentication";
 PouchDb.plugin(PouchDBFind);
 PouchDb.plugin(PouchDbAuth);
 
+let remoteCouch;
+export let localTasksDb;
+
 async function isSeshAuth(): Promise<boolean> {
   const response = await authDb.getSession();
   return response.userCtx.name ? true : false;
