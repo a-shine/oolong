@@ -1,5 +1,5 @@
 <script lang="ts">
-  import TaskList from "./TaskList.svelte";
+  import TaskList from "./lib/TaskList.svelte";
   import type { Task } from "./types/task.type";
 
   // Create dispatch function

@@ -17,13 +17,14 @@
 
   // Components
   import TopBar from "./TopBar.svelte";
-  import Login from "./Login.svelte";
-  import Logout from "./Logout.svelte";
+  import Login from "./pages/Login.svelte";
+  import Logout from "./lib/Logout.svelte";
   import Tasks from "./Tasks.svelte";
-  import NotFound from "./NotFound.svelte";
+  import NotFound from "./pages/NotFound.svelte";
   import TaskEditor from "./TaskEditor.svelte";
 
   import { setup, notSetup, initUserDb } from "./couch";
+  import Welcome from "./pages/Welcome.svelte";
 
   let onlineStatus: boolean;
 
@@ -71,13 +72,34 @@
         replace("/tasks/today");
         break;
       default:
-        replace("/login");
+        replace("/welcome");
         break;
     }
   }
 
   function alwaysFail() {
     return false;
+  }
+
+  async function initApp() {
+    // Check internet connection
+    if (navigator.onLine) {
+      console.log("Online");
+    } else {
+      console.log("Offline");
+    }
+
+    // Check if PWA is installed
+    if (window.matchMedia("(display-mode: standalone)").matches) {
+      console.log("PWA is installed");
+    } else {
+      console.log("PWA is not installed");
+    }
+
+    // Check authentication
+
+    // Initialise databases
+    initUserDb();
   }
 
   onMount(async () => {
@@ -90,53 +112,40 @@
   });
 </script>
 
-<TopBar />
-
-{#await initUserDb()}
+{#await initApp()}
   <p>Loading...</p>
 {:then _}
-  <div id="container">
-    <Router
-      routes={{
-        // Exact paths
-        "/": wrap({
-          component: Tasks,
-          conditions: [alwaysFail],
-        }),
-        "/tasks": wrap({
-          component: Tasks,
-          conditions: [alwaysFail],
-        }),
-        "/tasks/:scope": wrap({
-          component: Tasks,
-          conditions: [setup],
-        }),
-        "/tasks/editor/:taskId": wrap({
-          component: TaskEditor,
-          conditions: [setup],
-        }),
-        "/login": wrap({
-          component: Login,
-          conditions: [notSetup],
-        }),
-        "/logout": wrap({
-          component: Logout,
-          conditions: [setup],
-        }),
+  <Router
+    routes={{
+      // Exact paths
+      "/": wrap({
+        component: Tasks,
+        conditions: [alwaysFail],
+      }),
+      "/tasks": wrap({
+        component: Tasks,
+        conditions: [alwaysFail],
+      }),
+      "/tasks/:scope": wrap({
+        component: Tasks,
+        conditions: [setup],
+      }),
+      "/tasks/editor/:taskId": wrap({
+        component: TaskEditor,
+        conditions: [setup],
+      }),
+      "/login": wrap({
+        component: Login,
+        conditions: [notSetup],
+      }),
+      "/welcome": wrap({
+        component: Welcome,
+        // conditions: [notSetup],
+      }),
 
-        // Catch-all (must be the last)
-        "*": NotFound,
-      }}
-      on:conditionsFailed={conditionsFailed}
-    />
-  </div>
+      // Catch-all (must be the last)
+      "*": NotFound,
+    }}
+    on:conditionsFailed={conditionsFailed}
+  />
 {/await}
-
-<style>
-  /* start 50px under the top bar */
-  #container {
-    position: fixed;
-    top: 50px;
-    width: 100%;
-  }
-</style>

@@ -6,7 +6,7 @@
   import type { Task } from "./types/task.type";
 
   // Components
-  import TaskList from "./TaskList.svelte";
+  import TaskList from "./lib/TaskList.svelte";
   import CompletedTasksToday from "./CompletedTasksToday.svelte";
 
   // Props
@@ -40,7 +40,7 @@
         dueOn: { $eq: getToday() },
         completedAt: { $eq: null },
       },
-      // sort: [{ listOrder: "asc" }],
+      sort: [{ listOrder: "asc" }],
     });
     return response.docs;
   }

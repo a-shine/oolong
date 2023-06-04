@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { replace } from "svelte-spa-router";
-  import { authDb, getActiveUserDatabaseName, initUserDb } from "./couch";
+  import { replaceWrapper as replace } from "../navigatorWrapper";
+  import { authDb, getActiveUserDatabaseName, initUserDb } from "../couch";
+  import AppBar from "../lib/AppBar.svelte";
 
   let onlineStatus: boolean = navigator.onLine;
 
@@ -36,6 +37,8 @@
     });
   }
 </script>
+
+<AppBar />
 
 {#if onlineStatus}
   <form on:submit|preventDefault={login}>

@@ -1,68 +1,11 @@
 :root {
-    /* Avoiding setting color directly in component css, instead use classes */
-
-    /* Primary colour and darker focus colour */
-    --primary-color: hsl(138.86 15.982% 42.941%);
-    --primary-focus-color: hsl(138.86 15.982% 34.353%);
-    --primary-content-color: hsl(138.86 100% 88.588%);
-
-    /* Secondary colour */
-    --secondary-color: hsl(96.923 37.143% 93.137%);
-    --secondary-focus-color: hsl(96.923 37.143% 74.51%);
-    --secondary-content-color: hsl(996 32.468% 15.098%);
-
-    /* Accent colour  */
-    --accent-color: hsl(0 67.742% 93.922%);
-    --accent-focus-color: hsl(0 67.742% 75.137%);
-    --accent-content-color: hsl(0 21.951% 16.078%);
-
-    /* Neutral colour */
-    --neutral-color: hsl(0 3.9106% 35.098%);
-    --neutral-focus-color: hsl(0 3.9106% 28.078%);
-    --neutral-content-color: hsl(0 4.3478% 90.98%);
-
-    /* Base colours */
-    --base-100-color: hsl(0 4.3478% 90.98%);
-    --base-200-color: hsl(0 4.3478% 81.882%);
-    --base-300-color: hsl(0 4.3478% 73.694%);
-
-    /* Special colours */
-    --info-color: hsl(198 93% 60%);
-    --info-content-color: hsl(198 100% 12%);
-    --success-color: hsl(158 64% 52%);
-    --success-content-color: hsl(158 100% 10%);
-    --warning-color: hsl(43 96% 56%);
-    --warning-content-color: hsl(43 100% 11%);
-    --error: hsl(0 91% 71%);
-    --error-content-color: hsl(0 100% 14%);
-}
-
-
-.bg-primary {
-    background-color: var(--primary-color);
-    color: var(--primary-content-color);
-}
-
-.bg-primary:focus {
-    background-color: var(--primary-focus-color);
-}
-
-.bg-secondary {
-    background-color: var(--secondary-color);
-    color: var(--secondary-content-color);
-}
-
-.bg-secondary:focus {
-    background-color: var(--secondary-focus-color);
-}
-
-.bg-accent {
-    background-color: var(--accent-color);
-    color: var(--accent-content-color);
-}
-
-.bg-accent:focus {
-    background-color: var(--accent-focus-color);
+    --text: rgb(18, 19, 23);
+    --background: rgb(255, 255, 255);
+    --primary-btn: rgb(66, 97, 73);
+    --primary-btn-focus-color: rgb(66, 97, 73, 0.5);
+    --secondary-btn: rgb(241, 235, 234);
+    --secondary-btn-focus-color: rgb(241, 235, 234, 0.5);
+    --accent: rgb(27, 25, 36);
 }
 
 * {
@@ -76,45 +19,37 @@ html {
 }
 
 body {
-    /* Remove default browser margins */
-    margin: 0;
+    margin: 0; /* Remove default browser margins */
+    height: 100%;
 
     /* Add Noto font */
     font-family: 'Noto Sans JP', sans-serif;
-
-    /* Set background color */
-    background-color: var(--base-100-color);
-
-    height: 100%;
+    color: var(--text);
+    background: var(--background);
 }
 
 #app {
     height: 100%;
 }
 
-/* square brutalist buttons */
+/* Transparent button with darken on hover and rounded edges */
 button {
-    color: black;
-    cursor: pointer;
-    border: 2px solid var(--primary-color);
     background: transparent;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
 }
 
-/* distort text on button click */
-button:active {
-    transform: scale(0.95);
-}
-
-/* button hover avocado green */
 button:hover {
-    border-color: var(--primary-focus-color);
+    background-color: var(--primary-btn-focus-color);
 }
 
-/* TODO: Disable hover on mobile devices */
-@media (hover: none) {
-    button:hover {
-       color: inherit;
-    }
+.fl-btn {
+    background: var(--primary-btn);
+    color: var(--background);
 }
 
 /* square text input with solid border */
@@ -127,33 +62,3 @@ input[type=text] {
 input[type=text]:focus {
     border-color: var(--primary-focus-color);
 }
-
-select {
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-select:hover {
-    background-color: var(--primary-focus-color);
-}
-
- /* button with no borders and simple hover */
- .borderless-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #000;
-    font-size: 1rem;
-    font-weight: 500;
-    padding: 0;
-  }
-
-  .borderless-button:hover {
-    background: var(--primary-focus-color);
-  }
-
-  .center {
-    max-width: 800px;
-    margin: 0 auto;
-  }

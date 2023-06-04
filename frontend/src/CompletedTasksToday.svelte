@@ -5,7 +5,7 @@
   import type { Task } from "./types/task.type";
 
   // Components
-  import TaskList from "./TaskList.svelte";
+  import TaskList from "./lib/TaskList.svelte";
 
   // Props
   export let todayCompletedTasks: Task[] = [];

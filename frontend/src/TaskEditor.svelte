@@ -1,7 +1,6 @@
 <script lang="ts">
   import { slide } from "svelte/transition";
   import { v4 as uuidv4 } from "uuid";
-  import { pop } from "svelte-spa-router";
   import { userDb } from "./couch";
   import { fly } from "svelte/transition";
 
@@ -10,6 +9,7 @@
 
   // Components
   import Modal from "./lib/Modal.svelte";
+  import { replaceWrapper } from "./navigatorWrapper";
 
   // Props
   export let params: { taskId: string };
@@ -94,25 +94,25 @@
     task.createdAt = new Date().getTime();
 
     userDb.put(task);
-    pop();
+    replaceWrapper("/tasks");
   }
 
   const updateTask = () => {
     setTask();
     userDb.put(task);
-    pop();
+    replaceWrapper("/tasks");
   };
 
   const deleteTask = () => {
     userDb.remove(task);
-    pop();
+    replaceWrapper("/tasks");
   };
 
   let addDateDialog = false;
 
   function safeClose() {
     if (task.description === cachedDescription && task.dueOn === cachedDueOn) {
-      pop();
+      replaceWrapper("/tasks");
     } else {
       safeCloseModal = true;
     }
@@ -167,6 +167,14 @@
         autofocus
       />
 
+      <textarea
+        name=""
+        id="noteInput"
+        cols="30"
+        rows="10"
+        placeholder="Add notes..."
+        bind:value={notesValue}
+      />
       <div id="task-params">
         {#if !addDateDialog}
           <button
@@ -189,7 +197,7 @@
           <button
             on:click={() => {
               addDateDialog = true;
-            }}>Other datetime</button
+            }}>Another day...</button
           >
           <!-- remove date button -->
           {#if dueOnValue !== undefined}
@@ -207,24 +215,8 @@
             }}>x</button
           >
         {/if}
-        <!-- <div>
-          Associate with project:
-          <select name="project" id="projectSelect">
-            <option value="none">None</option>
-          </select>
-          <button>+</button>
-        </div> -->
-        <div>
-          <textarea
-            name=""
-            id=""
-            cols="30"
-            rows="10"
-            placeholder="Add notes..."
-            bind:value={notesValue}
-          />
-        </div>
       </div>
+      <div id="separator" />
       {#if task.createdAt}
         <button
           type="button"
@@ -248,21 +240,34 @@
   }
 
   .active {
-    background-color: var(--primary-color);
+    background-color: var(--primary-btn);
   }
 
   #task {
     width: 100%;
     height: 3.5rem;
-    margin-bottom: 1rem;
+    /* margin-bottom: 1rem; */
 
     /* increase size of placeholder text proportionals */
     font-size: 1.5rem;
   }
 
-  /* darker background on hover */
-  button:hover {
-    background-color: var(--primary-color);
+  #noteInput {
+    width: 100%;
+    height: 5rem;
+    border: none;
+    resize: none;
+  }
+
+  #noteInput:focus {
+    outline: none;
+  }
+
+  #separator {
+    width: 100%;
+    height: 1px;
+    background-color: var(--primary-btn);
+    margin: 1rem 0;
   }
 
   #task-add {

@@ -23,7 +23,8 @@ database by running the user-creation script:
 ./user-creation.sh
 ```
 
-<!-- TODO convert the user creation js scrip to a bash script using curl -->
+If you would like a self-hosted version with SSL support, you can go check out
+the [ssl couchdb]()
 
 ## About PWAs
 

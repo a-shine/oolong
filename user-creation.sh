@@ -24,6 +24,6 @@ MEMBER_DOC='{"admins": {"names": ["'$USERNAME'"], "roles": ["_admin"]}, "members
 curl -X PUT -H "Content-Type: application/json" -u "$ADMIN_USERNAME:$ADMIN_PASSWORD" -d "$MEMBER_DOC" "$COUCHDB_HOST/$USER_DATABASE/_security"
 
 # Print the response
-echo "User created successfully."
-echo "User database '$USER_DATABASE' created."
-echo "User '$USERNAME' is now a member and administrator of the database."
+# echo "User created successfully."
+# echo "User database '$USER_DATABASE' created."
+# echo "User '$USERNAME' is now a member and administrator of the database."

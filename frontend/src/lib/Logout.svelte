@@ -1,6 +1,6 @@
 <script lang="ts">
   import { replace } from "svelte-spa-router";
-  import { authDb, userDb } from "./couch";
+  import { authDb, userDb } from "../couch";
   import { createEventDispatcher } from "svelte";
 
   const dispatch = createEventDispatcher();

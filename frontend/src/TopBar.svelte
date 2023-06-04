@@ -1,22 +1,13 @@
 <script lang="ts">
   import { location } from "svelte-spa-router";
-  import TopBarTasksScopeSelector from "./TopBarTasksScopeSelector.svelte";
-  import Modal from "./lib/Modal.svelte";
-  import Logout from "./Logout.svelte";
-
-  let showModal = false;
+  import TopBarTasksScopeSelector from "./lib/TopBarTasksScopeSelector.svelte";
+  import Logout from "./lib/Logout.svelte";
 
   // extract the first part of the path, e.g. /tasks/today -> /tasks
   function extractPath(path: string): string[] {
     return path.split("/");
   }
 </script>
-
-{#if showModal}
-  <Modal on:close={() => (showModal = false)}>
-    <Logout on:logout={() => (showModal = false)} />
-  </Modal>
-{/if}
 
 <div id="container" class="bg-primary">
   {#if extractPath($location)[1] === "tasks" && extractPath($location)[2] !== "editor"}
@@ -28,7 +19,7 @@
     <!-- If not on /login page -->
     {#if $location !== "/login"}
       <div class="bar-item">
-        <button on:click={() => (showModal = true)}>&#8942;</button>
+        <Logout />
       </div>
     {/if}
   </div>

@@ -1,6 +1,7 @@
 import PouchDb from "pouchdb-browser";
 import PouchDBFind from "pouchdb-find";
 import PouchDbAuth from "pouchdb-authentication";
+import { replaceWrapper } from "./navigatorWrapper";
 
 // Unable to get worker-pouch to work. Lack of maintenance, does not support
 // pouch-find, unable to add to service worker generated file.
@@ -92,7 +93,7 @@ export async function initUserDb() {
     return;
   }
 
-  userDb = new PouchDb(userDbName);
+  userDb = new PouchDb(userDbName + "-tasks");
 
   userDb.createIndex({
     index: {
@@ -107,9 +108,18 @@ export async function initUserDb() {
   });
 
   // Sync between the local and remote user database
-  userDb.sync(import.meta.env.VITE_COUCH_URL + userDbName, {
+  userDb.sync(import.meta.env.VITE_COUCH_URL + userDbName + "-tasks", {
     live: true,
     retry: true,
     skip_setup: true,
   });
+}
+
+export async function logout() {
+  await authDb.logOut(); // TODO: may need to do this in web worker
+  localStorage.removeItem("userDbName");
+  localStorage.removeItem("_pouch_check_localstorage");
+  // Delete the pouchdb database
+  userDb.destroy();
+  replaceWrapper("/welcome");
 }

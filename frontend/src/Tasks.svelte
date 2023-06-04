@@ -1,17 +1,20 @@
 <script lang="ts">
-  import { push } from "svelte-spa-router";
+  import { pushWrapper as push, replaceWrapper } from "./navigatorWrapper";
   import { overrideItemIdKeyNameBeforeInitialisingDndZones } from "svelte-dnd-action";
   overrideItemIdKeyNameBeforeInitialisingDndZones("_id"); // https://github.com/isaacHagoel/svelte-dnd-action#overriding-the-item-id-key-name
   import { getTomorrow } from "./lib/date.utils";
-  import { userDb } from "./couch";
+  import { userDb, logout } from "./couch";
 
   // Types
   import type { Task } from "./types/task.type";
 
   // Components
   import TodayView from "./TodayView.svelte";
-  import TaskList from "./TaskList.svelte";
+  import TaskList from "./lib/TaskList.svelte";
   import UpcomingView from "./UpcomingView.svelte";
+  import AppBar from "./lib/AppBar.svelte";
+  import AppBarItem from "./lib/AppBarItem.svelte";
+  import TopBarTasksScopeSelector from "./lib/TopBarTasksScopeSelector.svelte";
 
   // Props
   export let params: { scope: string };
@@ -36,7 +39,7 @@
         break;
       default:
         console.log("Incorrect task retrieval scope");
-      // break;
+        break;
     }
   }
 
@@ -104,6 +107,20 @@
   }
 </script>
 
+<AppBar>
+  <div slot="left">
+    <AppBarItem><TopBarTasksScopeSelector /></AppBarItem>
+  </div>
+  <div slot="center">
+    <AppBarItem><b>Oolong Tasks</b></AppBarItem>
+  </div>
+  <div slot="right">
+    <AppBarItem
+      ><button class="btn" on:click={logout}>Logout</button></AppBarItem
+    >
+  </div>
+</AppBar>
+
 <div id="container">
   <div id="tasks" class="center">
     {#if params.scope == "today"}
@@ -130,9 +147,8 @@
 
 <button
   id="newTaskButton"
-  class="bg-accent"
   on:click={() => {
-    push("/tasks/editor/-1");
+    replaceWrapper("/tasks/editor/-1");
   }}
 >
   +
@@ -148,20 +164,18 @@
     height: 100%;
   }
 
-  /* place the newTaskButton at the bottom center of the page */
+  /* New task btn fixed horizontally centred at the bottom of the page */
   #newTaskButton {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
     width: 65px;
     height: 65px;
     border-radius: 50%;
-    font-size: 50px;
-    position: fixed;
-    bottom: 0;
-    margin-bottom: 20px;
-
-    /* Move to the center by moving left and then translating from the center 
-    point of the button right */
-    left: 50%;
-    transform: translateX(-50%);
     border: none;
+    font-size: 2rem;
+    font-weight: bold;
+    z-index: 100;
   }
 </style>
