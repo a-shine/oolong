@@ -40,7 +40,7 @@
         dueOn: { $eq: getToday() },
         completedAt: { $eq: null },
       },
-      sort: [{ listOrder: "asc" }],
+      // sort: [{ listOrder: "asc" }],
     });
     return response.docs;
   }

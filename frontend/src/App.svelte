@@ -16,9 +16,7 @@
   PouchDb.plugin(PouchDbAuth);
 
   // Components
-  import TopBar from "./TopBar.svelte";
   import Login from "./pages/Login.svelte";
-  import Logout from "./lib/Logout.svelte";
   import Tasks from "./Tasks.svelte";
   import NotFound from "./pages/NotFound.svelte";
   import TaskEditor from "./TaskEditor.svelte";

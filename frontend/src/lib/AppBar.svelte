@@ -50,5 +50,9 @@
     display: flex;
     flex-direction: row;
     align-items: center;
+
+    /* Center from the mid-point of the content */
+    left: 50%;
+    transform: translateX(-50%);
   }
 </style>
