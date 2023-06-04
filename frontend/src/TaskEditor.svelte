@@ -236,7 +236,6 @@
   /* Container adding padding on the sides  */
   #container {
     padding: 0 1rem;
-    margin-top: 10px;
   }
 
   .active {
