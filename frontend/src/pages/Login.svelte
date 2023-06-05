@@ -2,6 +2,7 @@
   import { replaceWrapper as replace } from "../navigatorWrapper";
   import { authDb, getActiveUserDatabaseName, initUserDb } from "../couch";
   import AppBar from "../lib/AppBar.svelte";
+  import AppBarItem from "../lib/AppBarItem.svelte";
 
   let onlineStatus: boolean = navigator.onLine;
 
@@ -38,18 +39,23 @@
   }
 </script>
 
-<AppBar />
+<AppBar>
+  <div slot="center">
+    <AppBarItem><b>Login</b></AppBarItem>
+  </div>
+</AppBar>
 
 {#if onlineStatus}
-  <form on:submit|preventDefault={login}>
-    <h1>Login</h1>
-    <label for="email">Email</label>
-    <input type="email" bind:value={email} />
-    <label for="password">Password</label>
-    <input type="password" bind:value={password} />
-    <button type="submit">Login</button>
-    <p>{errorMsg}</p>
-  </form>
+  <div style="padding: 0.2rem;">
+    <form on:submit|preventDefault={login}>
+      <label for="email">Email</label>
+      <input type="email" bind:value={email} />
+      <label for="password">Password</label>
+      <input type="password" bind:value={password} />
+      <button type="submit" class="fl-btn">Login</button>
+      <p>{errorMsg}</p>
+    </form>
+  </div>
 {:else}
   <p>Please login in when you are next online.</p>
 {/if}

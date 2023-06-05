@@ -25,11 +25,13 @@
   });
 
   async function getOverdueTasks() {
-    let response = await userDb.find({
+    const response = await userDb.find({
       selector: {
-        dueOn: { $lt: getToday(), $ne: "-1" },
-        completedAt: { $eq: null },
+        completedAt: { $eq: null }, // incomplete tasks
+        listOrder: { $gte: 0 }, // starting at the first ordered task
+        dueOn: { $lt: getToday(), $ne: "-1" }, // less than today and not unassigned
       },
+      sort: [{ listOrder: "asc" }],
     });
     return response.docs;
   }
@@ -37,10 +39,12 @@
   async function getTodayIncompleteTasks() {
     const response = await userDb.find({
       selector: {
-        dueOn: { $eq: getToday() },
-        completedAt: { $eq: null },
+        // IMPORTANT: the order of the fields in the selector matters!!!
+        completedAt: { $eq: null }, // incomplete tasks
+        listOrder: { $gte: 0 }, // starting at the first ordered task
+        dueOn: { $gte: getToday() }, // assigned today
       },
-      // sort: [{ listOrder: "asc" }],
+      sort: [{ listOrder: "asc" }],
     });
     return response.docs;
   }
@@ -54,6 +58,7 @@
           $lt: Date.parse(getToday()) + 86400000,
         },
       },
+      sort: [{ completedAt: "desc" }],
     });
     return response.docs;
   }

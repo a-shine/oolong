@@ -50,8 +50,4 @@
     font-size: 1rem;
     outline: none;
   }
-
-  select:hover {
-    background-color: var(--primary-focus-color);
-  }
 </style>

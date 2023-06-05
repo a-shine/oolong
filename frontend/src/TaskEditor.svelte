@@ -239,13 +239,13 @@
   }
 
   .active {
-    background-color: var(--primary-btn);
+    background-color: var(--primary-focus-color);
   }
 
   #task {
     width: 100%;
     height: 3.5rem;
-    /* margin-bottom: 1rem; */
+    border: none;
 
     /* increase size of placeholder text proportionals */
     font-size: 1.5rem;
@@ -264,8 +264,6 @@
 
   #separator {
     width: 100%;
-    height: 1px;
-    background-color: var(--primary-btn);
     margin: 1rem 0;
   }
 
