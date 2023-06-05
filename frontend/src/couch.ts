@@ -107,6 +107,12 @@ export async function initUserDb() {
     },
   });
 
+  userDb.createIndex({
+    index: {
+      fields: ["listOrder"],
+    },
+  });
+
   // Sync between the local and remote user database
   userDb.sync(import.meta.env.VITE_COUCH_URL + userDbName + "-tasks", {
     live: true,

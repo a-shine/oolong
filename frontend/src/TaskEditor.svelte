@@ -46,7 +46,7 @@
         projectTag: undefined,
         lane: undefined,
         laneOrder: undefined,
-        listOrder: Infinity,
+        listOrder: 0,
         dueAt: undefined,
         recurrence: undefined,
         completedAt: undefined,
