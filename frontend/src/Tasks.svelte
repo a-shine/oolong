@@ -105,13 +105,25 @@
   function updateOrder(tasks: Task[]) {
     userDb.bulkDocs(tasks);
   }
+
+  // Listen to changes on the local database
+  userDb
+    .changes({
+      since: "now",
+      live: true,
+      include_docs: true,
+    })
+    .on("change", (change) => {
+      // console.log("change", change);
+      // Redraw the UI
+    });
 </script>
 
 <AppBar>
   <div slot="left">
     <AppBarItem><TopBarTasksScopeSelector /></AppBarItem>
   </div>
-  <div slot="center">
+  <div slot="center" id="title">
     <AppBarItem><b>Oolong Tasks</b></AppBarItem>
   </div>
   <div slot="right">
@@ -177,5 +189,12 @@
     font-size: 2rem;
     font-weight: bold;
     z-index: 100;
+  }
+
+  /* When wid is to small do not display #title */
+  @media (max-width: 500px) {
+    #title {
+      display: none;
+    }
   }
 </style>
