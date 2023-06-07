@@ -1,16 +1,22 @@
 #!/bin/bash
 
-read -p "CouchDB Host (e.g., http://localhost:5984): " COUCHDB_HOST
-read -p "Admin Username: " ADMIN_USERNAME
-read -s -p "Admin Password: " ADMIN_PASSWORD
+read -p "CouchDB host (e.g., http://localhost:5984): " COUCHDB_HOST
+read -p "Admin username: " ADMIN_USERNAME
+read -s -p "Admin password: " ADMIN_PASSWORD
 echo
 
-read -p "New User Username: " USERNAME
-read -s -p "New User Password: " PASSWORD
+read -p "New user email: " USERNAME
+read -s -p "New user password: " PASSWORD
 echo
+
+read -p "New user first name: " FIRST_NAME
+read -p "New user last name: " LAST_NAME
+echo
+
+USER_METADATA='{"first_name": "'$FIRST_NAME'", "last_name": "'$LAST_NAME'"}'
 
 # Create the user document
-USER_DOC='{"_id": "org.couchdb.user:'$USERNAME'", "name": "'$USERNAME'", "password": "'$PASSWORD'", "roles": ["member", "admin"], "type": "user"}'
+USER_DOC='{"_id": "org.couchdb.user:'$USERNAME'", "name": "'$USERNAME'", "password": "'$PASSWORD'", "roles": [], "type": "user", "metadata": '$USER_METADATA'}'
 
 # Send a POST request to create the user document
 curl -X POST -H "Content-Type: application/json" -u "$ADMIN_USERNAME:$ADMIN_PASSWORD" -d "$USER_DOC" "$COUCHDB_HOST/_users"
@@ -22,8 +28,3 @@ curl -X PUT -u "$ADMIN_USERNAME:$ADMIN_PASSWORD" "$COUCHDB_HOST/$USER_DATABASE"
 # Assign user as a member and administrator of the user database
 MEMBER_DOC='{"admins": {"names": ["'$USERNAME'"], "roles": ["_admin"]}, "members": {"names": ["'$USERNAME'"], "roles": ["_admin"]}}'
 curl -X PUT -H "Content-Type: application/json" -u "$ADMIN_USERNAME:$ADMIN_PASSWORD" -d "$MEMBER_DOC" "$COUCHDB_HOST/$USER_DATABASE/_security"
-
-# Print the response
-# echo "User created successfully."
-# echo "User database '$USER_DATABASE' created."
-# echo "User '$USERNAME' is now a member and administrator of the database."
