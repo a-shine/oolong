@@ -42,7 +42,7 @@
         // IMPORTANT: the order of the fields in the selector matters!!!
         completedAt: { $eq: null }, // incomplete tasks
         listOrder: { $gte: 0 }, // starting at the first ordered task (task with the highest listOrder)
-        dueOn: { $gte: getToday() }, // assigned today
+        dueOn: { $eq: getToday() }, // assigned today
       },
       sort: [{ listOrder: "asc" }],
     });
