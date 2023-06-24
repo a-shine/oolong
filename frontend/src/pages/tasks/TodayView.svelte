@@ -1,16 +1,16 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from "svelte";
-  import { getToday } from "./lib/date.utils";
+  import { getToday } from "../../lib/date.utils";
 
   // Types
-  import type { Task } from "./types/task.type";
+  import type { Task } from "../../types/task.type";
 
   // Components
-  import TaskList from "./lib/TaskList.svelte";
-  import CompletedTasksToday from "./CompletedTasksToday.svelte";
+  import TaskList from "../../components/tasks/TaskList.svelte";
+  import CompletedTasksToday from "../../components/tasks/CompletedTasksToday.svelte";
 
   // Props
-  import { userDb } from "./couch";
+  import { localTasksDb } from "../../lib/couch";
 
   const dispatch = createEventDispatcher();
 
@@ -25,7 +25,7 @@
   });
 
   async function getOverdueTasks() {
-    const response = await userDb.find({
+    const response = await localTasksDb.find({
       selector: {
         completedAt: { $eq: null }, // incomplete tasks
         listOrder: { $gte: 0 }, // starting at the first ordered task
@@ -37,7 +37,7 @@
   }
 
   async function getTodayIncompleteTasks() {
-    const response = await userDb.find({
+    const response = await localTasksDb.find({
       selector: {
         // IMPORTANT: the order of the fields in the selector matters!!!
         completedAt: { $eq: null }, // incomplete tasks
@@ -50,7 +50,7 @@
   }
 
   async function getTodayCompletedTasks() {
-    const response = await userDb.find({
+    const response = await localTasksDb.find({
       selector: {
         // Completed between 12:00am and 11:59pm in unix time
         completedAt: {
@@ -76,7 +76,7 @@
     } else {
       todayIncompleteTasks = [...todayIncompleteTasks, task];
     }
-    userDb.put({
+    localTasksDb.put({
       ...task,
       // completedAt: null, // BUG: Put task completedAt update in the list component
     });
@@ -95,7 +95,7 @@
         (t) => t._id !== task._id
       );
     }
-    userDb.put({
+    localTasksDb.put({
       ...task,
       // completedAt: Date.now(), // BUG: Put task completedAt update in the list component
     });
@@ -103,7 +103,7 @@
 
   function updateOrder(tasks: Task[]) {
     console.log("updateOrder", tasks);
-    userDb.bulkDocs(tasks);
+    localTasksDb.bulkDocs(tasks);
   }
 </script>
 

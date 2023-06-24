@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { replaceWrapper as replace } from "../navigatorWrapper";
-  import { authDb, getActiveUserDatabaseName, initUserDb } from "../couch";
-  import AppBar from "../lib/AppBar.svelte";
-  import AppBarItem from "../lib/AppBarItem.svelte";
+  import { replaceWrapper as replace } from "../lib/navigatorWrapper";
+  import { authDb, getActiveUserDatabaseName, initUserDb } from "../lib/couch";
+  import AppBar from "../components/AppBar.svelte";
+  import AppBarItem from "../components/AppBarItem.svelte";
 
   let onlineStatus: boolean = navigator.onLine;
 

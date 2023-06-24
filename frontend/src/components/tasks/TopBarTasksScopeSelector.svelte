@@ -26,17 +26,9 @@
     <optgroup label="Timeline">
       <option value="unassigned">Unassigned</option>
       <option value="today">Today</option>
-      <!-- have an option on this page to see completed tasks of today to show progress -->
       <option value="upcoming">Upcoming</option>
     </optgroup>
-    <!-- <optgroup label="Project" /> -->
-
-    <!-- return all completed in order of most recently completed and do it by day -->
-    <!-- <optgroup label="Project">
-      </optgroup> -->
-    <optgroup label="All">
-      <option value="completed">Completed</option>
-    </optgroup>
+    <option value="all">All</option>
   </select>
 </div>
 

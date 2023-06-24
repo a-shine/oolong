@@ -22,5 +22,7 @@
     "IDBP",
     "Oolong",
     "uuidv"
-  ]
+  ],
+  "cSpell.language": "en-GB",
+  "ltex.additionalRules.languageModel": "en-gb",
 }

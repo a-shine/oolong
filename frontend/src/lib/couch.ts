@@ -51,8 +51,6 @@ export const authDb = new PouchDb(import.meta.env.VITE_COUCH_URL, {
   skip_setup: true,
 });
 
-export let userDb;
-
 // list all indexedDB databases
 async function listDatabases(): Promise<string[]> {
   return indexedDB.databases().then((dbs) => {
@@ -93,28 +91,31 @@ export async function initUserDb() {
     return;
   }
 
-  userDb = new PouchDb(userDbName + "-tasks");
+  localTasksDb = new PouchDb(userDbName + "-tasks");
 
-  userDb.createIndex({
+  // Add dueOn, ListOrder and createdAt indexes to be able to place new tasks at
+  // the top/bottom of the list
+
+  localTasksDb.createIndex({
     index: {
       fields: ["dueOn", "listOrder"],
     },
   });
 
-  userDb.createIndex({
+  localTasksDb.createIndex({
     index: {
       fields: ["completedAt"],
     },
   });
 
-  userDb.createIndex({
+  localTasksDb.createIndex({
     index: {
       fields: ["listOrder"],
     },
   });
 
   // Sync between the local and remote user database
-  userDb.sync(import.meta.env.VITE_COUCH_URL + userDbName + "-tasks", {
+  localTasksDb.sync(import.meta.env.VITE_COUCH_URL + userDbName + "-tasks", {
     live: true,
     retry: true,
     skip_setup: true,
@@ -126,6 +127,6 @@ export async function logout() {
   localStorage.removeItem("userDbName");
   localStorage.removeItem("_pouch_check_localstorage");
   // Delete the pouchdb database
-  userDb.destroy();
+  localTasksDb.destroy();
   replaceWrapper("/welcome");
 }

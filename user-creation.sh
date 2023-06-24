@@ -26,5 +26,5 @@ USER_DATABASE="userdb-$(echo -n "$USERNAME" | xxd -p)-tasks"
 curl -X PUT -u "$ADMIN_USERNAME:$ADMIN_PASSWORD" "$COUCHDB_HOST/$USER_DATABASE"
 
 # Assign user as a member and administrator of the user database
-MEMBER_DOC='{"admins": {"names": ["'$USERNAME'"], "roles": ["_admin"]}, "members": {"names": ["'$USERNAME'"], "roles": ["_admin"]}}'
+MEMBER_DOC='{"admins": {"names": ["'$USERNAME'"], "roles": ["_admin"]}, "members": {"names": ["'$USERNAME'"], "roles": []}}'
 curl -X PUT -H "Content-Type: application/json" -u "$ADMIN_USERNAME:$ADMIN_PASSWORD" -d "$MEMBER_DOC" "$COUCHDB_HOST/$USER_DATABASE/_security"

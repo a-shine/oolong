@@ -2,10 +2,10 @@
   import { createEventDispatcher } from "svelte";
 
   // Types
-  import type { Task } from "./types/task.type";
+  import type { Task } from "../../types/task.type";
 
   // Components
-  import TaskList from "./lib/TaskList.svelte";
+  import TaskList from "./TaskList.svelte";
 
   // Props
   export let todayCompletedTasks: Task[] = [];

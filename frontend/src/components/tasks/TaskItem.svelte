@@ -3,7 +3,7 @@
   import { push } from "svelte-spa-router";
 
   // Types
-  import type { Task } from "./types/task.type";
+  import type { Task } from "../../types/task.type";
 
   // Props
   export let task: Task;

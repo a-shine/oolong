@@ -17,11 +17,11 @@
 
   // Components
   import Login from "./pages/Login.svelte";
-  import Tasks from "./Tasks.svelte";
+  import Tasks from "./pages/tasks/Tasks.svelte";
   import NotFound from "./pages/NotFound.svelte";
-  import TaskEditor from "./TaskEditor.svelte";
+  import TaskEditor from "./pages/tasks/TaskEditor.svelte";
 
-  import { setup, notSetup, initUserDb } from "./couch";
+  import { setup, notSetup, initUserDb } from "./lib/couch";
   import Welcome from "./pages/Welcome.svelte";
 
   let onlineStatus: boolean;

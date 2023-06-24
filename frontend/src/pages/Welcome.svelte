@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { pushWrapper as push } from "../navigatorWrapper";
+  import { pushWrapper as push } from "../lib/navigatorWrapper";
 </script>
 
 <div class="flex flex-h-center flex-v-center" style="height: 100%">

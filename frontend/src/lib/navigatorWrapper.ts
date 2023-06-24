@@ -2,7 +2,13 @@ import { push, pop, replace } from "svelte-spa-router";
 import { writable } from "svelte/store";
 
 // if the page was pushed to, then add a back button to the app bar
-export const backButton = writable(0);
+export const backButton = writable(
+  parseInt(localStorage.getItem("backCount")) || 0
+);
+
+backButton.subscribe((val) =>
+  localStorage.setItem("backCount", val.toString())
+);
 
 export function pushWrapper(path: string) {
   backButton.update((n) => n + 1);

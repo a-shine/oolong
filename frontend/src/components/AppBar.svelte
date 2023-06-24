@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { popWrapper as pop } from "../navigatorWrapper";
-  import { backButton } from "../navigatorWrapper";
+  import { popWrapper as pop } from "../lib/navigatorWrapper";
+  import { backButton } from "../lib/navigatorWrapper";
   import AppBarItem from "./AppBarItem.svelte";
 
   let displayBackButton: boolean = false;
@@ -13,7 +13,7 @@
 <div id="bar">
   <div id="left">
     {#if displayBackButton}
-      <AppBarItem><button on:click={() => pop()}>Back</button></AppBarItem>
+      <AppBarItem><button on:click={() => pop()}>&larr;</button></AppBarItem>
     {/if}
     <slot name="left" />
   </div>

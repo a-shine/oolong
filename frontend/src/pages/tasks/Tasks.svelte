@@ -1,20 +1,27 @@
 <script lang="ts">
-  import { pushWrapper as push, replaceWrapper } from "./navigatorWrapper";
+  import {
+    pushWrapper as push,
+    replaceWrapper,
+  } from "../../lib/navigatorWrapper";
   import { overrideItemIdKeyNameBeforeInitialisingDndZones } from "svelte-dnd-action";
   overrideItemIdKeyNameBeforeInitialisingDndZones("_id"); // https://github.com/isaacHagoel/svelte-dnd-action#overriding-the-item-id-key-name
-  import { getTomorrow } from "./lib/date.utils";
-  import { userDb, logout } from "./couch";
+  import { localTasksDb, logout } from "../../lib/couch";
+  import {
+    getUnassignedTasks,
+    getUpcomingTasks,
+    getCompletedTasks,
+  } from "../../lib/tasks";
 
   // Types
-  import type { Task } from "./types/task.type";
+  import type { Task } from "../../types/task.type";
 
   // Components
   import TodayView from "./TodayView.svelte";
-  import TaskList from "./lib/TaskList.svelte";
+  import TaskList from "../../components/tasks/TaskList.svelte";
   import UpcomingView from "./UpcomingView.svelte";
-  import AppBar from "./lib/AppBar.svelte";
-  import AppBarItem from "./lib/AppBarItem.svelte";
-  import TopBarTasksScopeSelector from "./lib/TopBarTasksScopeSelector.svelte";
+  import AppBar from "../../components/AppBar.svelte";
+  import AppBarItem from "../../components/AppBarItem.svelte";
+  import TopBarTasksScopeSelector from "../../components/tasks/TopBarTasksScopeSelector.svelte";
 
   // Props
   export let params: { scope: string };
@@ -43,78 +50,26 @@
     }
   }
 
-  /**
-   * Get all unassigned tasks (tasks where dueOn is set to -1) from the local
-   * (IndexedDB) database
-   */
-  async function getUnassignedTasks() {
-    let jhg = userDb.find({
-      selector: {
-        dueOn: "-1",
-        completedAt: {
-          $eq: null,
-        },
-        // listOrder: { $gte: 0 },
-      },
-      // sort: ["listOrder"],
-      // sort by listOrder
-    });
-
-    return await jhg;
-  }
-
-  /**
-   * Get all upcoming tasks (tasks due from tomorrow onwards) from the local
-   * (IndexedDB) database
-   */
-  async function getUpcomingTasks() {
-    let jgjg = userDb.find({
-      selector: {
-        dueOn: {
-          $gte: getTomorrow(),
-        },
-        completedAt: {
-          $eq: null,
-        },
-      },
-    });
-
-    return await jgjg;
-  }
-
-  /**
-   * Get all completed tasks from the local (IndexedDB) database
-   */
-  async function getCompletedTasks() {
-    return await userDb.find({
-      selector: {
-        completedAt: { $gte: 0 },
-      },
-      sort: [{ completedAt: "desc" }],
-    });
-  }
-
   // Toggle between complete and incomplete
   function toggleComplete(task: Task) {
-    userDb.put({
+    localTasksDb.put({
       ...task,
     });
     displayedTasks = displayedTasks.filter((t) => t._id !== task._id);
   }
 
   function updateOrder(tasks: Task[]) {
-    userDb.bulkDocs(tasks);
+    localTasksDb.bulkDocs(tasks);
   }
 
   // Listen to changes on the local database
-  userDb
+  localTasksDb
     .changes({
       since: "now",
       live: true,
       include_docs: true,
     })
     .on("change", (change) => {
-      // console.log("change", change);
       // Redraw the UI
     });
 </script>
@@ -142,6 +97,15 @@
         <UpcomingView
           tasks={displayedTasks}
           on:toggleComplete={(e) => toggleComplete(e.detail)}
+        />
+      {/await}
+    {:else if params.scope == "unassigned"}
+      {#await getTasks(params.scope) then}
+        <TaskList
+          enableOrdering={true}
+          tasks={displayedTasks}
+          on:toggleComplete={(e) => toggleComplete(e.detail)}
+          on:updateOrder={(e) => updateOrder(e.detail)}
         />
       {/await}
     {:else}

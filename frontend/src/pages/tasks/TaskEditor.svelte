@@ -1,15 +1,15 @@
 <script lang="ts">
   import { slide } from "svelte/transition";
   import { v4 as uuidv4 } from "uuid";
-  import { userDb } from "./couch";
+  import { localTasksDb } from "../../lib/couch";
   import { fly } from "svelte/transition";
 
   // Types
-  import type { Task } from "./types/task.type";
+  import type { Task } from "../../types/task.type";
 
   // Components
-  import Modal from "./lib/Modal.svelte";
-  import { replaceWrapper } from "./navigatorWrapper";
+  import Modal from "../../components/Modal.svelte";
+  import { replaceWrapper } from "../../lib/navigatorWrapper";
 
   // Props
   export let params: { taskId: string };
@@ -52,7 +52,7 @@
         completedAt: undefined,
       };
     } else {
-      task = await userDb.get(params.taskId);
+      task = await localTasksDb.get(params.taskId);
     }
 
     // If task is null, we want to create a new task
@@ -93,18 +93,18 @@
     // Set the createdAt and updatedAt dates
     task.createdAt = new Date().getTime();
 
-    userDb.put(task);
+    localTasksDb.put(task);
     replaceWrapper("/tasks");
   }
 
   const updateTask = () => {
     setTask();
-    userDb.put(task);
+    localTasksDb.put(task);
     replaceWrapper("/tasks");
   };
 
   const deleteTask = () => {
-    userDb.remove(task);
+    localTasksDb.remove(task);
     replaceWrapper("/tasks");
   };
 
