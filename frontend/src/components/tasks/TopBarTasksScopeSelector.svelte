@@ -28,7 +28,7 @@
       <option value="today">Today</option>
       <option value="upcoming">Upcoming</option>
     </optgroup>
-    <option value="all">All</option>
+    <option value="completed">Completed</option>
   </select>
 </div>
 
