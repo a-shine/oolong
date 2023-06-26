@@ -2,9 +2,6 @@
   import TaskList from "../../components/tasks/TaskList.svelte";
   import type { Task } from "../../types/task.type";
 
-  // TODO: Make date human readable
-  // BUG: Sort by date
-
   // Create dispatch function
   import { createEventDispatcher } from "svelte";
 
