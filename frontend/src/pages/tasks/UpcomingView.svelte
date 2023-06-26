@@ -2,6 +2,9 @@
   import TaskList from "../../components/tasks/TaskList.svelte";
   import type { Task } from "../../types/task.type";
 
+  // TODO: Make date human readable
+  // BUG: Sort by date
+
   // Create dispatch function
   import { createEventDispatcher } from "svelte";
 
@@ -11,15 +14,21 @@
 
   let sortedTasks: { date: string; tasks: Task[] }[];
 
-  const getTaskDate = (task: Task) => {
-    const date = new Date(task.dueOn);
-    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
-  };
+  function humanReadableDate(date: string) {
+    const dateObj = new Date(date);
+    const options = {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    };
+    return dateObj.toLocaleDateString("en-US", options);
+  }
 
   // Plot the tasks in blocks of the same date
   const plotTasks = () => {
     const tasksByDate = tasks.reduce((acc, task) => {
-      const date = getTaskDate(task);
+      const date = task.dueOn;
       if (acc[date]) {
         acc[date].push(task);
       } else {
@@ -44,21 +53,20 @@
 
   function setSortTasks() {
     sortedTasks = plotTasks();
+    console.log(sortedTasks);
   }
   setSortTasks();
 </script>
 
 {#each sortedTasks as { date, tasks }}
-  <h2>{date}</h2>
+  <h2>{humanReadableDate(date)}</h2>
   <TaskList
     {tasks}
     on:toggleComplete={(e) => {
       // remove the task from the sublist of tasks for the date in sortedTasks
       let task = e.detail;
-      let date = getTaskDate(task);
-      // convert task date to dd/mm/yyyy format
 
-      let index = sortedTasks.findIndex((task) => task.date === date);
+      let index = sortedTasks.findIndex((day) => day.date === task.dueOn);
 
       // remove the task from the sublist of tasks for the date in sortedTasks
       sortedTasks[index].tasks = sortedTasks[index].tasks.filter(

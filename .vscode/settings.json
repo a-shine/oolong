@@ -21,6 +21,7 @@
     "gorm",
     "IDBP",
     "Oolong",
+    "Typecheck",
     "uuidv"
   ],
   "cSpell.language": "en-GB",
