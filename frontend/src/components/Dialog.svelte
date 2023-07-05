@@ -1,11 +1,14 @@
 <script lang="ts">
-  export let dialog;
+  import { onMount } from "svelte";
+
+  let dialog;
+
+  onMount(() => {
+    dialog = document.getElementById("dialog");
+    dialog.showModal();
+  });
 </script>
 
-<dialog bind:this={dialog} on:close>
+<dialog id="dialog">
   <slot />
 </dialog>
-
-<!-- <button on:click={() => dialog.showModal()}>OPen</button>
-<button on:click={() => console.log("test")}>test</button>
-<Dialog bind:dialog>This is some content</Dialog> -->
