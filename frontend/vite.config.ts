@@ -16,6 +16,7 @@ export default defineConfig({
         short_name: "Oolong",
         description: "Opinionated organisation tool.",
         theme_color: "#5c7f67",
+        orientation: "portrait",
         icons: [
           {
             src: "icons/logo/web/favicon.ico",
