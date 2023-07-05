@@ -13,18 +13,36 @@ export default defineConfig({
       registerType: "autoUpdate",
       manifest: {
         name: "Oolong",
-        description: "Opinionated organisation tool",
+        short_name: "Oolong",
+        description: "Opinionated organisation tool.",
         theme_color: "#5c7f67",
         icons: [
           {
-            src: "icons/logo/web/icon-192-maskable.png",
-            sizes: "192x192",
+            src: "icons/logo/web/favicon.ico",
+            type: "image/x-icon",
+            sizes: "16x16 32x32",
+          },
+          {
+            src: "icons/logo/web/icon-192.png",
             type: "image/png",
+            sizes: "192x192",
+          },
+          {
+            src: "icons/logo/web/icon-512.png",
+            type: "image/png",
+            sizes: "512x512",
+          },
+          {
+            src: "icons/logo/web/icon-192-maskable.png",
+            type: "image/png",
+            sizes: "192x192",
+            purpose: "maskable",
           },
           {
             src: "icons/logo/web/icon-512-maskable.png",
-            sizes: "512x512",
             type: "image/png",
+            sizes: "512x512",
+            purpose: "maskable",
           },
         ],
       },
