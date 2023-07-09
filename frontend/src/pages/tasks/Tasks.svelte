@@ -1,6 +1,7 @@
 <script lang="ts">
   import {
     pushWrapper as push,
+    pushWrapper,
     replaceWrapper,
   } from "../../lib/navigatorWrapper";
   import { overrideItemIdKeyNameBeforeInitialisingDndZones } from "svelte-dnd-action";
@@ -13,18 +14,20 @@
   } from "../../lib/tasks";
 
   // Types
-  import type { Task } from "../../types/task.type";
+  import type { Task } from "../../lib/actionListItem";
 
   // Components
   import TodayView from "./TodayView.svelte";
   import TaskList from "../../components/tasks/TaskList.svelte";
   import UpcomingView from "./UpcomingView.svelte";
-  import AppBar from "../../components/AppBar.svelte";
-  import AppBarItem from "../../components/AppBarItem.svelte";
+  import AppBar from "../../components/TopBar.svelte";
+  import AppBarItem from "../../components/BarItem.svelte";
   import TopBarTasksScopeSelector from "../../components/tasks/TopBarTasksScopeSelector.svelte";
+  import DropdownMenu from "../../components/DropdownMenu.svelte";
 
   // Props
   export let params: { scope: string };
+  export let menuItems;
 
   // Displayed tasks are determined by the scope, on changes to scope, the task
   // list is updated
@@ -79,12 +82,10 @@
     <AppBarItem><TopBarTasksScopeSelector /></AppBarItem>
   </div>
   <div slot="center" id="title">
-    <AppBarItem><b>Oolong Tasks</b></AppBarItem>
+    <AppBarItem><b>Oolong - Tasks</b></AppBarItem>
   </div>
   <div slot="right">
-    <AppBarItem
-      ><button class="btn" on:click={logout}>Logout</button></AppBarItem
-    >
+    <DropdownMenu {menuItems} />
   </div>
 </AppBar>
 
@@ -124,7 +125,7 @@
 <button
   id="newTaskButton"
   on:click={() => {
-    replaceWrapper("/tasks/editor/-1");
+    pushWrapper("/tasks/editor/-1");
   }}
 >
   +
@@ -138,6 +139,8 @@
     right: 0;
     overflow-y: auto;
     height: 100%;
+    max-width: 800px;
+    margin: auto;
   }
 
   /* New task btn fixed horizontally centred at the bottom of the page */

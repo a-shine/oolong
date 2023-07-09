@@ -3,7 +3,7 @@
   import { getToday } from "../../lib/date.utils";
 
   // Types
-  import type { Task } from "../../types/task.type";
+  import type { Task } from "../../lib/actionListItem";
 
   // Components
   import TaskList from "../../components/tasks/TaskList.svelte";

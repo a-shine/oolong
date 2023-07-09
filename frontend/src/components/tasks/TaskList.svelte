@@ -4,7 +4,7 @@
   import { flip } from "svelte/animate";
 
   // Types
-  import type { Task } from "../../types/task.type";
+  import type { Task } from "../../lib/actionListItem";
 
   //  Components
   import TaskItem from "./TaskItem.svelte";

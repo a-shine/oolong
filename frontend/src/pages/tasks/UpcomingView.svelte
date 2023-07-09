@@ -1,6 +1,6 @@
 <script lang="ts">
   import TaskList from "../../components/tasks/TaskList.svelte";
-  import type { Task } from "../../types/task.type";
+  import type { Task } from "../../lib/actionListItem";
 
   // Create dispatch function
   import { createEventDispatcher } from "svelte";

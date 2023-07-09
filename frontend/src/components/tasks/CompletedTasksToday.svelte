@@ -2,7 +2,7 @@
   import { createEventDispatcher } from "svelte";
 
   // Types
-  import type { Task } from "../../types/task.type";
+  import type { Task } from "../../lib/actionListItem";
 
   // Components
   import TaskList from "./TaskList.svelte";

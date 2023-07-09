@@ -1,14 +1,7 @@
 <script lang="ts">
-  import { onMount } from "svelte";
-
-  let dialog;
-
-  onMount(() => {
-    dialog = document.getElementById("dialog");
-    dialog.showModal();
-  });
+  export let dialog;
 </script>
 
-<dialog id="dialog">
+<dialog bind:this={dialog} on:close>
   <slot />
 </dialog>

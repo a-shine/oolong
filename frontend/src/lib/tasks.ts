@@ -72,3 +72,45 @@ export async function getCompletedTasks() {
     sort: [{ completedAt: "desc" }],
   });
 }
+
+/**
+ * Get all tasks from the local (IndexedDB) database.
+ * @returns {Promise} A promise that resolves to an array of tasks
+ */
+export async function getAllTasks() {
+  return localTasksDb.getAll();
+}
+
+/**
+ * Get a task by its ID from the local (IndexedDB) database.
+ * @param {string} id The ID of the task to get
+ * @returns {Promise} A promise that resolves to a task
+ * @throws {Error} If no task with the given ID exists
+ */
+export async function getTaskById(id: string) {
+  return localTasksDb.get(id);
+}
+
+/**
+ * Add a task to the local (IndexedDB) database.
+ * @param {object} task The task to add
+ * @returns {Promise} A promise that resolves to the task that was added
+ * @throws {Error} If the task could not be added
+ * @throws {Error} If the task is missing a description
+ */
+export async function addOrUpdateTask(task: any) {
+  if (!task.description) {
+    throw new Error("Task must have a description");
+  }
+  return localTasksDb.put(task);
+}
+
+/**
+ * Delete a task from the local (IndexedDB) database.
+ * @param {object} task The task to delete
+ * @returns {Promise} A promise that resolves to the task that was deleted
+ * @throws {Error} If the task could not be deleted
+ */
+export async function deleteTask(task: any) {
+  return localTasksDb.remove(task);
+}

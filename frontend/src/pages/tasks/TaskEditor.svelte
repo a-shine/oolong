@@ -1,15 +1,13 @@
 <script lang="ts">
-  import { slide } from "svelte/transition";
-  import { v4 as uuidv4 } from "uuid";
-  import { localTasksDb } from "../../lib/couch";
-  import { fly } from "svelte/transition";
+  import { onDestroy, onMount } from "svelte";
+  import { slide, fly } from "svelte/transition";
 
-  // Types
-  import type { Task } from "../../types/task.type";
+  import { Task } from "../../lib/actionListItem";
+  import { getTaskById, addOrUpdateTask, deleteTask } from "../../lib/tasks";
 
   // Components
-  import Modal from "../../components/Modal.svelte";
-  import { replaceWrapper } from "../../lib/navigatorWrapper";
+  import Dialog from "../../components/Dialog.svelte";
+  import { popWrapper } from "../../lib/navigatorWrapper";
 
   // Props
   export let params: { taskId: string };
@@ -29,54 +27,29 @@
   let cachedNotes: string;
   let cachedDueOn: string;
 
-  let safeCloseModal = false;
-  let safeDeleteModal = false;
+  let safeCloseDialog;
+  let safeDeleteDialog;
+  let addDateDialog = false;
 
-  async function getTask() {
+  /**
+   * Get or create the Task object and assign it to the component task variable
+   */
+  async function getOrCreateTask() {
     if (params.taskId == "-1") {
       // If no task is passed, it defaults to null
-      task = {
-        _id: uuidv4(),
-        _rev: undefined,
-        description: undefined,
-        notes: undefined,
-        createdAt: undefined,
-        updatedAt: undefined,
-        dueOn: undefined,
-        projectTag: undefined,
-        lane: undefined,
-        laneOrder: undefined,
-        listOrder: 0,
-        dueAt: undefined,
-        recurrence: undefined,
-        completedAt: undefined,
-      };
+      task = new Task();
     } else {
-      task = await localTasksDb.get(params.taskId);
-    }
-
-    // If task is null, we want to create a new task
-    if (task.createdAt) {
-      // If task is not a new task, we want to set the appropriate values
-      if (task.dueOn !== "-1") {
-        dueOnValue = new Date(task.dueOn).toISOString().split("T")[0];
-      }
-      descriptionValue = task.description;
-      notesValue = task.notes;
-
-      cachedDescription = task.description;
-      cachedDueOn = task.dueOn;
-      cachedNotes = task.notes;
+      task = await getTaskById(params.taskId);
     }
   }
 
-  function setTask() {
-    // Set task description and dueOn date
+  const updateTask = () => {
     task.description = descriptionValue.trim();
     task.notes = notesValue;
 
     // If we've specified a date, then assign the date to the task
-    // Else, undefined tasks have a dueOn of -1 so they are still present in the Index
+    // Else, undefined tasks have a dueOn of -1 so they are still present in the
+    // IndexedDB database
     if (dueOnValue !== undefined) {
       task.dueOn = dueOnValue;
     } else {
@@ -84,78 +57,73 @@
     }
 
     task.updatedAt = new Date().getTime();
-    task.completedAt = null;
-  }
 
-  function createNewTask() {
-    setTask();
-
-    // Set the createdAt and updatedAt dates
-    task.createdAt = new Date().getTime();
-
-    localTasksDb.put(task);
-    replaceWrapper("/tasks");
-  }
-
-  const updateTask = () => {
-    setTask();
-    localTasksDb.put(task);
-    replaceWrapper("/tasks");
+    addOrUpdateTask(task);
+    popWrapper();
   };
-
-  const deleteTask = () => {
-    localTasksDb.remove(task);
-    replaceWrapper("/tasks");
-  };
-
-  let addDateDialog = false;
 
   function safeClose() {
-    if (task.description === cachedDescription && task.dueOn === cachedDueOn) {
-      replaceWrapper("/tasks");
+    if (
+      task.description === cachedDescription ||
+      task.dueOn === cachedDueOn ||
+      task.notes === cachedNotes
+    ) {
+      popWrapper();
     } else {
-      safeCloseModal = true;
+      safeCloseDialog.showModal();
     }
   }
+
+  onMount(async () => {
+    // Get or create the task object
+    await getOrCreateTask();
+
+    // Set task value in the editor
+    descriptionValue = task.description;
+    notesValue = task.notes;
+    if (task.dueOn !== "-1") {
+      dueOnValue = new Date(task.dueOn).toISOString().split("T")[0];
+    }
+
+    cachedDescription = task.description;
+    cachedNotes = task.notes;
+    cachedDueOn = task.dueOn;
+  });
 </script>
 
-{#if safeCloseModal}
-  <Modal>
-    Are you sure you want to exit?
-    <button
-      on:click={() => {
-        safeCloseModal = false;
-      }}>No</button
-    >
-    <button
-      on:click={() => {
-        safeCloseModal = false;
-        close();
-      }}>Yes</button
-    >
-  </Modal>
-{/if}
+<Dialog bind:dialog={safeCloseDialog} on:close={() => console.log("closed")}>
+  <p>Are you sure you want to exit?</p>
+  <button
+    on:click={() => {
+      safeCloseDialog.close();
+    }}>No</button
+  >
+  <button
+    on:click={() => {
+      safeCloseDialog.close();
+      popWrapper();
+    }}>Yes</button
+  >
+</Dialog>
 
-{#if safeDeleteModal}
-  <Modal>
-    Are you sure you want to delete?
-    <button
-      on:click={() => {
-        safeDeleteModal = false;
-      }}>No</button
-    >
-    <button
-      on:click={() => {
-        safeDeleteModal = false;
-        deleteTask();
-        close();
-      }}>Yes</button
-    >
-  </Modal>
-{/if}
+<Dialog bind:dialog={safeDeleteDialog} on:close={() => console.log("closed")}>
+  Are you sure you want to delete?
+  <button
+    on:click={() => {
+      safeDeleteDialog.close();
+    }}>No</button
+  >
+  <button
+    on:click={() => {
+      safeDeleteDialog.close();
+      deleteTask(task);
+      popWrapper();
+    }}>Yes</button
+  >
+</Dialog>
 
 <div id="container" class="center" in:fly={{ y: 200, duration: 250 }}>
-  {#await getTask() then}
+  {#await getOrCreateTask() then}
     <div id="taskForm">
       <input
         type="text"
@@ -217,15 +185,13 @@
         {/if}
       </div>
       <div id="separator" />
-      {#if task.createdAt}
-        <button
-          type="button"
-          on:click={() => (safeDeleteModal = !safeDeleteModal)}>Delete</button
+      {#if params.taskId !== "-1"}
+        <button type="button" on:click={() => safeDeleteDialog.showModal()}
+          >Delete</button
         >
         <button type="button" on:click={updateTask}>Save</button>
       {:else}
-        <button type="button" id="task-add" on:click={createNewTask}>Add</button
-        >
+        <button type="button" id="task-add" on:click={updateTask}>Add</button>
       {/if}
       <button on:click={safeClose}>Cancel</button>
     </div>
@@ -236,6 +202,7 @@
   /* Container adding padding on the sides  */
   #container {
     padding: 0 1rem;
+    /* position: fixed; */
   }
 
   .active {
