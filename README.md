@@ -1,16 +1,43 @@
 # Oolong
 
+With Oolong Tasks the idea is to enable a simple tasks workflow. What matters to
+getting through tasks is not necessarily when they are due but when you want to
+find the time to complete them. So the idea is to scope visibility of tasks to
+solely the tasks to be completed today (with a reminder to complete overdue
+tasks as well). This way, you can focus on what you need to do today and not be
+overwhelmed by what is due in the future or has not been assigned a date yet.
+
+For psychological safety you can add tasks unassigned to a day, and they will
+be visible to remind that you intend to complete them. You can set tasks to be
+completed in the future, in the comfort that they will appear on the day you
+have allocated to them.
+
+If an action needs to be taken on a particular day and takes a
+particular amount of time, it should not be a task but an event in your
+calendar.
+
+## Features
+
+- [x] Create, edit and delete tasks both offline and online
+- [x] Plan for tasks to be completed on specified days (not when the task is due
+  but when you want to complete it)
+- [x] Today task view to focus on tasks that you want to complete today
+- [x] Completed task view to see what tasks have been completed historically
+- [x] Ability to re-order tasks on the day to reflect priorities
+- [x] Offline-first PWA cross-platform support
+
 ## Getting started
 
-Oolong is a simple task manager with one interface that works on all platform by
-using PWA technology. The stack is fully open source and you can self-host the
-webapp nginc server and CouchDB database.
+Oolong works on all platforms by using Progressive Web App (PWA) technology. The
+stack (Svelte + PouchDB + CouchDB) is fully open source, and can be and can be
+self-hosted.
 
 On a server simply run the following commands:
 
 ```bash
 docker compose -f docker-compose.yml - docker-compose.self-host.yml up -d
 ```
+
 Make sure to set the `COUCHDB_USER` and `COUCHDB_PASSWORD` environment variables
 and the `COUCHDB_HOST` and `COUCHDB_PORT` environment variables in the
 `docker-compose.self-host.yml` file.
@@ -24,7 +51,7 @@ database by running the user-creation script:
 ```
 
 If you would like a self-hosted version with SSL support, you can go check out
-the [ssl couchdb]()
+the [ssl couchdb](https://github.com/a-shine/couchdb-compose-ssl)
 
 ## About PWAs
 
