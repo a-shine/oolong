@@ -36,7 +36,7 @@
     align-items: center;
 
     /* bottom thin black border */
-    border-bottom: 1px solid black;
+    /* border-bottom: 1px solid black; */
   }
 
   #left {
