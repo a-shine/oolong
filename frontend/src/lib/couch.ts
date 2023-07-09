@@ -10,7 +10,6 @@ import { replaceWrapper } from "./navigatorWrapper";
 PouchDb.plugin(PouchDBFind);
 PouchDb.plugin(PouchDbAuth);
 
-let remoteCouch;
 export let localTasksDb;
 
 async function isSeshAuth(): Promise<boolean> {
@@ -58,7 +57,7 @@ async function listDatabases(): Promise<string[]> {
   });
 }
 
-// check if pouuchdb databases exist
+// check if pouchdb databases exist
 async function pouchUserDatabaseExists() {
   // any database starting with _pouch_ followed by any characters
   const dbs = await listDatabases();
@@ -128,5 +127,5 @@ export async function logout() {
   localStorage.removeItem("_pouch_check_localstorage");
   // Delete the pouchdb database
   localTasksDb.destroy();
-  replaceWrapper("/welcome");
+  replaceWrapper("/");
 }

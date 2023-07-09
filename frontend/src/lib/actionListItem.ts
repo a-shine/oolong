@@ -31,15 +31,6 @@ export class Task extends ActionListItem {
   }
 }
 
-export class FilmToWatch extends ActionListItem {
-  public notes: string;
-
-  constructor() {
-    super();
-    this.notes = "";
-  }
-}
-
 export class ShoppingItem extends ActionListItem {
   constructor() {
     super();

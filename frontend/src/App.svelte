@@ -3,8 +3,8 @@
 
   import Router, { replace, location } from "svelte-spa-router";
   import wrap from "svelte-spa-router/wrap";
-
-  // TODO: Big code refactor, clean and debug
+  import type { MenuItem } from "./interfaces/menuItem";
+  import { logout } from "./lib/couch";
 
   // This was tricky to get working!
   // - https://stackoverflow.com/questions/75808603/vitesveltepouchdb-uncaught-typeerror-class-extends-value-object-object-is
@@ -108,6 +108,20 @@
       onlineStatus = false;
     }
   });
+
+  const menuItems: MenuItem[] = [
+    {
+      name: "Tasks",
+      link: "/tasks",
+    },
+    {
+      name: "Logout",
+      link: "",
+      onClick: () => {
+        logout();
+      },
+    },
+  ];
 </script>
 
 {#await initApp()}
@@ -126,6 +140,7 @@
       }),
       "/tasks/:scope": wrap({
         component: Tasks,
+        props: { menuItems },
         conditions: [setup],
       }),
       "/tasks/editor/:taskId": wrap({
