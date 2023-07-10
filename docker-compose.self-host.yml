@@ -7,7 +7,7 @@ services:
       COUCHDB_USER: <YOUR_ADMIN_USER>
       COUCHDB_PASSWORD: <YOUR_ADMIN_USER_PWD>
   oolong:
-    image: oolongt:latest
+    image: ashinebourne/oolong_front:latest
     ports:
       - 80:80
     environment:
