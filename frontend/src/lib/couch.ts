@@ -2,6 +2,7 @@ import PouchDb from "pouchdb-browser";
 import PouchDBFind from "pouchdb-find";
 import PouchDbAuth from "pouchdb-authentication";
 import { replaceWrapper } from "./navigatorWrapper";
+import { triggerReload } from "./reloadStore";
 
 // Unable to get worker-pouch to work. Lack of maintenance, does not support
 // pouch-find, unable to add to service worker generated file.
@@ -119,6 +120,19 @@ export async function initUserDb() {
     retry: true,
     skip_setup: true,
   });
+
+  localTasksDb
+    .changes({
+      since: "now",
+      live: true,
+      include_docs: true,
+    })
+    .on("change", (change) => {
+      console.log("change", change);
+      // trigger a full redraw of the current view
+      // svelte store
+      triggerReload();
+    });
 }
 
 export async function logout() {

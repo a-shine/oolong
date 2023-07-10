@@ -24,6 +24,7 @@
   import AppBarItem from "../../components/BarItem.svelte";
   import TopBarTasksScopeSelector from "../../components/tasks/TopBarTasksScopeSelector.svelte";
   import DropdownMenu from "../../components/DropdownMenu.svelte";
+  import { reloadStore } from "../../lib/reloadStore";
 
   // Props
   export let params: { scope: string };
@@ -64,17 +65,6 @@
   function updateOrder(tasks: Task[]) {
     localTasksDb.bulkDocs(tasks);
   }
-
-  // Listen to changes on the local database
-  localTasksDb
-    .changes({
-      since: "now",
-      live: true,
-      include_docs: true,
-    })
-    .on("change", (change) => {
-      // Redraw the UI
-    });
 </script>
 
 <AppBar>
@@ -89,38 +79,40 @@
   </div>
 </AppBar>
 
-<div id="container">
-  <div id="tasks" class="center">
-    {#if params.scope == "today"}
-      <TodayView />
-    {:else if params.scope == "upcoming"}
-      {#await getTasks(params.scope) then}
-        <UpcomingView
-          tasks={displayedTasks}
-          on:toggleComplete={(e) => toggleComplete(e.detail)}
-        />
-      {/await}
-    {:else if params.scope == "unassigned"}
-      {#await getTasks(params.scope) then}
-        <TaskList
-          enableOrdering={true}
-          tasks={displayedTasks}
-          on:toggleComplete={(e) => toggleComplete(e.detail)}
-          on:updateOrder={(e) => updateOrder(e.detail)}
-        />
-      {/await}
-    {:else}
-      {#await getTasks(params.scope) then}
-        <TaskList
-          enableOrdering={false}
-          tasks={displayedTasks}
-          on:toggleComplete={(e) => toggleComplete(e.detail)}
-          on:updateOrder={(e) => updateOrder(e.detail)}
-        />
-      {/await}
-    {/if}
+{#key $reloadStore}
+  <div id="container">
+    <div id="tasks" class="center">
+      {#if params.scope == "today"}
+        <TodayView />
+      {:else if params.scope == "upcoming"}
+        {#await getTasks(params.scope) then}
+          <UpcomingView
+            tasks={displayedTasks}
+            on:toggleComplete={(e) => toggleComplete(e.detail)}
+          />
+        {/await}
+      {:else if params.scope == "unassigned"}
+        {#await getTasks(params.scope) then}
+          <TaskList
+            enableOrdering={true}
+            tasks={displayedTasks}
+            on:toggleComplete={(e) => toggleComplete(e.detail)}
+            on:updateOrder={(e) => updateOrder(e.detail)}
+          />
+        {/await}
+      {:else}
+        {#await getTasks(params.scope) then}
+          <TaskList
+            enableOrdering={false}
+            tasks={displayedTasks}
+            on:toggleComplete={(e) => toggleComplete(e.detail)}
+            on:updateOrder={(e) => updateOrder(e.detail)}
+          />
+        {/await}
+      {/if}
+    </div>
   </div>
-</div>
+{/key}
 
 <button
   id="newTaskButton"
