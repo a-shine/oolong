@@ -22,7 +22,7 @@ RUN npm run build
 FROM nginx:alpine as production-stage
 
 # Copy the built app from the previous stage
-COPY --from=build-stage /app/public /usr/share/nginx/html
+COPY --from=build-stage /app/dist /usr/share/nginx/html
 
 # Remove default NGINX configurations
 RUN rm /etc/nginx/conf.d/default.conf
