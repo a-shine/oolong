@@ -6,6 +6,21 @@ import { crx } from "@crxjs/vite-plugin";
 // https://vitejs.dev/config/
 export default defineConfig({
   define: { global: "window" },
+  // proxy /couch to backend for local development
+  server: {
+    proxy: {
+      "/couch": {
+        target: "http://localhost:5984",
+        // changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/couch/, ""),
+      },
+      "/_session": {
+        target: "http://localhost:5984/_session",
+        // changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/_session/, ""),
+      },
+    },
+  },
   plugins: [
     svelte(),
     // crx({ manifest }),

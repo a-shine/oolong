@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
-  import Router, { replace, location } from "svelte-spa-router";
+  import Router, { replace } from "svelte-spa-router";
   import wrap from "svelte-spa-router/wrap";
   import type { MenuItem } from "./interfaces/menuItem";
   import { logout } from "./lib/couch";

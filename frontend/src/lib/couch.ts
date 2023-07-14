@@ -47,7 +47,8 @@ export async function getActiveUserDatabaseName(): Promise<string> {
   return getUserDatabaseName(activeUser);
 }
 
-export const authDb = new PouchDb(import.meta.env.VITE_COUCH_URL, {
+// BUG: Find way to include/pre-pend full base url to the new PouchDb() constructor as it can't build dynamic urls
+export const authDb = new PouchDb(window.location.origin + "/couch/", {
   skip_setup: true,
 });
 
@@ -115,11 +116,14 @@ export async function initUserDb() {
   });
 
   // Sync between the local and remote user database
-  localTasksDb.sync(import.meta.env.VITE_COUCH_URL + userDbName + "-tasks", {
-    live: true,
-    retry: true,
-    skip_setup: true,
-  });
+  localTasksDb.sync(
+    window.location.origin + "/couch/" + userDbName + "-tasks",
+    {
+      live: true,
+      retry: true,
+      skip_setup: true,
+    }
+  );
 
   localTasksDb
     .changes({
