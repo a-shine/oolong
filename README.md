@@ -32,26 +32,7 @@ Oolong works on all platforms by using Progressive Web App (PWA) technology. The
 stack (Svelte + PouchDB + CouchDB) is fully open source, and can be and can be
 self-hosted.
 
-On a server simply run the following commands:
 
-```bash
-docker compose -f docker-compose.yml - docker-compose.self-host.yml up -d
-```
-
-Make sure to set the `COUCHDB_USER` and `COUCHDB_PASSWORD` environment variables
-and the `COUCHDB_HOST` and `COUCHDB_PORT` environment variables in the
-`docker-compose.self-host.yml` file.
-
-Once the containers are up and running, setup your user account for
-authenticating access to the database from the app and setting up the necessary
-database by running the user-creation script:
-
-```bash
-./user-creation.sh
-```
-
-If you would like a self-hosted version with SSL support, you can go check out
-the [ssl couchdb](https://github.com/a-shine/couchdb-compose-ssl)
 
 ## About PWAs
 

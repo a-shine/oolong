@@ -1,4 +1,4 @@
-name: Upload image to Docker Hub
+name: Build and push to Docker Hub
 on:
   # Runs on pushes targeting the default branch
   push:

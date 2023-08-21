@@ -1,8 +1,10 @@
-# NodeJS
 node_modules/
+
+# Svelte compiler build output
+dist/
 
 # Artifacts created by PWA vite plugin 
 dev-dist/
 
-# Svelte compiler build output
-dist/
+# Jetbrain IDE configuration files
+.idea/
