@@ -2,9 +2,10 @@
   import { popWrapper as pop } from "../lib/navigatorWrapper";
   import { backButton } from "../lib/navigatorWrapper";
   import AppBarItem from "./BarItem.svelte";
-  import DropdownMenu from "./DropdownMenu.svelte";
 
   let displayBackButton: boolean = false;
+  export let title: string;
+  // export let actions;
 
   backButton.subscribe((n) => {
     displayBackButton = n > 0;
@@ -14,33 +15,29 @@
 <div id="bar">
   <div id="left">
     {#if displayBackButton}
-      <AppBarItem
-        ><button
+        <button
           on:click={() => pop()}
-          style="font-size : 20px; font-weight: 999;">&larr;</button
-        ></AppBarItem
-      >
+          class="app-bar-item"
+        >&larr;</button>
     {/if}
-    <slot name="left" />
+    <span style="font-weight: bold; font-size: 1.5rem;">{title}</span>
   </div>
-  <div id="center"><slot name="center" /></div>
-  <div id="right"><slot name="right" /></div>
+  <div id="right"><slot/></div>
 </div>
 
 <style>
   #bar {
     width: 100%;
-    height: 60px;
+    height: 58px;
     display: flex;
     flex-direction: row;
     align-items: center;
-
-    /* bottom thin black border */
-    /* border-bottom: 1px solid black; */
+    background-color: var(--primary-colour-focus);
   }
 
   #left {
     margin-right: auto;
+      padding-left: 0.5rem;
   }
 
   /* push to the right of the container */
@@ -53,5 +50,15 @@
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
+  }
+
+  .app-bar-item {
+    /*remove default styling*/
+    background: none;
+    border: none;
+    color: var(--text-colour);
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
   }
 </style>

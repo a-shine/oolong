@@ -10,14 +10,14 @@ export default defineConfig({
   server: {
     proxy: {
       "/couch": {
-        target: "http://localhost:5984",
-        // changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/couch/, ""),
+        target: "https://littleoolong.app",
+        changeOrigin: true,
+        // rewrite: (path) => path.replace(/^\/couch/, ""),
       },
       "/_session": {
-        target: "http://localhost:5984/_session",
-        // changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/_session/, ""),
+        target: "https://littleoolong.app",
+        changeOrigin: true,
+        // rewrite: (path) => path.replace(/^\/_session/, ""),
       },
     },
   },

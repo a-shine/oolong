@@ -1,159 +1,179 @@
 <script lang="ts">
-  import {
-    pushWrapper as push,
-    pushWrapper,
-    replaceWrapper,
-  } from "../../lib/navigatorWrapper";
-  import { overrideItemIdKeyNameBeforeInitialisingDndZones } from "svelte-dnd-action";
-  overrideItemIdKeyNameBeforeInitialisingDndZones("_id"); // https://github.com/isaacHagoel/svelte-dnd-action#overriding-the-item-id-key-name
-  import { localTasksDb, logout } from "../../lib/couch";
-  import {
-    getUnassignedTasks,
-    getUpcomingTasks,
-    getCompletedTasks,
-  } from "../../lib/tasks";
+    import {pushWrapper, replaceWrapper,} from "../../lib/navigatorWrapper";
+    import {overrideItemIdKeyNameBeforeInitialisingDndZones} from "svelte-dnd-action";
+    import {localTasksDb, logout} from "../../lib/couch";
+    import {getCompletedTasks, getUnassignedTasks, getUpcomingTasks,} from "../../lib/tasks";
 
-  // Types
-  import type { Task } from "../../lib/actionListItem";
+    // Types
+    import type {Task} from "../../lib/actionListItem";
 
-  // Components
-  import TodayView from "./TodayView.svelte";
-  import TaskList from "../../components/tasks/TaskList.svelte";
-  import UpcomingView from "./UpcomingView.svelte";
-  import AppBar from "../../components/TopBar.svelte";
-  import AppBarItem from "../../components/BarItem.svelte";
-  import TopBarTasksScopeSelector from "../../components/tasks/TopBarTasksScopeSelector.svelte";
-  import DropdownMenu from "../../components/DropdownMenu.svelte";
-  import { reloadStore } from "../../lib/reloadStore";
+    // Components
+    import TodayView from "./TodayView.svelte";
+    import TaskList from "../../components/tasks/TaskList.svelte";
+    import UpcomingView from "./UpcomingView.svelte";
+    import TopBarTasksScopeSelector from "../../components/tasks/TopBarTasksScopeSelector.svelte";
+    import Scafold from "../../components/Scafold.svelte";
+    import Dialog from "../../components/Dialog.svelte";
+    import {reloadStore, triggerReload} from "../../lib/reloadStore";
 
-  // Props
-  export let params: { scope: string };
-  export let menuItems;
+    overrideItemIdKeyNameBeforeInitialisingDndZones("_id"); // https://github.com/isaacHagoel/svelte-dnd-action#overriding-the-item-id-key-name
 
-  // Displayed tasks are determined by the scope, on changes to scope, the task
-  // list is updated
-  let displayedTasks: Task[];
+    // Props
+    export let params: { scope: string };
 
-  /**
-   * @returns a promise of the tasks list based on the component scope setting
-   */
-  async function getTasks(scope: string) {
-    switch (scope) {
-      case "unassigned":
-        displayedTasks = (await getUnassignedTasks()).docs;
-        break;
-      case "upcoming":
-        displayedTasks = (await getUpcomingTasks()).docs;
-        break;
-      case "completed":
-        displayedTasks = (await getCompletedTasks()).docs;
-        break;
-      default:
-        console.log("Incorrect task retrieval scope");
-        break;
+    // Displayed tasks are determined by the scope, on changes to scope, the task
+    // list is updated
+    // let displayedTasks: Task[];
+
+    let confirmLogoutDialog: HTMLDialogElement;
+
+    /**
+     * @returns a promise of the tasks list based on the component scope setting
+     */
+    async function getTasks(scope: string): Promise<Task[]> {
+        switch (scope) {
+            case "unassigned":
+                return (await getUnassignedTasks()).docs;
+            case "upcoming":
+                return (await getUpcomingTasks()).docs;
+            case "completed":
+                return (await getCompletedTasks()).docs;
+            default:
+                console.log("Incorrect task retrieval scope");
+                return [];
+        }
     }
-  }
 
-  // Toggle between complete and incomplete
-  function toggleComplete(task: Task) {
-    localTasksDb.put({
-      ...task,
-    });
-    displayedTasks = displayedTasks.filter((t) => t._id !== task._id);
-  }
+    // Toggle between complete and incomplete
+    function complete(task: Task) {
+        localTasksDb.put({
+            ...task,
+        });
+        triggerReload();
+    }
 
-  function updateOrder(tasks: Task[]) {
-    localTasksDb.bulkDocs(tasks);
-  }
+    function updateOrder(tasks: Task[]) {
+        localTasksDb.bulkDocs(tasks);
+    }
+
+    //   menu item object has an action function and a label
+    const menuItems = [
+        {
+            label: "Logout",
+            action: () => {
+                confirmLogoutDialog.showModal();
+            },
+        },
+    ];
 </script>
 
-<AppBar>
-  <div slot="left">
-    <AppBarItem><TopBarTasksScopeSelector /></AppBarItem>
-  </div>
-  <div slot="center" id="title">
-    <AppBarItem><b>Oolong - Tasks</b></AppBarItem>
-  </div>
-  <div slot="right">
-    <DropdownMenu {menuItems} />
-  </div>
-</AppBar>
+<Dialog
+        actions={[
+            {
+                label: "Cancel",
+                handler: () => {
+                    confirmLogoutDialog.close();
+                },
+            },
+            {
+                label: "Logout",
+                handler: () => {
+                    logout();
+                    replaceWrapper("/welcome");
+                },
+            },
+        ]}
+        bind:dialog={confirmLogoutDialog}
+        content="Are you sure you want to logout? You will require an internet connection to login again."
+        on:close={() => console.log('closed')}
+        title="Confirm Logout"
+/>
 
-{#key $reloadStore}
-  <div id="container">
-    <div id="tasks" class="center">
-      {#if params.scope == "today"}
-        <TodayView />
-      {:else if params.scope == "upcoming"}
-        {#await getTasks(params.scope) then}
-          <UpcomingView
-            tasks={displayedTasks}
-            on:toggleComplete={(e) => toggleComplete(e.detail)}
-          />
-        {/await}
-      {:else if params.scope == "unassigned"}
-        {#await getTasks(params.scope) then}
-          <TaskList
-            enableOrdering={true}
-            tasks={displayedTasks}
-            on:toggleComplete={(e) => toggleComplete(e.detail)}
-            on:updateOrder={(e) => updateOrder(e.detail)}
-          />
-        {/await}
-      {:else}
-        {#await getTasks(params.scope) then}
-          <TaskList
-            enableOrdering={false}
-            tasks={displayedTasks}
-            on:toggleComplete={(e) => toggleComplete(e.detail)}
-            on:updateOrder={(e) => updateOrder(e.detail)}
-          />
-        {/await}
-      {/if}
-    </div>
-  </div>
-{/key}
-
-<button
-  id="newTaskButton"
-  on:click={() => {
-    pushWrapper("/tasks/editor/-1");
-  }}
+<Scafold
+        actionItems="{menuItems}"
+        title="Tasks"
 >
-  +
-</button>
+    <div id="container">
+        <div class="center" id="tasks">
+            <TopBarTasksScopeSelector/>
+            {#key $reloadStore}
+                {#if params.scope === "today"}
+                    <TodayView/>
+                {:else if params.scope === "upcoming"}
+                    {#await getTasks(params.scope)}
+                        <p>Loading...</p>
+                    {:then tasks}
+                        <UpcomingView tasks={tasks} on:toggleComplete={(e) => complete(e.detail)}/>
+                    {:catch error}
+                        <p>{error.message}</p>
+                    {/await}
+                {:else if params.scope === "unassigned"}
+                    {#await getTasks(params.scope)}
+                        <p>Loading...</p>
+                    {:then tasks}
+                        <TaskList
+                                enableOrdering={true}
+                                {tasks}
+                                on:toggleComplete={(e) => complete(e.detail)}
+                                on:updateOrder={(e) => updateOrder(e.detail)}
+                        />
+                    {:catch error}
+                        <p>{error.message}</p>
+                    {/await}
+                {:else if params.scope === "completed"}
+                    {#await getTasks(params.scope)}
+                        <p>Loading...</p>
+                    {:then tasks}
+                        <TaskList
+                                {tasks}
+                                on:toggleComplete={(e) => complete(e.detail)}
+                        />
+                    {:catch error}
+                        <p>{error.message}</p>
+                    {/await}
+                {:else}
+                    <p>Invalid scope</p>
+                {/if}
+            {/key}
+        </div>
+    </div>
+
+
+    <button
+            id="newTaskButton"
+            on:click={() => {
+                    pushWrapper("/tasks/editor/-1");
+                }
+            }>
+        +
+    </button>
+</Scafold>
+
 
 <style>
-  #container {
-    position: fixed;
-    top: 50px;
-    left: 0;
-    right: 0;
-    overflow-y: auto;
-    height: 100%;
-    max-width: 800px;
-    margin: auto;
-  }
-
-  /* New task btn fixed horizontally centred at the bottom of the page */
-  #newTaskButton {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 65px;
-    height: 65px;
-    border-radius: 50%;
-    border: none;
-    font-size: 2rem;
-    font-weight: bold;
-    z-index: 100;
-  }
-
-  /* When wid is to small do not display #title */
-  @media (max-width: 500px) {
-    #title {
-      display: none;
+    #container {
+        position: fixed;
+        left: 0;
+        right: 0;
+        overflow-y: auto;
+        height: 100%;
+        max-width: 800px;
+        margin: auto;
+        padding: 0 0.5rem;
     }
-  }
+
+    /* New task btn fixed horizontally centred at the bottom of the page */
+    #newTaskButton {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 65px;
+        height: 65px;
+        border-radius: 50%;
+        border: none;
+        font-size: 2rem;
+        font-weight: bold;
+        z-index: 100;
+    }
 </style>

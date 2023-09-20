@@ -123,7 +123,7 @@
 </Dialog>
 
 <div id="container" class="center" in:fly={{ y: 200, duration: 250 }}>
-  {#await getOrCreateTask() then}
+  {#await getOrCreateTask()}
     <div id="taskForm">
       <input
         type="text"

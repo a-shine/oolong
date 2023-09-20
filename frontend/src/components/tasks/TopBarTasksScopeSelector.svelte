@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { push, replace, location } from "svelte-spa-router";
+  import { push, location } from "svelte-spa-router";
   import { get } from "svelte/store";
 
   function getCurrentScope() {

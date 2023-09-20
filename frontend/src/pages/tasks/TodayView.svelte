@@ -119,7 +119,6 @@
 
 {#if todayIncompleteTasks.length > 0}
   {#key todayIncompleteTasks}
-    <p>Today</p>
     <TaskList
       enableOrdering={true}
       tasks={todayIncompleteTasks}

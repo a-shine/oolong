@@ -70,8 +70,8 @@
     /* small text */
     font-size: 0.7rem;
 
-    margin-right: 2.5px;
-    padding: 1px 2.5px;
+    margin-right: 3px;
+    padding: 1px 3px;
 
     border-radius: 5px;
     background-color: var(--accent);

@@ -3,6 +3,7 @@
   import { authDb, getActiveUserDatabaseName, initUserDb } from "../lib/couch";
   import AppBar from "../components/TopBar.svelte";
   import AppBarItem from "../components/BarItem.svelte";
+  import Scafold from "../components/Scafold.svelte";
 
   let onlineStatus: boolean = navigator.onLine;
 
@@ -39,26 +40,30 @@
   }
 </script>
 
-<AppBar>
-  <div slot="center">
-    <AppBarItem><b>Login</b></AppBarItem>
-  </div>
-</AppBar>
+<Scafold title="Login">
+  {#if onlineStatus}
+    <div style="padding: 0.2rem;">
+      <form on:submit|preventDefault={login}>
+        <label for="email">Email</label>
+        <input id="email" type="email" bind:value={email} />
+        <label for="password">Password</label>
+        <input id="password" type="password" bind:value={password} />
+        <button type="submit" class="fl-btn">Login</button>
+        <p>{errorMsg}</p>
+      </form>
+    </div>
+  {:else}
+    <p>Please login in when you are next online.</p>
+  {/if}
+</Scafold>
 
-{#if onlineStatus}
-  <div style="padding: 0.2rem;">
-    <form on:submit|preventDefault={login}>
-      <label for="email">Email</label>
-      <input type="email" bind:value={email} />
-      <label for="password">Password</label>
-      <input type="password" bind:value={password} />
-      <button type="submit" class="fl-btn">Login</button>
-      <p>{errorMsg}</p>
-    </form>
-  </div>
-{:else}
-  <p>Please login in when you are next online.</p>
-{/if}
+<!--<AppBar>-->
+<!--  <div slot="center">-->
+<!--    <AppBarItem><b>Login</b></AppBarItem>-->
+<!--  </div>-->
+<!--</AppBar>-->
+
+
 
 <style>
   /* center form horizontally */

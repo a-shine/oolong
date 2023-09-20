@@ -23,7 +23,8 @@
   <p>
     <button
       on:click={() => (showCompleted = !showCompleted)}
-      class="borderless-button"
+      id="toggleCompletedTasks"
+      class="secondary-button"
     >
       {showCompleted ? "Hide" : "Show"} today's completed tasks</button
     >
@@ -37,3 +38,12 @@
     />
   {/if}
 {/if}
+
+<style>
+    #toggleCompletedTasks {
+    /*   center button */
+    display: block;
+    margin: 0 auto;
+
+    }
+</style>

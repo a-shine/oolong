@@ -1,0 +1,1 @@
+svelte component, which is a page component, meaning it corresponds to a specific url that we can visit in our browser

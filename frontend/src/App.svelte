@@ -23,6 +23,7 @@
 
   import { setup, notSetup, initUserDb } from "./lib/couch";
   import Welcome from "./pages/Welcome.svelte";
+  import DesignSystem from "./pages/DesignSystem.svelte";
 
   let onlineStatus: boolean;
 
@@ -155,7 +156,9 @@
         component: Welcome,
         // conditions: [notSetup],
       }),
-
+      "/design-system": wrap({
+        component: DesignSystem,
+      }),
       // Catch-all (must be the last)
       "*": NotFound,
     }}
