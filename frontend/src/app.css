@@ -64,7 +64,7 @@ button {
     color: white;
 }
 
-@media (pointer: fine) {
+@media(hover: hover) {
     button {
         /* Styles for pointing devices */
         cursor: pointer; /* pointer/hand icon */
