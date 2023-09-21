@@ -4,7 +4,7 @@
   import Router, { replace } from "svelte-spa-router";
   import wrap from "svelte-spa-router/wrap";
   import type { MenuItem } from "./interfaces/menuItem";
-  import {logout, workspaceDb} from "./lib/couch";
+  import {getFirstWorkspaceId, logout, workspaceDb} from "./lib/couch";
 
   // This was tricky to get working!
   // - https://stackoverflow.com/questions/75808603/vitesveltepouchdb-uncaught-typeerror-class-extends-value-object-object-is
@@ -64,13 +64,7 @@
   async function conditionsFailed(event) {
     // get personal workspace id
     // get the id of the default created workspace personal workspace
-    const result = await workspaceDb
-      .find({
-        selector: {
-          name: "Personal",
-        },
-      });
-    const personalWorkspaceId = result.docs[0]._id;
+    const personalWorkspaceId = await getFirstWorkspaceId();
     switch (event.detail.route) {
       case "/":
         replace("/tasks/" + personalWorkspaceId + "/today");
@@ -106,20 +100,8 @@
       console.log("PWA is not installed");
     }
 
-    // Check authentication
-
-    // Initialise databases
     initUserDb();
   }
-
-  onMount(async () => {
-    // Initialize onlineStatus
-    if (navigator.onLine) {
-      onlineStatus = true;
-    } else {
-      onlineStatus = false;
-    }
-  });
 </script>
 
 {#await initApp()}

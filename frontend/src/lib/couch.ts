@@ -2,8 +2,8 @@ import PouchDb from "pouchdb-browser";
 import PouchDBFind from "pouchdb-find";
 import PouchDbAuth from "pouchdb-authentication";
 import {replaceWrapper} from "./navigatorWrapper";
-import {triggerReload} from "./reloadStore";
 import {v4 as uuidv4} from "uuid";
+import {triggerReload} from "./reloadStore";
 
 // Unable to get worker-pouch to work. Lack of maintenance, does not support
 // pouch-find, unable to add to service worker generated file.
@@ -23,8 +23,6 @@ export class Workspace {
 
 export let taskDb;
 export let workspaceDb;
-
-const personalWorkspaceId: string = "personal";
 
 /**
  * @returns Promise<Workspace[]> of all workspaces in the user's workspace pouchdb
@@ -64,17 +62,15 @@ export async function deleteWorkspace(workspaceId: string): Promise<void> {
 /**
  * Create a new workspace in the user's workspace pouchdb
  * @param name
- * @returns Promise<Workspace> of the created workspace
+ * @returns Promise<string> of the created workspace
  * @constructor
  */
-export async function createWorkspace(name: string): Promise<Workspace> {
+export async function createWorkspace(name: string): Promise<string> {
     const workspace: Workspace = {
-        _id: uuidv4(),
-        name: name,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
+        _id: uuidv4(), name: name, createdAt: Date.now(), updatedAt: Date.now(),
     };
-    return await workspaceDb.put(workspace);
+    const result = await workspaceDb.put(workspace);
+    return result.id;
 }
 
 /**
@@ -95,9 +91,7 @@ async function isSessionAuth(): Promise<boolean> {
 function getUserDatabaseName(name, prefix = "userdb-") {
     const encoder = new TextEncoder();
     const buffy = encoder.encode(name);
-    const bytes = Array.from(buffy).map((byte) =>
-        byte.toString(16).padStart(2, "0")
-    );
+    const bytes = Array.from(buffy).map((byte) => byte.toString(16).padStart(2, "0"));
     return prefix + bytes.join("");
 }
 
@@ -143,12 +137,18 @@ export async function getUserMetaData() {
     //  admin credentials for extra user metadata
 }
 
+export async function getFirstWorkspaceId(): Promise<string> {
+    const result = await workspaceDb.allDocs({limit: 1});
+    return result.rows[0].id;
+}
+
 // function to create a user workspace database hosting a list of workspaces with ids that can be referenced by tasks
 export async function createUserWorkspaceDatabase() {
 
 }
 
 export async function initUserDb() {
+    console.log("Initializing user database");
     // Get DB name from storage
     let userDbName = localStorage.getItem("userDbName");
 
@@ -157,20 +157,14 @@ export async function initUserDb() {
         return;
     }
 
-    // personal workspace
-    // let personalWorkspace: Workspace = {
-    //     _id: uuidv4(),
-    //     name: "Personal",
-    //     createdAt: Date.now(),
-    //     updatedAt: Date.now(),
-    // };
+    // Assume that as users is already signed in that most of the data is already synced
+    // FIXME: may need to change this later
 
     // settingsDb = new PouchDb(userDbName + "-settings");
     workspaceDb = new PouchDb(userDbName + "-workspaces");
-    // add personal workspace to workspaceDb
-    // workspaceDb.put(personalWorkspace);
-
     taskDb = new PouchDb(userDbName + "-tasks");
+
+    console.log("User database name: " + userDbName);
 
     // Add dueOn, ListOrder and createdAt indexes to be able to place new tasks at
     // the top/bottom of the list
@@ -200,41 +194,38 @@ export async function initUserDb() {
         }
     });
 
-    // FIXME: Disabled sync for now, to avoid corrupting the prod database
     // Sync between the local and remote user database
-    // taskDb.sync(
-    //     window.location.origin + "/couch/" + userDbName + "-tasks",
-    //     {
-    //         live: true,
-    //         retry: true,
-    //         skip_setup: true,
-    //     }
-    // );
+    taskDb.sync(window.location.origin + "/couch/" + userDbName + "-tasks", {
+        live: true, retry: true, skip_setup: true,
+    });
 
-    // taskDb
-    //     .changes({
-    //         since: "now",
-    //         live: true,
-    //         include_docs: true,
-    //     })
-    //     .on("change", () => {
-    //         // Trigger redraw of the task list
-    //         triggerReload();
-    //     });
+    console.log("Task sync complete");
 
-    // One time update to add workspaceId to all tasks
-    // const tasks = await taskDb.allDocs({include_docs: true});
-    // const taskDocs = tasks.rows.map((row) => row.doc);
-    // const updatedTaskDocs = taskDocs.map((doc) => {
-    //     doc.workspaceId = "14623ca6-b6f0-42e7-8821-7cda1be27e6d";
-    //     return doc;
-    // });
-    // console.log(updatedTaskDocs);
-    // taskDb.bulkDocs(updatedTaskDocs);
+    workspaceDb.sync(window.location.origin + "/couch/" + userDbName + "-workspaces", {
+        live: true, retry: true, skip_setup: true,
+    });
 
-    // print all tasks
-    const tasks = await taskDb.allDocs({include_docs: true});
-    // console.log(tasks.rows.map((row) => row.doc));
+    // query reomote database for all workspaces and add them to the local database
+    // FIXME: Remove as this is not needed once all existing users have been migrated to the new database
+    const result = await workspaceDb.allDocs();
+    if (result.rows.length === 0) {
+        console.log("User has no workspaces, creating a default personal workspace");
+        // create a personal workspace
+        const workspaceId = await createWorkspace("Personal");
+        console.log(workspaceId);
+    } else {
+        console.log("User has workspaces, not creating a default personal workspace");
+    }
+
+
+    taskDb
+        .changes({
+            since: "now", live: true, include_docs: true,
+        })
+        .on("change", () => {
+            // Trigger redraw of the task list
+            triggerReload();
+        });
 
     // TODO: get all completed tasks older than 7 days old and remove them from the database
 }
