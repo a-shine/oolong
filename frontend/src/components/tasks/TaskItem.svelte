@@ -24,7 +24,7 @@
     bind:checked={task.completedAt}
   />
   <!-- </div> -->
-  <div id="task-info" on:click={() => push("/tasks/editor/" + task._id)}>
+  <div id="task-info" on:click={() => push(`/tasks/editor/${task.workspaceId}}/${task._id}`)}>
     <div id="task-text">
       {task.description}
     </div>

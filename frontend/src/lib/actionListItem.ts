@@ -25,10 +25,10 @@ export class Task extends ActionListItem {
     public dueOn: string;
     public workspaceId: string;
 
-    constructor() {
+    constructor(workspaceId: string) {
         super();
         this.notes = "";
         this.dueOn = "-1"; // default to undefined due date
-        this.workspaceId = "personal"; // default to personal workspace
+        this.workspaceId = workspaceId; // default to personal workspace
     }
 }

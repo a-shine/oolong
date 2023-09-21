@@ -112,7 +112,7 @@
                         bind:value={params.workspace}
                         on:change={(e) => {
                             // @ts-ignore
-                            replaceWrapper(`/tasks/${e.target.value}/${params.scope}`);
+                            replaceWrapper(`/tasks/list/${e.target.value}/${params.scope}`);
                         }}
                 >
                     {#each workspaces as workspace}
@@ -127,7 +127,7 @@
                     bind:value={params.scope}
                     on:change={(e) => {
                         // @ts-ignore
-                        replaceWrapper(`/tasks/${params.workspace}/${e.target.value}`);
+                        replaceWrapper(`/tasks/list/${params.workspace}/${e.target.value}`);
                     }}
             >
                 <option value="unassigned">Unassigned</option>
@@ -184,7 +184,7 @@
     <button
             id="newTaskButton"
             on:click={() => {
-                    pushWrapper("/tasks/editor/-1");
+                    pushWrapper(`/tasks/editor/${params.workspace}/-1`);
                 }
             }>
         +

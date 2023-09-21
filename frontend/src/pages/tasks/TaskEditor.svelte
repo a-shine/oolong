@@ -10,7 +10,7 @@
   import { popWrapper } from "../../lib/navigatorWrapper";
 
   // Props
-  export let params: { taskId: string };
+  export let params: { workspaceId: string, taskId: string };
 
   let task: Task;
 
@@ -37,7 +37,7 @@
   async function getOrCreateTask() {
     if (params.taskId == "-1") {
       // If no task is passed, it defaults to null
-      task = new Task();
+      task = new Task(params.workspaceId);
     } else {
       task = await getTaskById(params.taskId);
     }
@@ -91,39 +91,35 @@
   });
 </script>
 
-<Dialog bind:dialog={safeCloseDialog} on:close={() => console.log("closed")}>
-  <p>Are you sure you want to exit?</p>
-  <button
-    on:click={() => {
-      safeCloseDialog.close();
-    }}>No</button
-  >
-  <button
-    on:click={() => {
-      safeCloseDialog.close();
-      popWrapper();
-    }}>Yes</button
-  >
+<Dialog
+        bind:dialog={safeCloseDialog}
+        title="Discard changes"
+        content="Are you sure you want to discard your changes?"
+        actions={[
+                { label: "Yes", handler: () => popWrapper() },
+                { label: "No", handler: () => safeCloseDialog.close() },
+        ]}
+>
 </Dialog>
 
-<Dialog bind:dialog={safeDeleteDialog} on:close={() => console.log("closed")}>
-  Are you sure you want to delete?
-  <button
-    on:click={() => {
-      safeDeleteDialog.close();
-    }}>No</button
-  >
-  <button
-    on:click={() => {
-      safeDeleteDialog.close();
-      deleteTask(task);
-      popWrapper();
-    }}>Yes</button
-  >
+<Dialog
+        bind:dialog={safeDeleteDialog}
+        title="Delete task"
+        content="Are you sure you want to delete this task?"
+        actions={[
+                { label: "Yes", handler: () => {
+                        deleteTask(task);
+                        popWrapper();
+                } },
+                { label: "No", handler: () => safeDeleteDialog.close() },
+        ]}
+>
 </Dialog>
 
 <div id="container" class="center" in:fly={{ y: 200, duration: 250 }}>
   {#await getOrCreateTask()}
+    <p>Loading...</p>
+    {:then _}
     <div id="taskForm">
       <input
         type="text"
@@ -145,13 +141,13 @@
       />
       <div id="task-params">
         {#if !addDateDialog}
-          <button
+          <button class="secondary-button"
             class:active={dueOnValue === new Date().toISOString().split("T")[0]}
             on:click={(e) => {
               dueOnValue = new Date().toISOString().split("T")[0];
             }}>Today</button
           >
-          <button
+          <button class="secondary-button"
             class:active={dueOnValue ===
               new Date(new Date().getTime() + 86400000)
                 .toISOString()
@@ -162,7 +158,7 @@
                 .split("T")[0];
             }}>Tomorrow</button
           >
-          <button
+          <button class="secondary-button"
             on:click={() => {
               addDateDialog = true;
             }}>Another day...</button
@@ -202,11 +198,13 @@
   /* Container adding padding on the sides  */
   #container {
     padding: 0 1rem;
+    max-width: 800px;
+    margin: auto;
     /* position: fixed; */
   }
 
   .active {
-    background-color: var(--primary-focus-color);
+    background-color: var(--secondary-focus-color);
   }
 
   #task {

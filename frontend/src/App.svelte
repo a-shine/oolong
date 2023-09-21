@@ -67,13 +67,13 @@
     const personalWorkspaceId = await getFirstWorkspaceId();
     switch (event.detail.route) {
       case "/":
-        replace("/tasks/" + personalWorkspaceId + "/today");
+        replace("/tasks/list/" + personalWorkspaceId + "/today");
         break;
       case "/login":
         replace("/");
         break;
       case "/tasks":
-        replace("/tasks/" + personalWorkspaceId + "/today");
+        replace("/tasks/list/" + personalWorkspaceId + "/today");
         break;
       default:
         replace("/welcome");
@@ -118,14 +118,15 @@
         component: Tasks,
         conditions: [alwaysFail],
       }),
-      "/tasks/:workspace/:scope": wrap({
-        component: Tasks,
-        conditions: [setup],
-      }),
-      "/tasks/editor/:taskId": wrap({
+       "/tasks/editor/:workspaceId/:taskId?": wrap({
         component: TaskEditor,
         conditions: [setup],
       }),
+      "/tasks/list/:workspace/:scope": wrap({
+        component: Tasks,
+        conditions: [setup],
+      }),
+
       "/settings": wrap({
         component: Settings,
         conditions: [setup],
