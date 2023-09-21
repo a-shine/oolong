@@ -11,6 +11,7 @@
 
   // Props
   import { taskDb } from "../../lib/couch";
+  export let workspaceId: string;
 
   const dispatch = createEventDispatcher();
 
@@ -19,14 +20,16 @@
   let todayCompletedTasks: Task[] = [];
 
   onMount(async () => {
-    overdueTasks = await getOverdueTasks();
-    todayIncompleteTasks = await getTodayIncompleteTasks();
-    todayCompletedTasks = await getTodayCompletedTasks();
+    console.log(workspaceId);
+    overdueTasks = await getOverdueTasks(workspaceId);
+    todayIncompleteTasks = await getTodayIncompleteTasks(workspaceId);
+    todayCompletedTasks = await getTodayCompletedTasks(workspaceId);
   });
 
-  async function getOverdueTasks() {
+  async function getOverdueTasks(workspaceId: string) {
     const response = await taskDb.find({
       selector: {
+        workspaceId: { $eq: workspaceId },
         completedAt: { $eq: null }, // incomplete tasks
         listOrder: { $gte: 0 }, // starting at the first ordered task
         dueOn: { $lt: getToday(), $ne: "-1" }, // less than today and not unassigned
@@ -36,10 +39,11 @@
     return response.docs;
   }
 
-  async function getTodayIncompleteTasks() {
+  async function getTodayIncompleteTasks(workspaceId: string) {
     const response = await taskDb.find({
       selector: {
         // IMPORTANT: the order of the fields in the selector matters!!!
+        workspaceId: { $eq: workspaceId },
         completedAt: { $eq: null }, // incomplete tasks
         listOrder: { $gte: 0 }, // starting at the first ordered task (task with the highest listOrder)
         dueOn: { $eq: getToday() }, // assigned today
@@ -49,10 +53,11 @@
     return response.docs;
   }
 
-  async function getTodayCompletedTasks() {
+  async function getTodayCompletedTasks(workspaceId: string) {
     const response = await taskDb.find({
       selector: {
         // Completed between 12:00am and 11:59pm in unix time
+        workspaceId: { $eq: workspaceId },
         completedAt: {
           $gte: Date.parse(getToday()),
           $lt: Date.parse(getToday()) + 86400000,

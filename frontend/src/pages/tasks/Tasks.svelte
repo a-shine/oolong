@@ -138,7 +138,9 @@
             <!-- select workspace from list of workspaces in user workspace pouchdb -->
             {#key $reloadStore}
                 {#if params.scope === "today"}
-                    <TodayView/>
+                    {#key params.workspace}
+                        <TodayView workspaceId="{params.workspace}"/>
+                    {/key}
                 {:else if params.scope === "upcoming"}
                     {#await getTasks(params.scope)}
                         <p>Loading...</p>
