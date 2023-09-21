@@ -1,5 +1,5 @@
 <script>
-    import Scaffold from "../components/Scafold.svelte";
+    import Scaffold from "../components/Scaffold.svelte";
     import Dialog from "../components/Dialog.svelte";
     let dialog;
 </script>

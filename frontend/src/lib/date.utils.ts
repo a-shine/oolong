@@ -5,7 +5,7 @@
 export function getToday(): string {
   const today = new Date();
   const year = today.getFullYear();
-  const month = today.getMonth() + 1; // JavaScript months are 0-indexed
+  const month = today.getMonth() + 1; // JavaScript's months are 0-indexed
   const day = today.getDate();
 
   const yyyy = year.toString();
@@ -24,7 +24,7 @@ export function getTomorrow(): string {
   tomorrow.setDate(tomorrow.getDate() + 1);
 
   const year = tomorrow.getFullYear();
-  const month = tomorrow.getMonth() + 1; // JavaScript months are 0-indexed
+  const month = tomorrow.getMonth() + 1; // JavaScript's months are 0-indexed
   const day = tomorrow.getDate();
 
   const yyyy = year.toString();

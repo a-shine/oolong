@@ -10,7 +10,7 @@
   import CompletedTasksToday from "../../components/tasks/CompletedTasksToday.svelte";
 
   // Props
-  import { localTasksDb } from "../../lib/couch";
+  import { taskDb } from "../../lib/couch";
 
   const dispatch = createEventDispatcher();
 
@@ -25,7 +25,7 @@
   });
 
   async function getOverdueTasks() {
-    const response = await localTasksDb.find({
+    const response = await taskDb.find({
       selector: {
         completedAt: { $eq: null }, // incomplete tasks
         listOrder: { $gte: 0 }, // starting at the first ordered task
@@ -37,7 +37,7 @@
   }
 
   async function getTodayIncompleteTasks() {
-    const response = await localTasksDb.find({
+    const response = await taskDb.find({
       selector: {
         // IMPORTANT: the order of the fields in the selector matters!!!
         completedAt: { $eq: null }, // incomplete tasks
@@ -50,7 +50,7 @@
   }
 
   async function getTodayCompletedTasks() {
-    const response = await localTasksDb.find({
+    const response = await taskDb.find({
       selector: {
         // Completed between 12:00am and 11:59pm in unix time
         completedAt: {
@@ -76,7 +76,7 @@
     } else {
       todayIncompleteTasks = [...todayIncompleteTasks, task];
     }
-    localTasksDb.put({
+    taskDb.put({
       ...task,
       // completedAt: null, // BUG: Put task completedAt update in the list component
     });
@@ -95,7 +95,7 @@
         (t) => t._id !== task._id
       );
     }
-    localTasksDb.put({
+    taskDb.put({
       ...task,
       // completedAt: Date.now(), // BUG: Put task completedAt update in the list component
     });
@@ -103,7 +103,7 @@
 
   function updateOrder(tasks: Task[]) {
     console.log("updateOrder", tasks);
-    localTasksDb.bulkDocs(tasks);
+    taskDb.bulkDocs(tasks);
   }
 </script>
 

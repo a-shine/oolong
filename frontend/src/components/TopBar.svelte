@@ -2,6 +2,8 @@
   import { popWrapper as pop } from "../lib/navigatorWrapper";
   import { backButton } from "../lib/navigatorWrapper";
   import AppBarItem from "./BarItem.svelte";
+  import Icon from "svelte-icons-pack/Icon.svelte";
+  import AiOutlineArrowLeft from "svelte-icons-pack/ai/AiOutlineArrowLeft";
 
   let displayBackButton: boolean = false;
   export let title: string;
@@ -18,7 +20,7 @@
         <button
           on:click={() => pop()}
           class="app-bar-item"
-        >&larr;</button>
+        ><Icon src={AiOutlineArrowLeft} /></button>
     {/if}
     <span style="font-weight: bold; font-size: 1.5rem;">{title}</span>
   </div>

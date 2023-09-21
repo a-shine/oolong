@@ -24,6 +24,7 @@
   import { setup, notSetup, initUserDb } from "./lib/couch";
   import Welcome from "./pages/Welcome.svelte";
   import DesignSystem from "./pages/DesignSystem.svelte";
+  import Settings from "./pages/Settings.svelte";
 
   let onlineStatus: boolean;
 
@@ -146,6 +147,10 @@
       }),
       "/tasks/editor/:taskId": wrap({
         component: TaskEditor,
+        conditions: [setup],
+      }),
+      "/settings": wrap({
+        component: Settings,
         conditions: [setup],
       }),
       "/login": wrap({

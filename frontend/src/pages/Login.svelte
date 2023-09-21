@@ -3,7 +3,7 @@
   import { authDb, getActiveUserDatabaseName, initUserDb } from "../lib/couch";
   import AppBar from "../components/TopBar.svelte";
   import AppBarItem from "../components/BarItem.svelte";
-  import Scafold from "../components/Scafold.svelte";
+  import Scafold from "../components/Scaffold.svelte";
 
   let onlineStatus: boolean = navigator.onLine;
 

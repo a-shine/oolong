@@ -1,7 +1,7 @@
 <script lang="ts">
     import {pushWrapper, replaceWrapper,} from "../../lib/navigatorWrapper";
     import {overrideItemIdKeyNameBeforeInitialisingDndZones} from "svelte-dnd-action";
-    import {localTasksDb, logout} from "../../lib/couch";
+    import {taskDb, workspaceDb, logout} from "../../lib/couch";
     import {getCompletedTasks, getUnassignedTasks, getUpcomingTasks,} from "../../lib/tasks";
 
     // Types
@@ -12,7 +12,7 @@
     import TaskList from "../../components/tasks/TaskList.svelte";
     import UpcomingView from "./UpcomingView.svelte";
     import TopBarTasksScopeSelector from "../../components/tasks/TopBarTasksScopeSelector.svelte";
-    import Scafold from "../../components/Scafold.svelte";
+    import Scafold from "../../components/Scaffold.svelte";
     import Dialog from "../../components/Dialog.svelte";
     import {reloadStore, triggerReload} from "../../lib/reloadStore";
 
@@ -46,25 +46,40 @@
 
     // Toggle between complete and incomplete
     function complete(task: Task) {
-        localTasksDb.put({
+        taskDb.put({
             ...task,
         });
         triggerReload();
     }
 
     function updateOrder(tasks: Task[]) {
-        localTasksDb.bulkDocs(tasks);
+        taskDb.bulkDocs(tasks);
     }
 
     //   menu item object has an action function and a label
     const menuItems = [
         {
+            label: "Settings",
+            action: () => {
+                pushWrapper("/settings");
+            },
+        },
+        {
             label: "Logout",
             action: () => {
                 confirmLogoutDialog.showModal();
             },
-        },
+        }
     ];
+
+    /**
+     * @returns a promise of the workspaces list
+     */
+    async function getWorkspaces(): Promise<string[]> {
+        return (await workspaceDb.allDocs()).rows.map((row) => row.id);
+    }
+
+
 </script>
 
 <Dialog
@@ -95,7 +110,25 @@
 >
     <div id="container">
         <div class="center" id="tasks">
+            {#await getWorkspaces()}
+                <p>Loading...</p>
+            {:then workspaces}
+                <select
+                        id="workspaceSelector"
+                        on:change={(e) => {
+                            // @ts-ignore
+                            replaceWrapper(`/tasks/${params.scope}?workspace=${e.target.value}`);
+                        }}
+                >
+                    {#each workspaces as workspace}
+                        <option value={workspace}>{workspace}</option>
+                    {/each}
+                </select>
+            {:catch error}
+                <p>{error.message}</p>
+            {/await}
             <TopBarTasksScopeSelector/>
+            <!-- select workspace from list of workspaces in user workspace pouchdb -->
             {#key $reloadStore}
                 {#if params.scope === "today"}
                     <TodayView/>
