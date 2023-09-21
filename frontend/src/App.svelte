@@ -4,7 +4,7 @@
   import Router, { replace } from "svelte-spa-router";
   import wrap from "svelte-spa-router/wrap";
   import type { MenuItem } from "./interfaces/menuItem";
-  import { logout } from "./lib/couch";
+  import {logout, workspaceDb} from "./lib/couch";
 
   // This was tricky to get working!
   // - https://stackoverflow.com/questions/75808603/vitesveltepouchdb-uncaught-typeerror-class-extends-value-object-object-is
@@ -25,6 +25,7 @@
   import Welcome from "./pages/Welcome.svelte";
   import DesignSystem from "./pages/DesignSystem.svelte";
   import Settings from "./pages/Settings.svelte";
+  import WorkspaceConfig from "./pages/WorkspaceConfig.svelte";
 
   let onlineStatus: boolean;
 
@@ -60,16 +61,25 @@
   // pre-condition failed. If the pre-condition failed on a route other than the "/login" route then it must mean that
   // the user is not authenticated and hence we redirect to "/login". If the pre-condition failed on the "/login" route,
   // it means the user must be authenticated and hence the user is redirected to the "/" route.
-  function conditionsFailed(event) {
+  async function conditionsFailed(event) {
+    // get personal workspace id
+    // get the id of the default created workspace personal workspace
+    const result = await workspaceDb
+      .find({
+        selector: {
+          name: "Personal",
+        },
+      });
+    const personalWorkspaceId = result.docs[0]._id;
     switch (event.detail.route) {
       case "/":
-        replace("/tasks/today");
+        replace("/tasks/" + personalWorkspaceId + "/today");
         break;
       case "/login":
-        replace("/tasks");
+        replace("/");
         break;
       case "/tasks":
-        replace("/tasks/today");
+        replace("/tasks/" + personalWorkspaceId + "/today");
         break;
       default:
         replace("/welcome");
@@ -110,20 +120,6 @@
       onlineStatus = false;
     }
   });
-
-  const menuItems: MenuItem[] = [
-    {
-      name: "Tasks",
-      link: "/tasks",
-    },
-    {
-      name: "Logout",
-      link: "",
-      onClick: () => {
-        logout();
-      },
-    },
-  ];
 </script>
 
 {#await initApp()}
@@ -140,9 +136,8 @@
         component: Tasks,
         conditions: [alwaysFail],
       }),
-      "/tasks/:scope": wrap({
+      "/tasks/:workspace/:scope": wrap({
         component: Tasks,
-        props: { menuItems },
         conditions: [setup],
       }),
       "/tasks/editor/:taskId": wrap({
@@ -151,6 +146,10 @@
       }),
       "/settings": wrap({
         component: Settings,
+        conditions: [setup],
+      }),
+       "/settings/workspace-configuration/:workspaceId?": wrap({
+        component: WorkspaceConfig,
         conditions: [setup],
       }),
       "/login": wrap({

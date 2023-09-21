@@ -1,7 +1,7 @@
 <script lang="ts">
     import {pushWrapper, replaceWrapper,} from "../../lib/navigatorWrapper";
     import {overrideItemIdKeyNameBeforeInitialisingDndZones} from "svelte-dnd-action";
-    import {taskDb, workspaceDb, logout} from "../../lib/couch";
+    import {logout, taskDb, getWorkspaces} from "../../lib/couch";
     import {getCompletedTasks, getUnassignedTasks, getUpcomingTasks,} from "../../lib/tasks";
 
     // Types
@@ -11,19 +11,18 @@
     import TodayView from "./TodayView.svelte";
     import TaskList from "../../components/tasks/TaskList.svelte";
     import UpcomingView from "./UpcomingView.svelte";
-    import TopBarTasksScopeSelector from "../../components/tasks/TopBarTasksScopeSelector.svelte";
-    import Scafold from "../../components/Scaffold.svelte";
     import Dialog from "../../components/Dialog.svelte";
     import {reloadStore, triggerReload} from "../../lib/reloadStore";
+    import Scaffold from "../../components/Scaffold.svelte";
 
-    overrideItemIdKeyNameBeforeInitialisingDndZones("_id"); // https://github.com/isaacHagoel/svelte-dnd-action#overriding-the-item-id-key-name
+    // Required for svelte-dnd-action to work with PouchDB ids
+    // https://github.com/isaacHagoel/svelte-dnd-action#overriding-the-item-id-key-name
+    overrideItemIdKeyNameBeforeInitialisingDndZones("_id");
+
+    // TODO: Today task view not working with workspace selector
 
     // Props
-    export let params: { scope: string };
-
-    // Displayed tasks are determined by the scope, on changes to scope, the task
-    // list is updated
-    // let displayedTasks: Task[];
+    export let params: { workspace: string, scope: string };
 
     let confirmLogoutDialog: HTMLDialogElement;
 
@@ -33,11 +32,11 @@
     async function getTasks(scope: string): Promise<Task[]> {
         switch (scope) {
             case "unassigned":
-                return (await getUnassignedTasks()).docs;
+                return (await getUnassignedTasks(params.workspace)).docs;
             case "upcoming":
-                return (await getUpcomingTasks()).docs;
+                return (await getUpcomingTasks(params.workspace)).docs;
             case "completed":
-                return (await getCompletedTasks()).docs;
+                return (await getCompletedTasks(params.workspace)).docs;
             default:
                 console.log("Incorrect task retrieval scope");
                 return [];
@@ -72,12 +71,7 @@
         }
     ];
 
-    /**
-     * @returns a promise of the workspaces list
-     */
-    async function getWorkspaces(): Promise<string[]> {
-        return (await workspaceDb.allDocs()).rows.map((row) => row.id);
-    }
+
 
 
 </script>
@@ -104,7 +98,7 @@
         title="Confirm Logout"
 />
 
-<Scafold
+<Scaffold
         actionItems="{menuItems}"
         title="Tasks"
 >
@@ -115,19 +109,32 @@
             {:then workspaces}
                 <select
                         id="workspaceSelector"
+                        bind:value={params.workspace}
                         on:change={(e) => {
                             // @ts-ignore
-                            replaceWrapper(`/tasks/${params.scope}?workspace=${e.target.value}`);
+                            replaceWrapper(`/tasks/${e.target.value}/${params.scope}`);
                         }}
                 >
                     {#each workspaces as workspace}
-                        <option value={workspace}>{workspace}</option>
+                        <option value={workspace._id}>{workspace.name}</option>
                     {/each}
                 </select>
             {:catch error}
                 <p>{error.message}</p>
             {/await}
-            <TopBarTasksScopeSelector/>
+            <select
+                    id="scopeSelector"
+                    bind:value={params.scope}
+                    on:change={(e) => {
+                        // @ts-ignore
+                        replaceWrapper(`/tasks/${params.workspace}/${e.target.value}`);
+                    }}
+            >
+                <option value="unassigned">Unassigned</option>
+                <option value="today">Today</option>
+                <option value="upcoming">Upcoming</option>
+                <option value="completed">Completed</option>
+            </select>
             <!-- select workspace from list of workspaces in user workspace pouchdb -->
             {#key $reloadStore}
                 {#if params.scope === "today"}
@@ -180,7 +187,7 @@
             }>
         +
     </button>
-</Scafold>
+</Scaffold>
 
 
 <style>
