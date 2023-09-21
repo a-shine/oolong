@@ -110,6 +110,7 @@ export const authDb = new PouchDb(window.location.origin + "/couch/", {
     skip_setup: true,
 });
 
+
 // list all indexedDB databases
 async function listDatabases(): Promise<string[]> {
     return indexedDB.databases().then((dbs) => {
@@ -143,8 +144,18 @@ export async function getFirstWorkspaceId(): Promise<string> {
 }
 
 // function to create a user workspace database hosting a list of workspaces with ids that can be referenced by tasks
-export async function createUserWorkspaceDatabase() {
-
+export async function checkUserWorkspaceDatabase() {
+    let userDbName = localStorage.getItem("userDbName");
+    const remoteDb = new PouchDb(window.location.origin + "/couch/" + userDbName + "-workspaces");
+    const result = await remoteDb.allDocs();
+    if (result.rows.length === 0) {
+        console.log("User has no workspaces, creating a default personal workspace");
+        // create a personal workspace
+        const workspaceId = await createWorkspace("Personal");
+        console.log(workspaceId);
+    } else {
+        console.log("User has workspaces, not creating a default personal workspace");
+    }
 }
 
 export async function initUserDb() {
@@ -199,23 +210,11 @@ export async function initUserDb() {
         live: true, retry: true, skip_setup: true,
     });
 
-    console.log("Task sync complete");
-
     workspaceDb.sync(window.location.origin + "/couch/" + userDbName + "-workspaces", {
         live: true, retry: true, skip_setup: true,
     });
 
     // query reomote database for all workspaces and add them to the local database
-    // FIXME: Remove as this is not needed once all existing users have been migrated to the new database
-    const result = await workspaceDb.allDocs();
-    if (result.rows.length === 0) {
-        console.log("User has no workspaces, creating a default personal workspace");
-        // create a personal workspace
-        const workspaceId = await createWorkspace("Personal");
-        console.log(workspaceId);
-    } else {
-        console.log("User has workspaces, not creating a default personal workspace");
-    }
 
 
     taskDb

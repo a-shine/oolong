@@ -1,9 +1,17 @@
 <script lang="ts">
   import { replaceWrapper as replace } from "../lib/navigatorWrapper";
-  import { authDb, getActiveUserDatabaseName, initUserDb } from "../lib/couch";
+  import {
+    authDb,
+    checkUserWorkspaceDatabase,
+    createWorkspace,
+    getActiveUserDatabaseName,
+    initUserDb,
+    workspaceDb
+  } from "../lib/couch";
   import AppBar from "../components/TopBar.svelte";
   import AppBarItem from "../components/BarItem.svelte";
   import Scafold from "../components/Scaffold.svelte";
+  import PouchDb from "pouchdb-browser";
 
   let onlineStatus: boolean = navigator.onLine;
 
@@ -33,6 +41,7 @@
       } else {
         const userDbName = await getActiveUserDatabaseName();
         localStorage.setItem("userDbName", userDbName);
+        checkUserWorkspaceDatabase();
         initUserDb();
         replace("/");
       }
