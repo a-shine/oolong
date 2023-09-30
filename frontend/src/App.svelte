@@ -64,7 +64,15 @@
   async function conditionsFailed(event) {
     // get personal workspace id
     // get the id of the default created workspace personal workspace
-    const personalWorkspaceId = await getFirstWorkspaceId();
+    let personalWorkspaceId
+    try {
+      personalWorkspaceId = await getFirstWorkspaceId();
+    } catch (e) {
+      console.log(e);
+      replace("/welcome")
+      return
+    }
+
     switch (event.detail.route) {
       case "/":
         replace("/tasks/list/" + personalWorkspaceId + "/today");
